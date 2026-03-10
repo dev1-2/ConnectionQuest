@@ -406,7 +406,11 @@ function setBusy(isBusy) {
 	if (!state.currentPair.left || !state.currentPair.right) {
 		elements.leftCard.disabled = true;
 		elements.rightCard.disabled = true;
+		return;
 	}
+
+	elements.leftCard.disabled = isBusy;
+	elements.rightCard.disabled = isBusy;
 }
 
 function toggleAdminPanel() {

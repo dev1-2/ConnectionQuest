@@ -127,7 +127,7 @@ app.put("/api/teachers", requireAdmin, async (request, response) => {
 		}
 
 		const state = createStateFromTeachers(teachers);
-		await persistRuntimeState(state);
+		await replaceRuntimeState(state);
 		response.json({
 			message: "Neue Profile übernommen.",
 			state: serializeState(state),
@@ -148,7 +148,7 @@ app.post("/api/reset", requireAdmin, async (request, response) => {
 		}
 
 		const state = createStateFromTeachers(teachers);
-		await persistRuntimeState(state);
+		await replaceRuntimeState(state);
 		response.json({
 			message: "Turnier wurde zurückgesetzt.",
 			state: serializeState(state),
@@ -183,7 +183,7 @@ app.post("/api/vote", async (request, response) => {
 		state.rounds += 1;
 
 		advanceBattle(state, winner.id, loser.id);
-		await persistRuntimeState(state);
+		await persistBattleState(state, [winner.id, loser.id]);
 
 		response.json({
 			message: `${winner.name} gewinnt gegen ${loser.name}.`,
@@ -240,7 +240,7 @@ async function initializeDatabase() {
 	const teacherCountResult = await pool.query("SELECT COUNT(*)::int AS count FROM teachers");
 	if (teacherCountResult.rows[0].count === 0) {
 		const state = createStateFromTeachers(DEFAULT_TEACHERS);
-		await persistRuntimeState(state);
+		await replaceRuntimeState(state);
 	}
 }
 
@@ -280,13 +280,13 @@ async function loadRuntimeState() {
 
 	if (teachers.length >= 2 && (!state.currentPair.left || !state.currentPair.right)) {
 		setupBattle(state);
-		await persistRuntimeState(state);
+		await persistBattleState(state);
 	}
 
 	return state;
 }
 
-async function persistRuntimeState(state) {
+async function replaceRuntimeState(state) {
 	const client = await pool.connect();
 	try {
 		await client.query("BEGIN");
@@ -335,6 +335,57 @@ async function persistRuntimeState(state) {
 	}
 }
 
+async function persistBattleState(state, teacherIds = null) {
+	const client = await pool.connect();
+	try {
+		await client.query("BEGIN");
+
+		const teacherIdSet = Array.isArray(teacherIds) ? new Set(teacherIds) : null;
+		const teachersToUpdate = teacherIdSet
+			? state.teachers.filter((teacher) => teacherIdSet.has(teacher.id))
+			: [];
+
+		for (const teacher of teachersToUpdate) {
+			await client.query(
+				`UPDATE teachers
+				 SET wins = $2,
+				     losses = $3,
+				     matches = $4
+				 WHERE id = $1`,
+				[
+					teacher.id,
+					teacher.wins,
+					teacher.losses,
+					teacher.matches,
+				],
+			);
+		}
+
+		await client.query(
+			`UPDATE app_state
+			 SET rounds = $1,
+			     queue = $2::jsonb,
+			     left_id = $3,
+			     right_id = $4,
+			     updated_at = NOW()
+			 WHERE state_key = 'main'`,
+			[
+				state.rounds,
+				JSON.stringify(state.queue),
+				state.currentPair.left?.id || null,
+				state.currentPair.right?.id || null,
+			],
+		);
+
+		await client.query("COMMIT");
+	} catch (error) {
+		await client.query("ROLLBACK");
+		throw error;
+	} finally {
+		client.release();
+	}
+}
+
 function normalizeTeacherPayload(teachers) {
 	if (!Array.isArray(teachers)) {
 		return [];
@@ -349,7 +400,7 @@ function normalizeTeacherPayload(teachers) {
 		.filter((teacher) => teacher.name.length > 0)
 		.slice(0, 200)
 		.map((teacher, index) => ({
-			id: `teacher-${index + 1}-${slugify(teacher.name || `profil-${index + 1}`)}`,
+			id: (index + 1).toString(36),
 			name: teacher.name || `Profil ${index + 1}`,
 			subject: teacher.subject,
 			image: teacher.image,
@@ -557,15 +608,6 @@ function shuffle(items) {
 		[result[index], result[swapIndex]] = [result[swapIndex], result[index]];
 	}
 	return result;
-}
-
-function slugify(value) {
-	return value
-		.toLowerCase()
-		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/(^-|-$)/g, "") || "profil";
 }
 
 function sendServerError(response, error) {
