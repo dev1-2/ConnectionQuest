@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Connection Quest</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="hero">
+			<div class="hero-copy">
+				<p class="eyebrow">PRIVATE TRACKER</p>
+				<h1>Connection Quest</h1>
+				<p class="hero-text">
+					Tracke Dates, Vibes und besondere Momente in einer privaten Timeline mit Kalender,
+					XP, Levels und freischaltbaren Achievements.
+				</p>
+				<div class="hero-badges">
+					<span>Kalenderansicht</span>
+					<span>Lokaler Speicher</span>
+					<span>Achievement-Flow</span>
+				</div>
+			</div>
+			<section class="level-panel" aria-label="Level Fortschritt">
+				<div class="level-head">
+					<div>
+						<p class="mini-label">Current Level</p>
+						<h2 id="level-value">1</h2>
+					</div>
+					<div class="xp-chip">
+						<span id="xp-value">0 XP</span>
+					</div>
+				</div>
+				<div class="progress-block">
+					<div class="progress-meta">
+						<span>Nächstes Level</span>
+						<span id="progress-text">0 / 120 XP</span>
+					</div>
+					<div class="progress-track" aria-hidden="true">
+						<div class="progress-fill" id="progress-fill"></div>
+					</div>
+				</div>
+				<p class="level-note" id="level-note">Starte mit dem ersten Eintrag.</p>
+			</section>
+		</header>
+
+		<main class="dashboard">
+			<section class="card form-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Neuer Eintrag</p>
+						<h2>Moment loggen</h2>
+					</div>
+					<p class="section-copy">Alles bleibt lokal im Browser gespeichert.</p>
+				</div>
+
+				<form id="entry-form" class="entry-form">
+					<label>
+						<span>Name oder Nickname</span>
+						<input id="name" name="name" type="text" maxlength="40" placeholder="z. B. Lena" required>
+					</label>
+
+					<label>
+						<span>Datum</span>
+						<input id="date" name="date" type="date" required>
+					</label>
+
+					<label>
+						<span>Moment</span>
+						<select id="type" name="type" required>
+							<option value="Chat">Chat</option>
+							<option value="Date">Date</option>
+							<option value="Kuss">Kuss</option>
+							<option value="Hookup">Hookup</option>
+							<option value="Beziehung">Beziehung</option>
+						</select>
+					</label>
+
+					<label class="full-span">
+						<span>Notiz</span>
+						<textarea id="notes" name="notes" rows="3" maxlength="180" placeholder="Kurz festhalten, was den Tag besonders gemacht hat."></textarea>
+					</label>
+
+					<button type="submit" class="primary-btn">Eintrag speichern</button>
+				</form>
+			</section>
+
+			<section class="stats-grid" aria-label="Statistiken">
+				<article class="card stat-card accent-one">
+					<p class="mini-label">Unique Connections</p>
+					<h2 id="unique-count">0</h2>
+					<p id="unique-copy">Noch keine Namen erfasst.</p>
+				</article>
+				<article class="card stat-card accent-two">
+					<p class="mini-label">Total Entries</p>
+					<h2 id="entry-count">0</h2>
+					<p id="entry-copy">Dein Journal wartet auf den ersten Log.</p>
+				</article>
+				<article class="card stat-card accent-three">
+					<p class="mini-label">Current Streak</p>
+					<h2 id="streak-count">0 Tage</h2>
+					<p id="streak-copy">Noch keine Aktivität in Folge.</p>
+				</article>
+				<article class="card stat-card accent-four">
+					<p class="mini-label">Unlocked</p>
+					<h2 id="achievement-count">0</h2>
+					<p id="achievement-copy">Keine Badges freigeschaltet.</p>
+				</article>
+			</section>
+
+			<section class="card calendar-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Kalender</p>
+						<h2 id="calendar-label">Monat</h2>
+					</div>
+					<div class="calendar-actions">
+						<button type="button" class="ghost-btn" id="prev-month">Zurück</button>
+						<button type="button" class="ghost-btn" id="today-btn">Heute</button>
+						<button type="button" class="ghost-btn" id="next-month">Weiter</button>
+					</div>
+				</div>
+
+				<div class="weekdays" aria-hidden="true">
+					<span>Mo</span>
+					<span>Di</span>
+					<span>Mi</span>
+					<span>Do</span>
+					<span>Fr</span>
+					<span>Sa</span>
+					<span>So</span>
+				</div>
+				<div id="calendar-grid" class="calendar-grid"></div>
+			</section>
+
+			<section class="card day-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Tagesansicht</p>
+						<h2 id="selected-date-label">Kein Datum gewählt</h2>
+					</div>
+					<p class="section-copy" id="selected-date-summary">Wähle einen Tag im Kalender oder lege direkt einen Eintrag an.</p>
+				</div>
+				<div id="selected-day-list" class="day-list empty-state">
+					Noch keine Einträge für diesen Tag.
+				</div>
+			</section>
+
+			<section class="card achievement-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Badges</p>
+						<h2>Achievement Board</h2>
+					</div>
+					<p class="section-copy">Freischaltungen basieren auf Aktivität, Vielfalt und Konstanz.</p>
+				</div>
+				<div id="achievement-list" class="achievement-list"></div>
+			</section>
+
+			<section class="card timeline-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Recent Logs</p>
+						<h2>Letzte Einträge</h2>
+					</div>
+					<button type="button" id="clear-all" class="danger-btn">Alles löschen</button>
+				</div>
+				<div id="recent-list" class="recent-list empty-state">
+					Noch keine Einträge vorhanden.
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<template id="entry-template">
+		<article class="entry-item">
+			<div>
+				<div class="entry-topline">
+					<h3 class="entry-name"></h3>
+					<span class="entry-type"></span>
+				</div>
+				<p class="entry-notes"></p>
+			</div>
+			<button type="button" class="delete-btn">Entfernen</button>
+		</article>
+	</template>
+
+	<script src="script.js"></script>
+</body>
+</html>
