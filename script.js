@@ -18,11 +18,14 @@ const elements = {
 	applyButton: document.querySelector("#apply-button"),
 	resetButton: document.querySelector("#reset-button"),
 	adminForm: document.querySelector("#admin-form"),
+	adminToggle: document.querySelector("#admin-toggle"),
+	adminBody: document.querySelector("#admin-body"),
 	adminPassword: document.querySelector("#admin-password"),
 	loginButton: document.querySelector("#login-button"),
 	logoutButton: document.querySelector("#logout-button"),
 	authStatus: document.querySelector("#auth-status"),
 	controlPanel: document.querySelector(".control-panel"),
+	controlLockNote: document.querySelector("#control-lock-note"),
 };
 
 const state = {
@@ -33,6 +36,7 @@ const state = {
 	isBusy: false,
 	isAdmin: false,
 	adminConfigured: false,
+	adminPanelOpen: false,
 };
 
 elements.leftCard.addEventListener("click", () => handleVote("left"));
@@ -41,6 +45,8 @@ elements.applyButton.addEventListener("click", applyTeacherList);
 elements.resetButton.addEventListener("click", resetTournament);
 elements.adminForm.addEventListener("submit", handleLogin);
 elements.logoutButton.addEventListener("click", handleLogout);
+elements.adminToggle.addEventListener("click", toggleAdminPanel);
+window.addEventListener("keydown", handleKeyboardVote);
 
 initializeApp();
 
@@ -149,6 +155,7 @@ async function handleLogin(event) {
 			method: "POST",
 			body: JSON.stringify({ password }),
 		});
+		state.adminPanelOpen = true;
 		elements.adminPassword.value = "";
 		applyServerState(payload.state, payload.auth);
 		render(payload.message);
@@ -169,6 +176,7 @@ async function handleLogout() {
 		const payload = await fetchJson("/api/admin/logout", {
 			method: "POST",
 		});
+		state.adminPanelOpen = false;
 		applyServerState(payload.state, payload.auth);
 		render(payload.message);
 	} catch (error) {
@@ -190,8 +198,11 @@ function render(message) {
 
 function renderAuthPanel() {
 	if (!state.adminConfigured) {
+		state.adminPanelOpen = false;
 		elements.authStatus.textContent = "Admin-Passwort ist noch nicht konfiguriert. Setze ADMIN_PASSWORD und SESSION_SECRET in Render.";
+		elements.adminBody.hidden = true;
 		elements.adminForm.hidden = true;
+		elements.adminToggle.hidden = true;
 		elements.logoutButton.hidden = true;
 		return;
 	}
@@ -199,13 +210,19 @@ function renderAuthPanel() {
 	if (state.isAdmin) {
 		elements.authStatus.textContent = "Als Admin angemeldet. Profile und Reset sind freigeschaltet.";
 		elements.adminForm.hidden = true;
+		elements.adminBody.hidden = !state.adminPanelOpen;
+		elements.adminToggle.hidden = false;
+		elements.adminToggle.textContent = state.adminPanelOpen ? "Admin schließen" : "Admin öffnen";
 		elements.logoutButton.hidden = false;
 		return;
 	}
 
 	elements.authStatus.textContent = "Admin-Rechte sind für Bearbeiten und Reset erforderlich.";
-		elements.adminForm.hidden = false;
-		elements.logoutButton.hidden = true;
+	elements.adminBody.hidden = !state.adminPanelOpen;
+	elements.adminForm.hidden = !state.adminPanelOpen;
+	elements.adminToggle.hidden = false;
+	elements.adminToggle.textContent = state.adminPanelOpen ? "Admin schließen" : "Admin öffnen";
+	elements.logoutButton.hidden = true;
 }
 
 function renderBattle(message) {
@@ -335,10 +352,15 @@ function applyServerState(nextState, auth) {
 function updateControlsState() {
 	const locked = !state.isAdmin;
 	elements.controlPanel.classList.toggle("locked", locked);
+	elements.controlLockNote.hidden = !locked;
+	elements.controlLockNote.textContent = state.adminConfigured
+		? "Bearbeiten und Zurücksetzen ist nur mit Admin-Rechten möglich."
+		: "Bearbeiten ist gesperrt, bis ADMIN_PASSWORD und SESSION_SECRET in Render gesetzt sind.";
 	elements.teacherInput.disabled = locked || state.isBusy;
 	elements.applyButton.disabled = locked || state.isBusy;
 	elements.resetButton.disabled = locked || state.isBusy;
 	elements.loginButton.disabled = state.isBusy;
+	elements.adminToggle.disabled = state.isBusy;
 	elements.adminPassword.disabled = state.isBusy;
 	elements.logoutButton.disabled = state.isBusy;
 	if (!state.adminConfigured) {
@@ -384,6 +406,35 @@ function setBusy(isBusy) {
 	if (!state.currentPair.left || !state.currentPair.right) {
 		elements.leftCard.disabled = true;
 		elements.rightCard.disabled = true;
+	}
+}
+
+function toggleAdminPanel() {
+	if (state.isBusy || !state.adminConfigured) {
+		return;
+	}
+
+	state.adminPanelOpen = !state.adminPanelOpen;
+	render();
+	if (state.adminPanelOpen && !state.isAdmin) {
+		elements.adminPassword.focus();
+	}
+}
+
+function handleKeyboardVote(event) {
+	const tagName = event.target?.tagName;
+	if (tagName === "INPUT" || tagName === "TEXTAREA") {
+		return;
+	}
+
+	if (event.key === "ArrowLeft") {
+		event.preventDefault();
+		handleVote("left");
+	}
+
+	if (event.key === "ArrowRight") {
+		event.preventDefault();
+		handleVote("right");
 	}
 }
 
