@@ -1,16 +1,3 @@
-const STORAGE_KEY = "teacher-matchup-state";
-
-const DEFAULT_TEACHERS = [
-	"Herr Becker | Mathematik |",
-	"Frau Sommer | Deutsch |",
-	"Herr Nguyen | Physik |",
-	"Frau König | Englisch |",
-	"Herr Demir | Geschichte |",
-	"Frau Wagner | Biologie |",
-	"Herr Hartmann | Informatik |",
-	"Frau Aydin | Kunst |",
-];
-
 const elements = {
 	roundCount: document.querySelector("#round-count"),
 	teacherCount: document.querySelector("#teacher-count"),
@@ -32,97 +19,96 @@ const elements = {
 	resetButton: document.querySelector("#reset-button"),
 };
 
-const state = loadState();
+const state = {
+	teachers: [],
+	rounds: 0,
+	queue: [],
+	currentPair: { left: null, right: null },
+	isBusy: false,
+};
 
 elements.leftCard.addEventListener("click", () => handleVote("left"));
 elements.rightCard.addEventListener("click", () => handleVote("right"));
 elements.applyButton.addEventListener("click", applyTeacherList);
 elements.resetButton.addEventListener("click", resetTournament);
 
-render();
+initializeApp();
 
-function handleVote(side) {
-	if (!state.currentPair.left || !state.currentPair.right) {
+async function initializeApp() {
+	setBusy(true);
+	try {
+		const payload = await fetchJson("/api/state");
+		applyServerState(payload.state);
+		render();
+	} catch (error) {
+		renderError(error.message);
+	} finally {
+		setBusy(false);
+	}
+}
+
+async function handleVote(side) {
+	if (state.isBusy || !state.currentPair.left || !state.currentPair.right) {
 		return;
 	}
 
-	const winner = side === "left" ? state.currentPair.left : state.currentPair.right;
-	const loser = side === "left" ? state.currentPair.right : state.currentPair.left;
-
-	winner.wins += 1;
-	winner.matches += 1;
-	loser.losses += 1;
-	loser.matches += 1;
-	state.rounds += 1;
-
-	advanceBattle(winner.id, loser.id);
-	saveState();
-	render(`${winner.name} gewinnt gegen ${loser.name}.`);
+	setBusy(true);
+	try {
+		const payload = await fetchJson("/api/vote", {
+			method: "POST",
+			body: JSON.stringify({ side }),
+		});
+		applyServerState(payload.state);
+		render(payload.message);
+	} catch (error) {
+		renderError(error.message);
+	} finally {
+		setBusy(false);
+	}
 }
 
-function applyTeacherList() {
+async function applyTeacherList() {
 	const teachers = parseTeacherInput(elements.teacherInput.value);
 	if (teachers.length < 2) {
-		elements.battleStatus.textContent = "Mindestens zwei Profile werden benötigt.";
+		renderError("Mindestens zwei Profile werden benötigt.");
 		return;
 	}
 
-	state.teachers = teachers;
-	state.rounds = 0;
-	state.queue = [];
-	state.currentPair = { left: null, right: null };
-	setupBattle();
-	saveState();
-	render("Neue Profile übernommen.");
+	setBusy(true);
+	try {
+		const payload = await fetchJson("/api/teachers", {
+			method: "PUT",
+			body: JSON.stringify({ teachers }),
+		});
+		applyServerState(payload.state);
+		render(payload.message);
+	} catch (error) {
+		renderError(error.message);
+	} finally {
+		setBusy(false);
+	}
 }
 
-function resetTournament() {
-	state.teachers = parseTeacherInput(elements.teacherInput.value);
-	state.rounds = 0;
-	state.queue = [];
-	state.currentPair = { left: null, right: null };
-	setupBattle();
-	saveState();
-	render("Turnier wurde zurückgesetzt.");
-}
-
-function setupBattle() {
-	if (state.teachers.length < 2) {
-		state.currentPair = { left: null, right: null };
-		state.queue = [];
+async function resetTournament() {
+	const teachers = parseTeacherInput(elements.teacherInput.value);
+	if (teachers.length < 2) {
+		renderError("Mindestens zwei Profile werden benötigt.");
 		return;
 	}
 
-	state.queue = shuffle(state.teachers.map((teacher) => teacher.id));
-	const leftId = state.queue.shift();
-	const rightId = state.queue.shift();
-	state.currentPair.left = findTeacher(leftId);
-	state.currentPair.right = findTeacher(rightId);
-}
-
-function advanceBattle(winnerId, loserId) {
-	const winner = findTeacher(winnerId);
-	const loser = findTeacher(loserId);
-
-	state.currentPair.left = winner;
-
-	if (loser && loser.id !== winner.id) {
-		state.queue.push(loser.id);
+	setBusy(true);
+	try {
+		const payload = await fetchJson("/api/reset", {
+			method: "POST",
+			body: JSON.stringify({ teachers }),
+		});
+		applyServerState(payload.state);
+		render(payload.message);
+	} catch (error) {
+		renderError(error.message);
+	} finally {
+		setBusy(false);
 	}
-
-	let nextChallenger = null;
-	while (state.queue.length > 0 && !nextChallenger) {
-		const candidateId = state.queue.shift();
-		if (candidateId !== winner.id) {
-			nextChallenger = findTeacher(candidateId);
-		}
-	}
-
-	if (!nextChallenger) {
-		nextChallenger = state.teachers.find((teacher) => teacher.id !== winner.id) || null;
-	}
-
-	state.currentPair.right = nextChallenger;
 }
 
 function render(message) {
@@ -138,13 +124,13 @@ function renderBattle(message) {
 	if (!left || !right) {
 		elements.leftCard.disabled = true;
 		elements.rightCard.disabled = true;
-		elements.battleStatus.textContent = "Bitte erst mindestens zwei Profile eintragen.";
+		elements.battleStatus.textContent = state.isBusy ? "Lade Daten..." : "Bitte erst mindestens zwei Profile eintragen.";
 		elements.winnerBanner.hidden = true;
 		return;
 	}
 
-	elements.leftCard.disabled = false;
-	elements.rightCard.disabled = false;
+	elements.leftCard.disabled = state.isBusy;
+	elements.rightCard.disabled = state.isBusy;
 	elements.battleStatus.textContent = message || `${left.name} gegen ${right.name}. Wer gewinnt diese Runde?`;
 	elements.winnerBanner.hidden = !message;
 	elements.winnerBanner.textContent = message || "";
@@ -204,16 +190,12 @@ function parseTeacherInput(input) {
 		.split(/\r?\n/)
 		.map((line) => line.trim())
 		.filter(Boolean)
-		.map((line, index) => {
+		.map((line) => {
 			const [namePart = "", subjectPart = "", imagePart = ""] = line.split("|").map((part) => part.trim());
 			return {
-				id: `teacher-${index + 1}-${slugify(namePart || `profil-${index + 1}`)}`,
-				name: namePart || `Profil ${index + 1}`,
+				name: namePart,
 				subject: subjectPart,
 				image: imagePart,
-				wins: 0,
-				losses: 0,
-				matches: 0,
 			};
 		});
 }
@@ -222,111 +204,11 @@ function formatTeacherInput(teachers) {
 	return teachers.map((teacher) => `${teacher.name} | ${teacher.subject || ""} | ${teacher.image || ""}`).join("\n");
 }
 
-function loadState() {
-	const fallbackTeachers = parseTeacherInput(DEFAULT_TEACHERS.join("\n"));
-	try {
-		const raw = window.localStorage.getItem(STORAGE_KEY);
-		if (!raw) {
-			return buildInitialState(fallbackTeachers);
-		}
-
-		const parsed = JSON.parse(raw);
-		if (!parsed || !Array.isArray(parsed.teachers)) {
-			return buildInitialState(fallbackTeachers);
-		}
-
-		const teachers = parsed.teachers.map((teacher, index) => ({
-			id: teacher.id || `teacher-${index + 1}`,
-			name: teacher.name || `Profil ${index + 1}`,
-			subject: teacher.subject || "",
-			image: teacher.image || "",
-			wins: Number(teacher.wins) || 0,
-			losses: Number(teacher.losses) || 0,
-			matches: Number(teacher.matches) || 0,
-		}));
-		const result = {
-			teachers,
-			rounds: Number(parsed.rounds) || 0,
-			queue: Array.isArray(parsed.queue) ? parsed.queue.filter((id) => teachers.some((teacher) => teacher.id === id)) : [],
-			currentPair: { left: null, right: null },
-		};
-
-		result.currentPair.left = teachers.find((teacher) => teacher.id === parsed.currentPair?.leftId) || teachers[0] || null;
-		result.currentPair.right = teachers.find((teacher) => teacher.id === parsed.currentPair?.rightId) || teachers[1] || null;
-
-		if (!result.currentPair.left || !result.currentPair.right) {
-			setupStateBattle(result);
-		}
-
-		return result;
-	} catch {
-		return buildInitialState(fallbackTeachers);
-	}
-}
-
-function buildInitialState(teachers) {
-	const initialState = {
-		teachers,
-		rounds: 0,
-		queue: [],
-		currentPair: { left: null, right: null },
-	};
-	setupStateBattle(initialState);
-	return initialState;
-}
-
-function setupStateBattle(targetState) {
-	if (targetState.teachers.length < 2) {
-		targetState.currentPair = { left: null, right: null };
-		targetState.queue = [];
-		return;
-	}
-
-	targetState.queue = shuffle(targetState.teachers.map((teacher) => teacher.id));
-	targetState.currentPair.left = targetState.teachers.find((teacher) => teacher.id === targetState.queue.shift()) || null;
-	targetState.currentPair.right = targetState.teachers.find((teacher) => teacher.id === targetState.queue.shift()) || null;
-	if (!targetState.currentPair.left || !targetState.currentPair.right) {
-		targetState.currentPair.left = targetState.teachers[0] || null;
-		targetState.currentPair.right = targetState.teachers[1] || null;
-	}
-	targetState.queue = targetState.queue.filter(
-		(id) => id !== targetState.currentPair.left?.id && id !== targetState.currentPair.right?.id,
-	);
-	if (!targetState.queue.length) {
-		targetState.queue = shuffle(
-			targetState.teachers
-				.map((teacher) => teacher.id)
-				.filter((id) => id !== targetState.currentPair.left?.id && id !== targetState.currentPair.right?.id),
-		);
-	}
-}
-
-function saveState() {
-	window.localStorage.setItem(
-		STORAGE_KEY,
-		JSON.stringify({
-			teachers: state.teachers,
-			rounds: state.rounds,
-			queue: state.queue,
-			currentPair: {
-				leftId: state.currentPair.left?.id || null,
-				rightId: state.currentPair.right?.id || null,
-			},
-		}),
-	);
-}
-
-function findTeacher(id) {
-	return state.teachers.find((teacher) => teacher.id === id) || null;
-}
-
-function shuffle(items) {
-	const result = [...items];
-	for (let index = result.length - 1; index > 0; index -= 1) {
-		const swapIndex = Math.floor(Math.random() * (index + 1));
-		[result[index], result[swapIndex]] = [result[swapIndex], result[index]];
-	}
-	return result;
+function applyServerState(nextState) {
+	state.teachers = Array.isArray(nextState?.teachers) ? nextState.teachers : [];
+	state.rounds = Number(nextState?.rounds) || 0;
+	state.queue = Array.isArray(nextState?.queue) ? nextState.queue : [];
+	state.currentPair = nextState?.currentPair || { left: null, right: null };
 }
 
 function initialsFor(name) {
@@ -363,4 +245,37 @@ function escapeHtml(value) {
 		.replaceAll(">", "&gt;")
 		.replaceAll('"', "&quot;")
 		.replaceAll("'", "&#39;");
+}
+
+function setBusy(isBusy) {
+	state.isBusy = isBusy;
+	elements.applyButton.disabled = isBusy;
+	elements.resetButton.disabled = isBusy;
+	elements.leftCard.disabled = isBusy || !state.currentPair.left || !state.currentPair.right;
+	elements.rightCard.disabled = isBusy || !state.currentPair.left || !state.currentPair.right;
+	if (isBusy) {
+		elements.battleStatus.textContent = "Lade Daten...";
+	}
+}
+
+function renderError(message) {
+	elements.winnerBanner.hidden = false;
+	elements.winnerBanner.textContent = message;
+	elements.battleStatus.textContent = message;
+}
+
+async function fetchJson(url, options = {}) {
+	const response = await window.fetch(url, {
+		headers: {
+			"Content-Type": "application/json",
+			...(options.headers || {}),
+		},
+		...options,
+	});
+
+	const payload = await response.json().catch(() => ({}));
+	if (!response.ok) {
+		throw new Error(payload.error || "Die Anfrage konnte nicht verarbeitet werden.");
+	}
+	return payload;
 }
