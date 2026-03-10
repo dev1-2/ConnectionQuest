@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Lehrkraft Matchup</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="hero-panel">
+			<div>
+				<p class="kicker">Lokales Vergleichsspiel</p>
+				<h1>Lehrkraft Matchup</h1>
+				<p class="hero-copy">
+					Immer zwei Profile gegeneinander, ein Klick entscheidet. Der Gewinner bleibt und tritt direkt gegen die nächste Person an.
+				</p>
+			</div>
+			<div class="hero-stats" aria-label="Spielstatus">
+				<div class="hero-stat">
+					<span>Runden</span>
+					<strong id="round-count">0</strong>
+				</div>
+				<div class="hero-stat">
+					<span>Profile</span>
+					<strong id="teacher-count">0</strong>
+				</div>
+				<button type="button" id="reset-button" class="secondary-button">Duell neu starten</button>
+			</div>
+		</header>
+
+		<main class="layout-grid">
+			<section class="battle-panel">
+				<div class="panel-head">
+					<div>
+						<p class="kicker">Aktuelles Duell</p>
+						<h2>Wähle links oder rechts</h2>
+					</div>
+					<p id="battle-status" class="panel-note">Klicke auf eine Karte, um den Gewinner festzulegen.</p>
+				</div>
+
+				<div id="battle-stage" class="battle-stage" aria-live="polite">
+					<button type="button" id="left-card" class="teacher-card teacher-card-left">
+						<span class="vote-hint">Links gewinnt</span>
+						<div class="portrait-frame">
+							<div id="left-avatar" class="avatar-badge">L</div>
+						</div>
+						<div class="card-copy">
+							<h3 id="left-name">Lehrkraft links</h3>
+							<p id="left-subject">Fach</p>
+							<p id="left-meta">0 Siege</p>
+						</div>
+					</button>
+
+					<div class="versus-mark" aria-hidden="true">VS</div>
+
+					<button type="button" id="right-card" class="teacher-card teacher-card-right">
+						<span class="vote-hint">Rechts gewinnt</span>
+						<div class="portrait-frame">
+							<div id="right-avatar" class="avatar-badge">R</div>
+						</div>
+						<div class="card-copy">
+							<h3 id="right-name">Lehrkraft rechts</h3>
+							<p id="right-subject">Fach</p>
+							<p id="right-meta">0 Siege</p>
+						</div>
+					</button>
+				</div>
+
+				<div id="winner-banner" class="winner-banner" hidden></div>
+			</section>
+
+			<aside class="side-column">
+				<section class="panel control-panel">
+					<div class="panel-head compact">
+						<div>
+							<p class="kicker">Daten</p>
+							<h2>Profile bearbeiten</h2>
+						</div>
+					</div>
+					<p class="panel-note">
+						Du kannst Namen, Fach und optional ein Bild pro Zeile eintragen. Format: Name | Fach | Bild-URL
+					</p>
+					<textarea id="teacher-input" rows="10" spellcheck="false"></textarea>
+					<div class="control-actions">
+						<button type="button" id="apply-button" class="primary-button">Profile übernehmen</button>
+					</div>
+				</section>
+
+				<section class="panel ranking-panel">
+					<div class="panel-head compact">
+						<div>
+							<p class="kicker">Ergebnis</p>
+							<h2>Rangliste</h2>
+						</div>
+					</div>
+					<ol id="ranking-list" class="ranking-list"></ol>
+				</section>
+			</aside>
+		</main>
+	</div>
+
+	<script src="script.js"></script>
+</body>
+</html>
