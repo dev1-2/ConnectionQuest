@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Lehrkraft Matchup</title>
+	<title>Lehrer Ranking</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 		<header class="hero-panel">
 			<div>
 				<p class="kicker">Lokales Vergleichsspiel</p>
-				<h1>Lehrkraft Matchup</h1>
+				<h1>Lehrer Ranking</h1>
 				<p class="hero-copy">
 					Immer zwei Profile gegeneinander, ein Klick entscheidet. Der Gewinner bleibt und tritt direkt gegen die nächste Person an.
 				</p>
@@ -74,6 +74,24 @@
 			</section>
 
 			<aside class="side-column">
+				<section class="panel admin-panel">
+					<div class="panel-head compact">
+						<div>
+							<p class="kicker">Admin</p>
+							<h2>Verwaltung</h2>
+						</div>
+					</div>
+					<p id="auth-status" class="panel-note">Admin-Status wird geladen.</p>
+					<form id="admin-form" class="admin-form">
+						<label>
+							<span class="sr-only">Admin-Passwort</span>
+							<input id="admin-password" type="password" autocomplete="current-password" placeholder="Admin-Passwort">
+						</label>
+						<button type="submit" id="login-button" class="primary-button">Anmelden</button>
+					</form>
+					<button type="button" id="logout-button" class="secondary-button secondary-button-compact" hidden>Abmelden</button>
+				</section>
+
 				<section class="panel control-panel">
 					<div class="panel-head compact">
 						<div>

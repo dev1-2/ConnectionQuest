@@ -17,6 +17,12 @@ const elements = {
 	teacherInput: document.querySelector("#teacher-input"),
 	applyButton: document.querySelector("#apply-button"),
 	resetButton: document.querySelector("#reset-button"),
+	adminForm: document.querySelector("#admin-form"),
+	adminPassword: document.querySelector("#admin-password"),
+	loginButton: document.querySelector("#login-button"),
+	logoutButton: document.querySelector("#logout-button"),
+	authStatus: document.querySelector("#auth-status"),
+	controlPanel: document.querySelector(".control-panel"),
 };
 
 const state = {
@@ -25,12 +31,16 @@ const state = {
 	queue: [],
 	currentPair: { left: null, right: null },
 	isBusy: false,
+	isAdmin: false,
+	adminConfigured: false,
 };
 
 elements.leftCard.addEventListener("click", () => handleVote("left"));
 elements.rightCard.addEventListener("click", () => handleVote("right"));
 elements.applyButton.addEventListener("click", applyTeacherList);
 elements.resetButton.addEventListener("click", resetTournament);
+elements.adminForm.addEventListener("submit", handleLogin);
+elements.logoutButton.addEventListener("click", handleLogout);
 
 initializeApp();
 
@@ -38,7 +48,7 @@ async function initializeApp() {
 	setBusy(true);
 	try {
 		const payload = await fetchJson("/api/state");
-		applyServerState(payload.state);
+		applyServerState(payload.state, payload.auth);
 		render();
 	} catch (error) {
 		renderError(error.message);
@@ -58,7 +68,7 @@ async function handleVote(side) {
 			method: "POST",
 			body: JSON.stringify({ side }),
 		});
-		applyServerState(payload.state);
+		applyServerState(payload.state, payload.auth);
 		render(payload.message);
 	} catch (error) {
 		renderError(error.message);
@@ -68,6 +78,11 @@ async function handleVote(side) {
 }
 
 async function applyTeacherList() {
+	if (!state.isAdmin) {
+		renderError("Nur Admins können Profile bearbeiten.");
+		return;
+	}
+
 	const teachers = parseTeacherInput(elements.teacherInput.value);
 	if (teachers.length < 2) {
 		renderError("Mindestens zwei Profile werden benötigt.");
@@ -80,7 +95,7 @@ async function applyTeacherList() {
 			method: "PUT",
 			body: JSON.stringify({ teachers }),
 		});
-		applyServerState(payload.state);
+		applyServerState(payload.state, payload.auth);
 		render(payload.message);
 	} catch (error) {
 		renderError(error.message);
@@ -90,6 +105,11 @@ async function applyTeacherList() {
 }
 
 async function resetTournament() {
+	if (!state.isAdmin) {
+		renderError("Nur Admins können das Turnier zurücksetzen.");
+		return;
+	}
+
 	const teachers = parseTeacherInput(elements.teacherInput.value);
 	if (teachers.length < 2) {
 		renderError("Mindestens zwei Profile werden benötigt.");
@@ -102,7 +122,54 @@ async function resetTournament() {
 			method: "POST",
 			body: JSON.stringify({ teachers }),
 		});
-		applyServerState(payload.state);
+		applyServerState(payload.state, payload.auth);
+		render(payload.message);
+	} catch (error) {
+		renderError(error.message);
+	} finally {
+		setBusy(false);
+	}
+}
+
+async function handleLogin(event) {
+	event.preventDefault();
+	if (state.isBusy) {
+		return;
+	}
+
+	const password = elements.adminPassword.value;
+	if (!password) {
+		renderError("Bitte ein Admin-Passwort eingeben.");
+		return;
+	}
+
+	setBusy(true);
+	try {
+		const payload = await fetchJson("/api/admin/login", {
+			method: "POST",
+			body: JSON.stringify({ password }),
+		});
+		elements.adminPassword.value = "";
+		applyServerState(payload.state, payload.auth);
+		render(payload.message);
+	} catch (error) {
+		renderError(error.message);
+	} finally {
+		setBusy(false);
+	}
+}
+
+async function handleLogout() {
+	if (state.isBusy) {
+		return;
+	}
+
+	setBusy(true);
+	try {
+		const payload = await fetchJson("/api/admin/logout", {
+			method: "POST",
+		});
+		applyServerState(payload.state, payload.auth);
 		render(payload.message);
 	} catch (error) {
 		renderError(error.message);
@@ -115,8 +182,30 @@ function render(message) {
 	elements.teacherInput.value = formatTeacherInput(state.teachers);
 	elements.roundCount.textContent = String(state.rounds);
 	elements.teacherCount.textContent = String(state.teachers.length);
+	renderAuthPanel();
 	renderBattle(message);
 	renderRanking();
+	updateControlsState();
+}
+
+function renderAuthPanel() {
+	if (!state.adminConfigured) {
+		elements.authStatus.textContent = "Admin-Passwort ist noch nicht konfiguriert. Setze ADMIN_PASSWORD und SESSION_SECRET in Render.";
+		elements.adminForm.hidden = true;
+		elements.logoutButton.hidden = true;
+		return;
+	}
+
+	if (state.isAdmin) {
+		elements.authStatus.textContent = "Als Admin angemeldet. Profile und Reset sind freigeschaltet.";
+		elements.adminForm.hidden = true;
+		elements.logoutButton.hidden = false;
+		return;
+	}
+
+	elements.authStatus.textContent = "Admin-Rechte sind für Bearbeiten und Reset erforderlich.";
+		elements.adminForm.hidden = false;
+		elements.logoutButton.hidden = true;
 }
 
 function renderBattle(message) {
@@ -204,11 +293,29 @@ function formatTeacherInput(teachers) {
 	return teachers.map((teacher) => `${teacher.name} | ${teacher.subject || ""} | ${teacher.image || ""}`).join("\n");
 }
 
-function applyServerState(nextState) {
+function applyServerState(nextState, auth) {
 	state.teachers = Array.isArray(nextState?.teachers) ? nextState.teachers : [];
 	state.rounds = Number(nextState?.rounds) || 0;
 	state.queue = Array.isArray(nextState?.queue) ? nextState.queue : [];
 	state.currentPair = nextState?.currentPair || { left: null, right: null };
+	state.isAdmin = Boolean(auth?.isAdmin);
+	state.adminConfigured = Boolean(auth?.adminConfigured);
+}
+
+function updateControlsState() {
+	const locked = !state.isAdmin;
+	elements.controlPanel.classList.toggle("locked", locked);
+	elements.teacherInput.disabled = locked || state.isBusy;
+	elements.applyButton.disabled = locked || state.isBusy;
+	elements.resetButton.disabled = locked || state.isBusy;
+	elements.loginButton.disabled = state.isBusy;
+	elements.adminPassword.disabled = state.isBusy;
+	elements.logoutButton.disabled = state.isBusy;
+	if (!state.adminConfigured) {
+		elements.teacherInput.disabled = true;
+		elements.applyButton.disabled = true;
+		elements.resetButton.disabled = true;
+	}
 }
 
 function initialsFor(name) {
@@ -229,15 +336,6 @@ function accentFor(name) {
 	return palette[total % palette.length];
 }
 
-function slugify(value) {
-	return value
-		.toLowerCase()
-		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/(^-|-$)/g, "") || "profil";
-}
-
 function escapeHtml(value) {
 	return value
 		.replaceAll("&", "&amp;")
@@ -249,12 +347,13 @@ function escapeHtml(value) {
 
 function setBusy(isBusy) {
 	state.isBusy = isBusy;
-	elements.applyButton.disabled = isBusy;
-	elements.resetButton.disabled = isBusy;
-	elements.leftCard.disabled = isBusy || !state.currentPair.left || !state.currentPair.right;
-	elements.rightCard.disabled = isBusy || !state.currentPair.left || !state.currentPair.right;
+	updateControlsState();
 	if (isBusy) {
 		elements.battleStatus.textContent = "Lade Daten...";
+	}
+	if (!state.currentPair.left || !state.currentPair.right) {
+		elements.leftCard.disabled = true;
+		elements.rightCard.disabled = true;
 	}
 }
 
@@ -266,6 +365,7 @@ function renderError(message) {
 
 async function fetchJson(url, options = {}) {
 	const response = await window.fetch(url, {
+		credentials: "same-origin",
 		headers: {
 			"Content-Type": "application/json",
 			...(options.headers || {}),

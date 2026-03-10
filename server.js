@@ -1,4 +1,7 @@
+const crypto = require("crypto");
 const express = require("express");
+const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
 const path = require("path");
 const { Pool } = require("pg");
 
@@ -13,7 +16,13 @@ const DEFAULT_TEACHERS = [
 	{ name: "Frau Aydin", subject: "Kunst", image: "" },
 ];
 
+const ADMIN_COOKIE_NAME = "cq_admin_session";
+const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 const databaseUrl = process.env.DATABASE_URL;
+const adminPassword = process.env.ADMIN_PASSWORD || "";
+const sessionSecret = process.env.SESSION_SECRET || "";
+const isProduction = process.env.NODE_ENV === "production";
+
 const app = express();
 const port = Number(process.env.PORT) || 3000;
 const publicDir = __dirname;
@@ -24,14 +33,30 @@ if (!databaseUrl) {
 
 const pool = new Pool({
 	connectionString: databaseUrl,
-	ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+	ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
 
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "1mb" }));
+app.use("/api/", rateLimit({
+	windowMs: 15 * 60 * 1000,
+	max: 400,
+	standardHeaders: true,
+	legacyHeaders: false,
+}));
 app.use(express.static(publicDir, {
 	extensions: ["html"],
 }));
+
+const loginLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000,
+	max: 10,
+	standardHeaders: true,
+	legacyHeaders: false,
+	message: { error: "Zu viele Login-Versuche. Bitte später erneut probieren." },
+});
 
 app.get("/health", async (_request, response) => {
 	try {
@@ -42,16 +67,58 @@ app.get("/health", async (_request, response) => {
 	}
 });
 
-app.get("/api/state", async (_request, response) => {
+app.get("/api/state", async (request, response) => {
 	try {
 		const state = await loadRuntimeState();
-		response.json({ state: serializeState(state) });
+		response.json({
+			state: serializeState(state),
+			auth: buildAuthState(request),
+		});
 	} catch (error) {
 		sendServerError(response, error);
 	}
 });
 
-app.put("/api/teachers", async (request, response) => {
+app.post("/api/admin/login", loginLimiter, async (request, response) => {
+	try {
+		if (!isAdminConfigured()) {
+			response.status(503).json({ error: "Admin-Zugang ist noch nicht konfiguriert." });
+			return;
+		}
+
+		const password = String(request.body?.password || "");
+		if (!passwordsMatch(password, adminPassword)) {
+			response.status(401).json({ error: "Admin-Passwort ist falsch." });
+			return;
+		}
+
+		response.setHeader("Set-Cookie", buildSessionCookie(createSessionToken()));
+		const state = await loadRuntimeState();
+		response.json({
+			message: "Admin-Anmeldung erfolgreich.",
+			state: serializeState(state),
+			auth: { isAdmin: true, adminConfigured: true },
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.post("/api/admin/logout", async (request, response) => {
+	try {
+		response.setHeader("Set-Cookie", clearSessionCookie());
+		const state = await loadRuntimeState();
+		response.json({
+			message: "Admin wurde abgemeldet.",
+			state: serializeState(state),
+			auth: { isAdmin: false, adminConfigured: isAdminConfigured() },
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.put("/api/teachers", requireAdmin, async (request, response) => {
 	try {
 		const teachers = normalizeTeacherPayload(request.body?.teachers);
 		if (teachers.length < 2) {
@@ -64,13 +131,14 @@ app.put("/api/teachers", async (request, response) => {
 		response.json({
 			message: "Neue Profile übernommen.",
 			state: serializeState(state),
+			auth: buildAuthState(request),
 		});
 	} catch (error) {
 		sendServerError(response, error);
 	}
 });
 
-app.post("/api/reset", async (request, response) => {
+app.post("/api/reset", requireAdmin, async (request, response) => {
 	try {
 		const requestedTeachers = Array.isArray(request.body?.teachers) ? request.body.teachers : null;
 		const teachers = requestedTeachers ? normalizeTeacherPayload(requestedTeachers) : normalizeTeacherPayload((await loadRuntimeState()).teachers);
@@ -84,6 +152,7 @@ app.post("/api/reset", async (request, response) => {
 		response.json({
 			message: "Turnier wurde zurückgesetzt.",
 			state: serializeState(state),
+			auth: buildAuthState(request),
 		});
 	} catch (error) {
 		sendServerError(response, error);
@@ -119,6 +188,7 @@ app.post("/api/vote", async (request, response) => {
 		response.json({
 			message: `${winner.name} gewinnt gegen ${loser.name}.`,
 			state: serializeState(state),
+			auth: buildAuthState(request),
 		});
 	} catch (error) {
 		sendServerError(response, error);
@@ -161,17 +231,17 @@ async function initializeDatabase() {
 		);
 	`);
 
-		await pool.query(
-			`INSERT INTO app_state (state_key, rounds, queue, left_id, right_id)
-			 VALUES ('main', 0, '[]'::jsonb, NULL, NULL)
-			 ON CONFLICT (state_key) DO NOTHING`,
-		);
+	await pool.query(
+		`INSERT INTO app_state (state_key, rounds, queue, left_id, right_id)
+		 VALUES ('main', 0, '[]'::jsonb, NULL, NULL)
+		 ON CONFLICT (state_key) DO NOTHING`,
+	);
 
-		const teacherCountResult = await pool.query("SELECT COUNT(*)::int AS count FROM teachers");
-		if (teacherCountResult.rows[0].count === 0) {
-			const state = createStateFromTeachers(DEFAULT_TEACHERS);
-			await persistRuntimeState(state);
-		}
+	const teacherCountResult = await pool.query("SELECT COUNT(*)::int AS count FROM teachers");
+	if (teacherCountResult.rows[0].count === 0) {
+		const state = createStateFromTeachers(DEFAULT_TEACHERS);
+		await persistRuntimeState(state);
+	}
 }
 
 async function loadRuntimeState() {
@@ -208,7 +278,7 @@ async function loadRuntimeState() {
 		},
 	};
 
-	if ((teachers.length >= 2) && (!state.currentPair.left || !state.currentPair.right)) {
+	if (teachers.length >= 2 && (!state.currentPair.left || !state.currentPair.right)) {
 		setupBattle(state);
 		await persistRuntimeState(state);
 	}
@@ -272,11 +342,12 @@ function normalizeTeacherPayload(teachers) {
 
 	return teachers
 		.map((teacher) => ({
-			name: String(teacher?.name || "").trim(),
-			subject: String(teacher?.subject || "").trim(),
-			image: String(teacher?.image || "").trim(),
+			name: String(teacher?.name || "").trim().slice(0, 120),
+			subject: String(teacher?.subject || "").trim().slice(0, 160),
+			image: sanitizeImageUrl(teacher?.image),
 		}))
 		.filter((teacher) => teacher.name.length > 0)
+		.slice(0, 200)
 		.map((teacher, index) => ({
 			id: `teacher-${index + 1}-${slugify(teacher.name || `profil-${index + 1}`)}`,
 			name: teacher.name || `Profil ${index + 1}`,
@@ -286,6 +357,20 @@ function normalizeTeacherPayload(teachers) {
 			losses: 0,
 			matches: 0,
 		}));
+}
+
+function sanitizeImageUrl(value) {
+	const input = String(value || "").trim();
+	if (!input) {
+		return "";
+	}
+
+	try {
+		const parsed = new URL(input);
+		return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.toString() : "";
+	} catch {
+		return "";
+	}
 }
 
 function createStateFromTeachers(teachers) {
@@ -358,6 +443,107 @@ function serializeState(state) {
 		queue: state.queue,
 		currentPair: state.currentPair,
 	};
+}
+
+function buildAuthState(request) {
+	return {
+		isAdmin: isAuthenticated(request),
+		adminConfigured: isAdminConfigured(),
+	};
+}
+
+function requireAdmin(request, response, next) {
+	if (!isAdminConfigured()) {
+		response.status(503).json({ error: "Admin-Zugang ist noch nicht konfiguriert." });
+		return;
+	}
+
+	if (!isAuthenticated(request)) {
+		response.status(401).json({ error: "Admin-Anmeldung erforderlich." });
+		return;
+	}
+
+	next();
+}
+
+function isAdminConfigured() {
+	return adminPassword.length > 0 && sessionSecret.length > 0;
+}
+
+function isAuthenticated(request) {
+	if (!isAdminConfigured()) {
+		return false;
+	}
+
+	const cookies = parseCookies(request.headers.cookie || "");
+	const token = cookies[ADMIN_COOKIE_NAME];
+	if (!token) {
+		return false;
+	}
+
+	const payload = verifySessionToken(token);
+	return Boolean(payload && payload.role === "admin" && payload.exp > Date.now());
+}
+
+function createSessionToken() {
+	const payload = {
+		role: "admin",
+		exp: Date.now() + SESSION_TTL_MS,
+	};
+	const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+	const signature = crypto.createHmac("sha256", sessionSecret).update(encoded).digest("base64url");
+	return `${encoded}.${signature}`;
+}
+
+function verifySessionToken(token) {
+	const parts = String(token || "").split(".");
+	if (parts.length !== 2) {
+		return null;
+	}
+
+	const [encoded, signature] = parts;
+	const expected = crypto.createHmac("sha256", sessionSecret).update(encoded).digest("base64url");
+	if (!safeCompare(signature, expected)) {
+		return null;
+	}
+
+	try {
+		return JSON.parse(Buffer.from(encoded, "base64url").toString("utf8"));
+	} catch {
+		return null;
+	}
+}
+
+function buildSessionCookie(token) {
+	return `${ADMIN_COOKIE_NAME}=${token}; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}; Path=/; HttpOnly; SameSite=Lax${isProduction ? "; Secure" : ""}`;
+}
+
+function clearSessionCookie() {
+	return `${ADMIN_COOKIE_NAME}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax${isProduction ? "; Secure" : ""}`;
+}
+
+function parseCookies(cookieHeader) {
+	return cookieHeader.split(";").reduce((cookies, part) => {
+		const [key, ...rest] = part.trim().split("=");
+		if (!key) {
+			return cookies;
+		}
+		cookies[key] = rest.join("=");
+		return cookies;
+	}, {});
+}
+
+function passwordsMatch(input, expected) {
+	return safeCompare(input, expected);
+}
+
+function safeCompare(left, right) {
+	const leftBuffer = Buffer.from(String(left));
+	const rightBuffer = Buffer.from(String(right));
+	if (leftBuffer.length !== rightBuffer.length) {
+		return false;
+	}
+	return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 function findTeacher(state, id) {
