@@ -18,6 +18,10 @@
 				<p class="hero-copy">
 					Immer zwei Profile gegeneinander, ein Klick entscheidet. Der Gewinner bleibt und tritt direkt gegen die nächste Person an.
 				</p>
+				<div class="hero-tags" aria-label="Zugriffshinweise">
+					<span>Voting ist offen</span>
+					<span>Verwaltung nur für Admins</span>
+				</div>
 			</div>
 			<div class="hero-stats" aria-label="Spielstatus">
 				<div class="hero-stat">
@@ -80,16 +84,19 @@
 							<p class="kicker">Admin</p>
 							<h2>Verwaltung</h2>
 						</div>
+						<button type="button" id="admin-toggle" class="secondary-button secondary-button-inline">Admin öffnen</button>
 					</div>
 					<p id="auth-status" class="panel-note">Admin-Status wird geladen.</p>
-					<form id="admin-form" class="admin-form">
-						<label>
-							<span class="sr-only">Admin-Passwort</span>
-							<input id="admin-password" type="password" autocomplete="current-password" placeholder="Admin-Passwort">
-						</label>
-						<button type="submit" id="login-button" class="primary-button">Anmelden</button>
-					</form>
-					<button type="button" id="logout-button" class="secondary-button secondary-button-compact" hidden>Abmelden</button>
+					<div id="admin-body" hidden>
+						<form id="admin-form" class="admin-form">
+							<label>
+								<span class="sr-only">Admin-Passwort</span>
+								<input id="admin-password" type="password" autocomplete="current-password" placeholder="Admin-Passwort">
+							</label>
+							<button type="submit" id="login-button" class="primary-button">Anmelden</button>
+						</form>
+						<button type="button" id="logout-button" class="secondary-button secondary-button-compact" hidden>Abmelden</button>
+					</div>
 				</section>
 
 				<section class="panel control-panel">
@@ -100,8 +107,9 @@
 						</div>
 					</div>
 					<p class="panel-note">
-						Du kannst Namen, Fach und optional ein Bild pro Zeile eintragen. Format: Name | Fach | Bild-URL
+						Du kannst entweder `Name | Fach | Bild-URL` oder Rohlisten wie `Name (Kürzel), Fach/Fach` pro Zeile einfügen.
 					</p>
+					<p id="control-lock-note" class="lock-note">Bearbeiten ist nur mit Admin-Rechten möglich.</p>
 					<textarea id="teacher-input" rows="10" spellcheck="false"></textarea>
 					<div class="control-actions">
 						<button type="button" id="apply-button" class="primary-button">Profile übernehmen</button>

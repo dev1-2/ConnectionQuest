@@ -279,14 +279,44 @@ function parseTeacherInput(input) {
 		.split(/\r?\n/)
 		.map((line) => line.trim())
 		.filter(Boolean)
-		.map((line) => {
-			const [namePart = "", subjectPart = "", imagePart = ""] = line.split("|").map((part) => part.trim());
-			return {
-				name: namePart,
-				subject: subjectPart,
-				image: imagePart,
-			};
-		});
+		.map(parseTeacherLine)
+		.filter((teacher) => teacher.name.length > 0);
+}
+
+function parseTeacherLine(line) {
+	if (line.includes("|")) {
+		const [namePart = "", subjectPart = "", imagePart = ""] = line.split("|").map((part) => part.trim());
+		return {
+			name: namePart,
+			subject: subjectPart,
+			image: imagePart,
+		};
+	}
+
+	const rawMatch = line.match(/^(.*?)\s*\(([^)]*)\)\s*,\s*(.*)$/);
+	if (rawMatch) {
+		return {
+			name: rawMatch[1].trim(),
+			subject: rawMatch[3].trim(),
+			image: "",
+		};
+	}
+
+	const fallbackParts = line.split(",");
+	if (fallbackParts.length >= 2) {
+		const subject = fallbackParts.pop().trim();
+		return {
+			name: fallbackParts.join(",").trim(),
+			subject,
+			image: "",
+		};
+	}
+
+	return {
+		name: line.trim(),
+		subject: "",
+		image: "",
+	};
 }
 
 function formatTeacherInput(teachers) {
