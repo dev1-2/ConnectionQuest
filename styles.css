@@ -529,6 +529,7 @@ textarea {
 	.page-shell {
 		width: min(100% - 1rem, 100%);
 		padding-top: 0.75rem;
+		padding-bottom: 1.5rem;
 	}
 
 	.hero-panel,
@@ -538,8 +539,31 @@ textarea {
 		border-radius: 24px;
 	}
 
+	.hero-panel,
+	.panel,
+	.battle-panel {
+		padding: 1rem;
+	}
+
+	h1 {
+		font-size: clamp(2.35rem, 12vw, 3.2rem);
+	}
+
 	.hero-stats {
 		grid-template-columns: 1fr;
+	}
+
+	.hero-stat strong {
+		font-size: 1.45rem;
+	}
+
+	.hero-tags {
+		gap: 0.45rem;
+	}
+
+	.hero-tags span {
+		font-size: 0.72rem;
+		padding: 0.38rem 0.65rem;
 	}
 
 	.panel-head {
@@ -547,21 +571,118 @@ textarea {
 		align-items: start;
 	}
 
+	.panel-note,
+	#battle-status {
+		font-size: 0.92rem;
+		line-height: 1.45;
+	}
+
 	.control-header {
 		flex-direction: column;
 		align-items: start;
 	}
 
-	.h1 {
-		font-size: 3rem;
+	.battle-stage {
+		gap: 0.7rem;
 	}
 
-	.textarea {
+	.teacher-card {
+		padding: 0.85rem;
+		min-width: 0;
+	}
+
+	.vote-hint {
+		width: 100%;
+		justify-content: center;
+		margin-bottom: 0.75rem;
+	}
+
+	.portrait-frame {
 		min-height: 220px;
+		margin-bottom: 0.8rem;
+	}
+
+	.avatar-badge {
+		font-size: clamp(3rem, 16vw, 4.7rem);
+	}
+
+	.card-copy h3 {
+		font-size: clamp(1.35rem, 7vw, 1.8rem);
+	}
+
+	.card-copy p {
+		font-size: 0.92rem;
+	}
+
+	.versus-mark {
+		width: 54px;
+		height: 54px;
+		font-size: 1.2rem;
+	}
+
+	.winner-banner {
+		padding: 0.9rem 1rem;
+		font-size: 0.94rem;
+	}
+
+	textarea {
+		min-height: 190px;
+		padding: 0.9rem;
+	}
+
+	.control-actions {
+		flex-direction: column;
+	}
+
+	.secondary-button,
+	.primary-button {
+		min-height: 52px;
+	}
+
+	.secondary-button-inline,
+	.secondary-button-compact {
+		width: 100%;
 	}
 
 	.ranking-list li {
 		align-items: start;
 		flex-direction: column;
+		gap: 0.45rem;
+	}
+
+	.ranking-rank {
+		min-width: 0;
+	}
+	}
+
+@media (max-width: 430px) {
+	.page-shell {
+		width: min(100% - 0.75rem, 100%);
+	}
+
+	.hero-panel,
+	.panel,
+	.battle-panel,
+	.teacher-card {
+		border-radius: 20px;
+	}
+
+	.hero-panel,
+	.panel,
+	.battle-panel {
+		padding: 0.85rem;
+	}
+
+	h2 {
+		font-size: 1.55rem;
+	}
+
+	.portrait-frame {
+		min-height: 190px;
+	}
+
+	.vote-hint {
+		font-size: 0.64rem;
+	}
 	}
 }
