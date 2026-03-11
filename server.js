@@ -69,7 +69,7 @@ app.disable("x-powered-by");
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "1mb" }));
 app.get("/", (_request, response) => {
-	response.sendFile(path.join(publicDir, "Welcome.html"));
+	response.sendFile(path.join(publicDir, "index.html"));
 });
 app.use("/api/", rateLimit({
 	windowMs: 15 * 60 * 1000,
