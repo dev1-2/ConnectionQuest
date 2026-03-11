@@ -3,133 +3,62 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Lehrer Ranking</title>
+	<title>Connection Quest Intro</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="styles.css">
+	<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Unbounded:wght@600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Welcome.css">
 </head>
 <body>
-	<div class="page-shell">
-		<header class="hero-panel">
-			<div>
-				<p class="kicker">Lokales Vergleichsspiel</p>
-				<h1>Lehrer Ranking</h1>
-				<p class="hero-copy">
-					Immer zwei Profile gegeneinander, ein Klick entscheidet. Der Gewinner bleibt und tritt direkt gegen die nächste Person an.
-				</p>
-				<div class="hero-tags" aria-label="Zugriffshinweise">
-					<span>Voting ist offen</span>
-					<span>Verwaltung nur für Admins</span>
+	<div class="film-grain" aria-hidden="true"></div>
+	<div class="vignette" aria-hidden="true"></div>
+
+	<main class="intro-page">
+		<section class="mono-stage">
+			<div class="corner-mark corner-mark-top-left" aria-hidden="true"></div>
+			<div class="corner-mark corner-mark-top-right" aria-hidden="true"></div>
+			<div class="corner-mark corner-mark-bottom-left" aria-hidden="true"></div>
+			<div class="corner-mark corner-mark-bottom-right" aria-hidden="true"></div>
+
+			<header class="stage-header">
+				<p class="stage-label">Intro Sequence</p>
+				<p class="stage-index">01 / CQ</p>
+			</header>
+
+			<div class="hero-stack">
+				<div class="title-block">
+					<p class="lead-tag">Anonymous web craft</p>
+					<p id="intro-prefix" class="intro-prefix">Welcome to</p>
+					<h1 id="main-title" class="main-title" data-text="Connection Quest" aria-label="Connection Quest"></h1>
+					<p id="credit-line" class="credit-line" data-text="made by Light and Frieren" aria-label="made by Light and Frieren"></p>
+				</div>
+
+				<div class="info-ribbon" aria-label="Intro Informationen">
+					<div class="ribbon-item">
+						<p class="info-label">Studio</p>
+						<p class="info-value">Light and Frieren</p>
+					</div>
+					<div class="ribbon-item">
+						<p class="info-label">Mood</p>
+						<p class="info-value">Black and White</p>
+					</div>
+					<div class="ribbon-item ribbon-item-wide">
+						<p class="info-label">Statement</p>
+						<p class="info-copy">Die ungefilterte Wahrheit</p>
+					</div>
 				</div>
 			</div>
-			<div class="hero-stats" aria-label="Spielstatus">
-				<div class="hero-stat">
-					<span>Runden</span>
-					<strong id="round-count">0</strong>
+
+			<div class="stage-footer">
+				<p id="status-line" class="status-line">letters incoming</p>
+				<div class="action-row">
+					<a id="enter-link" class="enter-link is-locked" href="ConnectionQuest.html" aria-disabled="true">Enter Connection Quest</a>
+					<a class="ghost-link" href="index.html">Lehrer Ranking</a>
 				</div>
-				<div class="hero-stat">
-					<span>Profile</span>
-					<strong id="teacher-count">0</strong>
-				</div>
-				<button type="button" id="reset-button" class="secondary-button">Duell neu starten</button>
 			</div>
-		</header>
+		</section>
+	</main>
 
-		<main class="layout-grid">
-			<section class="battle-panel">
-				<div class="panel-head">
-					<div>
-						<p class="kicker">Aktuelles Duell</p>
-						<h2>Wähle links oder rechts</h2>
-					</div>
-					<p id="battle-status" class="panel-note">Klicke auf eine Karte, um den Gewinner festzulegen.</p>
-				</div>
-
-				<div id="battle-stage" class="battle-stage" aria-live="polite">
-					<button type="button" id="left-card" class="teacher-card teacher-card-left">
-						<span class="vote-hint">Links gewinnt</span>
-						<div class="portrait-frame">
-							<div id="left-avatar" class="avatar-badge">L</div>
-						</div>
-						<div class="card-copy">
-							<h3 id="left-name">Lehrkraft links</h3>
-							<p id="left-subject">Fach</p>
-							<p id="left-meta">0 Siege</p>
-						</div>
-					</button>
-
-					<div class="versus-mark" aria-hidden="true">VS</div>
-
-					<button type="button" id="right-card" class="teacher-card teacher-card-right">
-						<span class="vote-hint">Rechts gewinnt</span>
-						<div class="portrait-frame">
-							<div id="right-avatar" class="avatar-badge">R</div>
-						</div>
-						<div class="card-copy">
-							<h3 id="right-name">Lehrkraft rechts</h3>
-							<p id="right-subject">Fach</p>
-							<p id="right-meta">0 Siege</p>
-						</div>
-					</button>
-				</div>
-
-				<div id="winner-banner" class="winner-banner" hidden></div>
-			</section>
-
-			<aside class="side-column">
-				<section class="panel admin-panel">
-					<div class="panel-head compact">
-						<div>
-							<p class="kicker">Admin</p>
-							<h2>Verwaltung</h2>
-						</div>
-						<button type="button" id="admin-toggle" class="secondary-button secondary-button-inline">Admin öffnen</button>
-					</div>
-					<p id="auth-status" class="panel-note">Admin-Status wird geladen.</p>
-					<div id="admin-body" hidden>
-						<form id="admin-form" class="admin-form">
-							<label>
-								<span class="sr-only">Admin-Passwort</span>
-								<input id="admin-password" type="password" autocomplete="current-password" placeholder="Admin-Passwort">
-							</label>
-							<button type="submit" id="login-button" class="primary-button">Anmelden</button>
-						</form>
-						<button type="button" id="logout-button" class="secondary-button secondary-button-compact" hidden>Abmelden</button>
-					</div>
-				</section>
-
-				<section class="panel control-panel">
-					<div class="panel-head compact">
-						<div>
-							<p class="kicker">Daten</p>
-							<h2>Profile bearbeiten</h2>
-						</div>
-					</div>
-					<p class="panel-note">
-						Du kannst entweder `Name | Fach | Bild-URL` oder Rohlisten wie `Name (Kürzel), Fach/Fach` pro Zeile einfügen.
-					</p>
-					<p id="control-lock-note" class="lock-note">Bearbeiten ist nur mit Admin-Rechten möglich.</p>
-					<textarea id="teacher-input" rows="10" spellcheck="false"></textarea>
-					<div class="control-actions">
-						<button type="button" id="apply-button" class="primary-button">Profile übernehmen</button>
-					</div>
-				</section>
-
-				<section class="panel ranking-panel">
-					<div class="panel-head compact">
-						<div>
-							<p class="kicker">Ergebnis</p>
-							<h2>Rangliste</h2>
-						</div>
-						<button type="button" id="purge-button" class="danger-button" hidden>🗑 DB löschen</button>
-					</div>
-					<ol id="ranking-list" class="ranking-list"></ol>
-				</section>
-			</aside>
-		</main>
-	</div>
-
-	<script src="script.js"></script>
+	<script src="Welcome.js"></script>
 </body>
 </html>
