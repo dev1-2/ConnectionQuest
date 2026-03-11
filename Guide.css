@@ -1,0 +1,218 @@
+:root {
+	--bg: #050505;
+	--panel: rgba(255, 255, 255, 0.05);
+	--line: rgba(255, 255, 255, 0.12);
+	--text: #f4f1ea;
+	--muted: rgba(244, 241, 234, 0.66);
+	--accent: #ffd166;
+	--accent-strong: #ef476f;
+	--shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	font-family: "Space Grotesk", sans-serif;
+	background:
+		radial-gradient(circle at top right, rgba(239, 71, 111, 0.18), transparent 28%),
+		radial-gradient(circle at left center, rgba(255, 209, 102, 0.16), transparent 22%),
+		var(--bg);
+	color: var(--text);
+}
+
+a {
+	color: inherit;
+}
+
+ul {
+	margin: 0;
+	padding-left: 1.15rem;
+	color: var(--muted);
+	line-height: 1.7;
+}
+
+h1,
+h2,
+h3,
+strong {
+	margin: 0;
+	font-family: "Bebas Neue", sans-serif;
+	font-weight: 400;
+	letter-spacing: 0.03em;
+}
+
+.guide-shell {
+	width: min(1240px, calc(100% - 2rem));
+	margin: 0 auto;
+	padding: 2rem 0 3rem;
+}
+
+.guide-layout {
+	display: grid;
+	gap: 1.2rem;
+	margin-top: 1.5rem;
+}
+
+.card {
+	padding: 1.5rem;
+	border-radius: 28px;
+	background: var(--panel);
+	border: 1px solid rgba(255, 255, 255, 0.38);
+	box-shadow: var(--shadow);
+	backdrop-filter: blur(18px);
+}
+
+.guide-hero {
+	display: flex;
+	justify-content: space-between;
+	align-items: end;
+	gap: 1rem;
+}
+
+.eyebrow {
+	margin: 0 0 0.35rem;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	font-size: 0.74rem;
+	color: var(--muted);
+}
+
+h1 {
+	font-size: clamp(3.5rem, 8vw, 6rem);
+	line-height: 0.92;
+}
+
+h2 {
+	font-size: 2.2rem;
+	line-height: 0.95;
+}
+
+h3 {
+	font-size: 1.65rem;
+	line-height: 0.95;
+}
+
+.hero-copy,
+.section-copy,
+.explain-card p,
+.step-card p {
+	color: var(--muted);
+	line-height: 1.7;
+}
+
+.hero-actions,
+.steps-grid,
+.explain-grid,
+.narrow-grid {
+	display: grid;
+	gap: 1rem;
+}
+
+.hero-actions {
+	min-width: 260px;
+	align-self: center;
+}
+
+.primary-link,
+.ghost-link,
+.explain-card a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.8rem 1rem;
+	border-radius: 999px;
+	text-decoration: none;
+	font-weight: 700;
+	border: 1px solid var(--line);
+}
+
+.primary-link {
+	background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+	color: #111;
+	border-color: transparent;
+}
+
+.ghost-link,
+.explain-card a {
+	background: rgba(255, 255, 255, 0.06);
+}
+
+.steps-grid {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	margin-top: 1rem;
+}
+
+.step-card,
+.explain-card {
+	padding: 1.1rem;
+	border-radius: 22px;
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid var(--line);
+}
+
+.step-card strong {
+	font-size: 1.4rem;
+}
+
+.section-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: end;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.explain-grid {
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.narrow-grid {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.explain-card {
+	display: grid;
+	gap: 0.8rem;
+}
+
+.explain-card a {
+	justify-self: start;
+}
+
+@media (max-width: 1080px) {
+	.guide-hero,
+	.section-head {
+		flex-direction: column;
+		align-items: start;
+	}
+
+	.steps-grid,
+	.explain-grid,
+	.narrow-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 720px) {
+	.guide-shell {
+		width: min(100% - 1rem, 100%);
+		padding-top: 1rem;
+	}
+
+	.steps-grid,
+	.explain-grid,
+	.narrow-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.hero-actions,
+	.primary-link,
+	.ghost-link,
+	.explain-card a {
+		width: 100%;
+	}
+}

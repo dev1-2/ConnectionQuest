@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
+	<title>Connection Quest Hub</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Hub.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="hub-hero">
+			<section class="hero-card spotlight">
+				<p class="eyebrow">COMMAND HUB</p>
+				<h1>Connection Quest Hub</h1>
+				<p class="hero-copy">Das ist jetzt der klare Einstiegspunkt fuer das ganze Projekt. Von hier aus sind alle Bereiche nach Funktion gruppiert statt als unuebersichtlicher Link-Block verteilt.</p>
+				<div class="hero-actions">
+					<a class="hero-link" href="ConnectionQuest.html">Journal</a>
+					<a class="hero-link" href="Games.html">Games</a>
+					<a class="hero-link" href="Leaderboard.html">Leaderboard</a>
+					<a class="ghost-link" href="Profile.html">Profil</a>
+					<a class="ghost-link" href="Guide.html">Guide</a>
+				</div>
+			</section>
+
+			<section class="hero-card pulse-card" aria-live="polite">
+				<p class="mini-label">Live Snapshot</p>
+				<h2 id="hub-title">System wartet</h2>
+				<p id="hub-copy" class="section-copy">Sobald Daten geladen sind, zeigt der Hub hier den schnellsten Einstieg fuer heute.</p>
+				<div id="hub-topline" class="topline-grid"></div>
+			</section>
+		</header>
+
+		<main class="hub-layout">
+			<section class="card cluster-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Core</p>
+						<h2>Die Hauptbereiche</h2>
+					</div>
+					<p class="section-copy">Die wichtigsten Orte fuer Nutzung und Rueckkehrdruck.</p>
+				</div>
+				<div class="hub-grid">
+					<a class="hub-link accent-coral" href="ConnectionQuest.html"><strong>Journal</strong><span>Logs, XP, Kalender und Hauptfortschritt</span></a>
+					<a class="hub-link accent-teal" href="Games.html"><strong>Games</strong><span>Arcade-Loops, Duels und Score-Schub</span></a>
+					<a class="hub-link accent-gold" href="Leaderboard.html"><strong>Leaderboard</strong><span>Vergleich, Platzierung und Rangdruck</span></a>
+					<a class="hub-link accent-sky" href="Profile.html"><strong>Profil</strong><span>Dein Zentrum fuer Identitaet und Fokus</span></a>
+				</div>
+			</section>
+
+			<section class="card cluster-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Social</p>
+						<h2>Netz und Signale</h2>
+					</div>
+					<p class="section-copy">Alles, was das Projekt wie ein Netzwerk wirken laesst.</p>
+				</div>
+				<div class="hub-grid">
+					<a class="hub-link" href="Community.html"><strong>Community</strong><span>Live-Feed, Trends und Segment-Leader</span></a>
+					<a class="hub-link" href="Network.html"><strong>Network</strong><span>Rivalen, Cluster und Discovery-Wege</span></a>
+					<a class="hub-link" href="Notifications.html"><strong>Inbox</strong><span>Warnungen, Progress und soziale Trigger</span></a>
+					<a class="hub-link" href="Events.html"><strong>Events</strong><span>Spotlights, Themen und Live-Fokus</span></a>
+				</div>
+			</section>
+
+			<section class="card cluster-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Meta</p>
+						<h2>System und Status</h2>
+					</div>
+					<p class="section-copy">Die Zusatzbereiche fuer Belohnungen und Gesamtueberblick.</p>
+				</div>
+				<div class="hub-grid">
+					<a class="hub-link" href="Rewards.html"><strong>Rewards</strong><span>Unlocks, Titel und kosmetische Progression</span></a>
+					<a class="hub-link" href="Analytics.html"><strong>Analytics</strong><span>Produkt-Health, Segmente und Retention-Linse</span></a>
+					<a class="hub-link" href="index.html"><strong>Intro</strong><span>Cinematic Einstieg und erster Touchpoint</span></a>
+					<a class="hub-link" href="LehrerRanking.html"><strong>Teacher Ranking</strong><span>Separater Ranking-Zweig des Projekts</span></a>
+				</div>
+			</section>
+
+			<section class="card focus-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Guided Start</p>
+						<h2>Heute sinnvoll starten</h2>
+					</div>
+					<p class="section-copy">Der Hub reduziert die Komplexitaet auf klare naechste Wege. Wenn Nutzer alles erklaert brauchen, fuehrt der Guide Schritt fuer Schritt durch die Plattform.</p>
+				</div>
+				<div id="hub-focus" class="focus-list empty-state">Noch keine Fokus-Routen geladen.</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="Hub.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

@@ -9,6 +9,14 @@
 	"theme_color": "#050505",
 	"shortcuts": [
 		{
+			"name": "Hub",
+			"url": "/Hub.html"
+		},
+		{
+			"name": "Guide",
+			"url": "/Guide.html"
+		},
+		{
 			"name": "Journal",
 			"url": "/ConnectionQuest.html"
 		},
