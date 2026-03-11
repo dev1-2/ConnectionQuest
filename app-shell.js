@@ -16,6 +16,11 @@ const PAGE_META = {
 		category: "Start",
 		quickLinks: ["Hub.html", "ConnectionQuest.html", "Games.html", "Leaderboard.html"],
 	},
+	"SocialRank.html": {
+		title: "Social Rank",
+		category: "Social",
+		quickLinks: ["Hub.html", "Network.html", "Community.html", "Guide.html"],
+	},
 	"ConnectionQuest.html": {
 		title: "Journal",
 		category: "Core",
@@ -84,7 +89,7 @@ const NAV_GROUPS = [
 	},
 	{
 		label: "Social",
-		links: ["Community.html", "Network.html", "Notifications.html"],
+		links: ["Community.html", "Network.html", "SocialRank.html", "Notifications.html"],
 	},
 	{
 		label: "Meta",

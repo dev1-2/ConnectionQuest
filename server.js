@@ -125,6 +125,14 @@ const CQ_WEEKLY_CHALLENGES = [
 	},
 ];
 
+const CQ_SOCIAL_RANK_GROUPS = [
+	{ id: "elite-aura", title: "Elite Aura", min: 9, blurb: "Absolute Spitzenklasse mit maximalem sozialen Zug." },
+	{ id: "high-orbit", title: "High Orbit", min: 8, blurb: "Sehr stark wahrgenommen und klar ueber dem Durchschnitt." },
+	{ id: "social-core", title: "Social Core", min: 6, blurb: "Stabiler Kernbereich mit guter Resonanz." },
+	{ id: "open-circle", title: "Open Circle", min: 4, blurb: "Sichtbar, aber noch mit Luft nach oben." },
+	{ id: "low-signal", title: "Low Signal", min: 1, blurb: "Momentan eher schwache Wirkung im Ranking." },
+];
+
 if (!databaseUrl) {
 	throw new Error("DATABASE_URL is required to start the server.");
 }
@@ -175,6 +183,14 @@ app.get("/api/state", async (request, response) => {
 			state: serializeState(state),
 			auth: buildAuthState(request),
 		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.get("/api/admin/status", async (request, response) => {
+	try {
+		response.json({ auth: buildAuthState(request) });
 	} catch (error) {
 		sendServerError(response, error);
 	}
@@ -390,6 +406,123 @@ app.get("/api/cq/pulse", async (request, response) => {
 			weeklyChallenges: currentUser && engagement ? buildCqWeeklyChallenges(engagement) : [],
 			recommendations: currentUser && engagement ? buildCqRecommendations(currentUser, engagement) : buildAnonymousRecommendations(),
 			returnBonus: currentUser && engagement ? buildCqReturnBonus(currentUser, engagement) : buildAnonymousReturnBonus(),
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.get("/api/cq/social-rank", async (request, response) => {
+	try {
+		const session = await loadCqSession(request);
+		const [socialRank, currentUser] = await Promise.all([
+			loadCqSocialRankOverview(session?.playerId || null),
+			session ? loadCqPlayerProfile(session.playerId) : Promise.resolve(null),
+		]);
+
+		response.json({
+			currentUserId: session?.playerId || null,
+			currentUser,
+			...socialRank,
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.post("/api/cq/social-rank/ratings", async (request, response) => {
+	try {
+		const session = await requireCqPlayer(request, response);
+		if (!session) {
+			return;
+		}
+
+		const payload = normalizeSocialRatingPayload(request.body);
+		if (!payload) {
+			response.status(400).json({ error: "Bitte Name und Bewertung von 1 bis 10 angeben." });
+			return;
+		}
+
+		await upsertCqSocialRating(session.playerId, payload);
+		const [currentUser, socialRank] = await Promise.all([
+			loadCqPlayerProfile(session.playerId),
+			loadCqSocialRankOverview(session.playerId),
+		]);
+
+		response.status(201).json({
+			message: `${payload.name} wurde mit ${payload.rating}/10 bewertet.`,
+			currentUser,
+			...socialRank,
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.post("/api/cq/inner-circle/redeem", async (request, response) => {
+	try {
+		const session = await requireCqPlayer(request, response);
+		if (!session) {
+			return;
+		}
+
+		const inviteCode = String(request.body?.inviteCode || "").trim().toUpperCase();
+		const password = String(request.body?.password || "").trim();
+		if (!inviteCode || password.length < 4) {
+			response.status(400).json({ error: "Bitte Invite-Code und Passwort eingeben." });
+			return;
+		}
+
+		const redeemResult = await redeemInnerCircleInvite(session.playerId, inviteCode, password);
+		const [currentUser, socialRank] = await Promise.all([
+			loadCqPlayerProfile(session.playerId),
+			loadCqSocialRankOverview(session.playerId),
+		]);
+
+		response.json({
+			message: redeemResult.message,
+			currentUser,
+			...socialRank,
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.get("/api/admin/inner-circle", requireAdmin, async (request, response) => {
+	try {
+		const [invites, members] = await Promise.all([
+			loadInnerCircleInvites(),
+			loadInnerCircleMembers(),
+		]);
+		response.json({ invites, members, auth: buildAuthState(request) });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.post("/api/admin/inner-circle/invites", requireAdmin, async (request, response) => {
+	try {
+		const label = String(request.body?.label || "").trim().slice(0, 48);
+		const password = String(request.body?.password || "").trim();
+		const expiresInDays = Math.max(1, Math.min(60, Number(request.body?.expiresInDays) || 14));
+		if (!label || password.length < 4) {
+			response.status(400).json({ error: "Bitte Label und Passwort mit mindestens 4 Zeichen angeben." });
+			return;
+		}
+
+		const invite = await createInnerCircleInvite({ label, password, expiresInDays });
+		const [invites, members] = await Promise.all([
+			loadInnerCircleInvites(),
+			loadInnerCircleMembers(),
+		]);
+
+		response.status(201).json({
+			message: `Invite ${invite.inviteCode} wurde erstellt.`,
+			invite,
+			invites,
+			members,
+			auth: buildAuthState(request),
 		});
 	} catch (error) {
 		sendServerError(response, error);
@@ -788,6 +921,8 @@ async function initializeDatabase() {
 			xp INTEGER NOT NULL DEFAULT 0,
 			level INTEGER NOT NULL DEFAULT 1,
 			score INTEGER NOT NULL DEFAULT 0,
+			status_tier VARCHAR(24) NOT NULL DEFAULT 'standard',
+			inner_circle_joined_at TIMESTAMPTZ,
 			unlocked_achievements INTEGER NOT NULL DEFAULT 0,
 			placement INTEGER NOT NULL DEFAULT 0,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -825,12 +960,45 @@ async function initializeDatabase() {
 			payload JSONB NOT NULL DEFAULT '{}'::jsonb,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		);
+
+		CREATE TABLE IF NOT EXISTS cq_social_people (
+			id TEXT PRIMARY KEY,
+			name VARCHAR(48) NOT NULL,
+			name_key VARCHAR(48) NOT NULL UNIQUE,
+			created_by_player_id TEXT REFERENCES cq_players(id) ON DELETE SET NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		);
+
+		CREATE TABLE IF NOT EXISTS cq_social_ratings (
+			id TEXT PRIMARY KEY,
+			person_id TEXT NOT NULL REFERENCES cq_social_people(id) ON DELETE CASCADE,
+			player_id TEXT NOT NULL REFERENCES cq_players(id) ON DELETE CASCADE,
+			rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 10),
+			notes VARCHAR(180) NOT NULL DEFAULT '',
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE (person_id, player_id)
+		);
+
+		CREATE TABLE IF NOT EXISTS cq_inner_circle_invites (
+			id TEXT PRIMARY KEY,
+			invite_code VARCHAR(24) NOT NULL UNIQUE,
+			label VARCHAR(48) NOT NULL,
+			password_hash TEXT NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			expires_at TIMESTAMPTZ,
+			redeemed_by_player_id TEXT REFERENCES cq_players(id) ON DELETE SET NULL,
+			redeemed_at TIMESTAMPTZ
+		);
 	`);
 
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_sessions INTEGER NOT NULL DEFAULT 0");
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_wins INTEGER NOT NULL DEFAULT 0");
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_score INTEGER NOT NULL DEFAULT 0");
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_xp INTEGER NOT NULL DEFAULT 0");
+	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS status_tier VARCHAR(24) NOT NULL DEFAULT 'standard'");
+	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS inner_circle_joined_at TIMESTAMPTZ");
 
 	await pool.query("DELETE FROM cq_sessions WHERE expires_at <= NOW()");
 
@@ -1189,6 +1357,21 @@ function normalizeDuelGamePayload(body) {
 	return { gameType, opponentPlayerId, winnerPlayerId, summary };
 }
 
+function normalizeSocialRatingPayload(body) {
+	const name = normalizeSocialPersonName(body?.name);
+	const rating = Math.round(Number(body?.rating));
+	const notes = String(body?.notes || "").trim().slice(0, 180);
+	if (!name || !Number.isFinite(rating) || rating < 1 || rating > 10) {
+		return null;
+	}
+	return { name, rating, notes };
+}
+
+function normalizeSocialPersonName(value) {
+	const normalized = String(value || "").replace(/\s+/g, " ").trim().slice(0, 48);
+	return normalized.length >= 2 ? normalized : "";
+}
+
 function buildSingleGameRewards(gameType, rawScore) {
 	const config = CQ_SINGLE_GAMES[gameType];
 	const normalizedRawScore = Math.max(0, Math.min(config.maxRawScore, Math.round(rawScore)));
@@ -1199,12 +1382,257 @@ function buildSingleGameRewards(gameType, rawScore) {
 	};
 }
 
+async function upsertCqSocialRating(playerId, payload) {
+	const client = await pool.connect();
+	try {
+		await client.query("BEGIN");
+		const personResult = await client.query(
+			`INSERT INTO cq_social_people (id, name, name_key, created_by_player_id, updated_at)
+			 VALUES ($1, $2, $3, $4, NOW())
+			 ON CONFLICT (name_key) DO UPDATE SET name = EXCLUDED.name, updated_at = NOW()
+			 RETURNING id`,
+			[crypto.randomUUID(), payload.name, payload.name.toLowerCase(), playerId],
+		);
+		const personId = personResult.rows[0].id;
+		await client.query(
+			`INSERT INTO cq_social_ratings (id, person_id, player_id, rating, notes, created_at, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+			 ON CONFLICT (person_id, player_id)
+			 DO UPDATE SET rating = EXCLUDED.rating, notes = EXCLUDED.notes, updated_at = NOW()`,
+			[crypto.randomUUID(), personId, playerId, payload.rating, payload.notes],
+		);
+		await client.query("COMMIT");
+	} catch (error) {
+		await client.query("ROLLBACK");
+		throw error;
+	} finally {
+		client.release();
+	}
+}
+
+async function loadCqSocialRankOverview(currentPlayerId) {
+	const [directoryResult, myRatingsResult, membersResult, currentPlayerResult] = await Promise.all([
+		pool.query(
+			`SELECT p.id, p.name,
+			        COALESCE(ROUND(AVG(r.rating)::numeric, 2), 0) AS avg_rating,
+			        COUNT(r.id)::int AS rating_count,
+			        MAX(r.updated_at) AS last_rated_at
+			 FROM cq_social_people p
+			 LEFT JOIN cq_social_ratings r ON r.person_id = p.id
+			 GROUP BY p.id, p.name
+			 HAVING COUNT(r.id) > 0
+			 ORDER BY avg_rating DESC, rating_count DESC, p.name ASC
+			 LIMIT 80`,
+		),
+		currentPlayerId ? pool.query(
+			`SELECT p.id, p.name, r.rating, r.notes, r.updated_at
+			 FROM cq_social_ratings r
+			 JOIN cq_social_people p ON p.id = r.person_id
+			 WHERE r.player_id = $1
+			 ORDER BY r.updated_at DESC, p.name ASC
+			 LIMIT 12`,
+			[currentPlayerId],
+		) : Promise.resolve({ rows: [] }),
+		loadInnerCircleMembers(),
+		currentPlayerId ? pool.query(
+			"SELECT handle, status_tier, inner_circle_joined_at FROM cq_players WHERE id = $1",
+			[currentPlayerId],
+		) : Promise.resolve({ rows: [] }),
+	]);
+
+	const directory = directoryResult.rows.map((row) => serializeSocialRankPerson(row));
+	const groups = CQ_SOCIAL_RANK_GROUPS.map((group) => ({
+		id: group.id,
+		title: group.title,
+		blurb: group.blurb,
+		people: directory.filter((person) => person.rankGroup.id === group.id).slice(0, 12),
+	})).filter((group) => group.people.length > 0);
+
+	return {
+		directory,
+		groups,
+		myRatings: myRatingsResult.rows.map((row) => ({
+			id: row.id,
+			name: row.name,
+			rating: Number(row.rating) || 0,
+			notes: row.notes,
+			updatedAt: row.updated_at,
+		})),
+		community: {
+			totalPeople: directory.length,
+			totalRatings: directory.reduce((sum, person) => sum + person.ratingCount, 0),
+			topBand: groups[0]?.title || "Noch kein Rang",
+		},
+		innerCircle: buildInnerCirclePayload(currentPlayerResult.rows[0] || null, membersResult, directory),
+	};
+}
+
+function serializeSocialRankPerson(row) {
+	const averageRating = Number(row.avg_rating) || 0;
+	const rankGroup = resolveSocialRankGroup(averageRating);
+	return {
+		id: row.id,
+		name: row.name,
+		averageRating,
+		ratingCount: Number(row.rating_count) || 0,
+		lastRatedAt: row.last_rated_at,
+		rankGroup,
+	};
+}
+
+function resolveSocialRankGroup(averageRating) {
+	const group = CQ_SOCIAL_RANK_GROUPS.find((entry) => averageRating >= entry.min) || CQ_SOCIAL_RANK_GROUPS[CQ_SOCIAL_RANK_GROUPS.length - 1];
+	return { id: group.id, title: group.title, blurb: group.blurb };
+}
+
+function buildInnerCirclePayload(memberRow, members, directory) {
+	const isMember = memberRow?.status_tier === "inner-circle";
+	return {
+		isMember,
+		joinedAt: memberRow?.inner_circle_joined_at || null,
+		memberCount: members.length,
+		members,
+		lockedMessage: isMember ? null : "Nur Admin-Einladung plus Passwort bringen dich in den Inneren Kreis.",
+		secretBenefit: isMember ? buildInnerCircleSecretBenefit(directory) : null,
+	};
+}
+
+function buildInnerCircleSecretBenefit(directory) {
+	const shadowTargets = directory
+		.filter((person) => person.averageRating >= 8 && person.ratingCount <= 2)
+		.slice(0, 4)
+		.map((person) => ({
+			name: person.name,
+			averageRating: person.averageRating,
+			ratingCount: person.ratingCount,
+			reason: "Starker Schnitt, aber noch wenig beachtet.",
+		}));
+
+	return {
+		title: "Shadow Forecast",
+		copy: "Du bekommst einen verdeckten Blick auf starke Personen mit noch wenig Aufmerksamkeit.",
+		shadowTargets,
+	};
+}
+
+async function createInnerCircleInvite({ label, password, expiresInDays }) {
+	const inviteCode = `CIRCLE-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+	await pool.query(
+		`INSERT INTO cq_inner_circle_invites (id, invite_code, label, password_hash, expires_at)
+		 VALUES ($1, $2, $3, $4, NOW() + ($5 || ' days')::interval)`,
+		[crypto.randomUUID(), inviteCode, label, hashSecret(password), String(expiresInDays)],
+	);
+	return {
+		inviteCode,
+		label,
+		expiresAt: new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString(),
+	};
+}
+
+async function redeemInnerCircleInvite(playerId, inviteCode, password) {
+	const client = await pool.connect();
+	try {
+		await client.query("BEGIN");
+		const playerResult = await client.query(
+			"SELECT status_tier FROM cq_players WHERE id = $1 FOR UPDATE",
+			[playerId],
+		);
+		const player = playerResult.rows[0];
+		if (!player) {
+			throw new Error("Spieler konnte nicht geladen werden.");
+		}
+		if (player.status_tier === "inner-circle") {
+			throw new Error("Dieser Spieler ist bereits im Inneren Kreis.");
+		}
+
+		const inviteResult = await client.query(
+			`SELECT id, password_hash, redeemed_by_player_id, expires_at
+			 FROM cq_inner_circle_invites
+			 WHERE invite_code = $1
+			 FOR UPDATE`,
+			[inviteCode],
+		);
+		const invite = inviteResult.rows[0];
+		if (!invite) {
+			throw new Error("Invite-Code wurde nicht gefunden.");
+		}
+		if (invite.redeemed_by_player_id) {
+			throw new Error("Dieser Invite wurde bereits verwendet.");
+		}
+		if (invite.expires_at && new Date(invite.expires_at).getTime() <= Date.now()) {
+			throw new Error("Dieser Invite ist abgelaufen.");
+		}
+		if (!verifySecret(password, invite.password_hash)) {
+			throw new Error("Passwort fuer den Inneren Kreis ist falsch.");
+		}
+
+		await client.query(
+			`UPDATE cq_inner_circle_invites
+			 SET redeemed_by_player_id = $2,
+			     redeemed_at = NOW()
+			 WHERE id = $1`,
+			[invite.id, playerId],
+		);
+		await client.query(
+			`UPDATE cq_players
+			 SET status_tier = 'inner-circle',
+			     inner_circle_joined_at = NOW(),
+			     updated_at = NOW()
+			 WHERE id = $1`,
+			[playerId],
+		);
+		await refreshCqPlacements(client);
+		await client.query("COMMIT");
+		return { message: "Der Innere Kreis wurde freigeschaltet." };
+	} catch (error) {
+		await client.query("ROLLBACK");
+		throw error;
+	} finally {
+		client.release();
+	}
+}
+
+async function loadInnerCircleInvites() {
+	const result = await pool.query(
+		`SELECT invite_code, label, created_at, expires_at, redeemed_at, redeemed_by_player_id,
+		        CASE WHEN redeemed_by_player_id IS NULL AND (expires_at IS NULL OR expires_at > NOW()) THEN TRUE ELSE FALSE END AS is_active
+		 FROM cq_inner_circle_invites
+		 ORDER BY created_at DESC
+		 LIMIT 20`,
+	);
+	return result.rows.map((row) => ({
+		inviteCode: row.invite_code,
+		label: row.label,
+		createdAt: row.created_at,
+		expiresAt: row.expires_at,
+		redeemedAt: row.redeemed_at,
+		redeemedByPlayerId: row.redeemed_by_player_id || null,
+		isActive: Boolean(row.is_active),
+	}));
+}
+
+async function loadInnerCircleMembers() {
+	const result = await pool.query(
+		`SELECT handle, score, level, inner_circle_joined_at
+		 FROM cq_players
+		 WHERE status_tier = 'inner-circle'
+		 ORDER BY inner_circle_joined_at DESC NULLS LAST, handle ASC
+		 LIMIT 18`,
+	);
+	return result.rows.map((row) => ({
+		handle: row.handle,
+		score: Number(row.score) || 0,
+		level: Number(row.level) || 1,
+		joinedAt: row.inner_circle_joined_at,
+	}));
+}
+
 async function loadCqPlayerProfile(playerId) {
 	const [playerResult, entriesResult] = await Promise.all([
 		pool.query(
 			`SELECT id, handle, login_count, last_login_at, total_entries, unique_connections, type_variety,
 			        current_streak, best_month_count, game_sessions, game_wins, game_score, game_xp,
-			        xp, level, score, unlocked_achievements, placement,
+			        xp, level, score, status_tier, inner_circle_joined_at, unlocked_achievements, placement,
 			        created_at, updated_at
 			 FROM cq_players WHERE id = $1`,
 			[playerId],
@@ -1229,7 +1657,7 @@ async function loadCqLeaderboard() {
 	const result = await pool.query(
 		`SELECT id, handle, login_count, last_login_at, total_entries, unique_connections, type_variety,
 		        current_streak, best_month_count, game_sessions, game_wins, game_score, game_xp,
-		        xp, level, score, unlocked_achievements, placement,
+		        xp, level, score, status_tier, inner_circle_joined_at, unlocked_achievements, placement,
 		        created_at, updated_at
 		 FROM cq_players
 		 ORDER BY placement ASC, created_at ASC`,
@@ -1267,6 +1695,11 @@ function serializeCqPlayer(row, entries = []) {
 			xpToNextLevel: CQ_XP_PER_LEVEL,
 			progressPercent: Math.round(((xp % CQ_XP_PER_LEVEL) / CQ_XP_PER_LEVEL) * 100),
 			levelMessage: buildCqLevelMessage(Number(row.level) || 1, Number(row.total_entries) || 0),
+		},
+		status: {
+			tier: row.status_tier || "standard",
+			isInnerCircle: row.status_tier === "inner-circle",
+			innerCircleJoinedAt: row.inner_circle_joined_at || null,
 		},
 		entries: entries.map((entry) => ({
 			id: entry.id,

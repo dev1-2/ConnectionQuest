@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#060606">
+	<title>Connection Quest Social Rank</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="SocialRank.css">
+</head>
+<body>
+	<div class="rank-shell">
+		<header class="rank-hero card">
+			<div>
+				<p class="eyebrow">Social Rank Engine</p>
+				<h1>Menschen eintragen, 1 bis 10 bewerten, nach Ranggruppen sehen</h1>
+				<p class="hero-copy">Hier kannst du beliebige Personen anlegen, ihnen einen sozialen Rang geben und sofort sehen, wer im selben Band landet. Unten wartet der passwortgeschuetzte Innere Kreis.</p>
+			</div>
+			<div class="hero-actions">
+				<a class="hero-link" href="Hub.html">Hub</a>
+				<a class="hero-link" href="Network.html">Network</a>
+				<a class="ghost-link" href="Community.html">Community</a>
+				<a class="ghost-link" href="Guide.html">Guide</a>
+			</div>
+		</header>
+
+		<main class="rank-layout">
+			<section class="card composer-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Eintrag</p>
+						<h2>Neue Person bewerten</h2>
+					</div>
+					<p id="rank-auth-note" class="section-copy">Bitte zuerst als Spieler einloggen, damit deine Wertung gespeichert werden kann.</p>
+				</div>
+				<form id="rating-form" class="rating-form">
+					<label>
+						<span>Name</span>
+						<input id="person-name" name="name" type="text" maxlength="48" placeholder="z. B. Alex, Lea, Sam" required>
+					</label>
+					<label>
+						<span>Sozialer Rang</span>
+						<input id="person-rating" name="rating" type="range" min="1" max="10" step="1" value="7">
+						<strong id="rating-value">7 / 10</strong>
+					</label>
+					<label>
+						<span>Notiz</span>
+						<textarea id="person-notes" name="notes" maxlength="180" placeholder="Warum diese Bewertung?"></textarea>
+					</label>
+					<button id="rating-submit" type="submit" class="primary-button">Speichern</button>
+				</form>
+				<p id="rank-feedback" class="feedback"></p>
+			</section>
+
+			<section class="card status-card">
+				<p class="eyebrow">Dein Status</p>
+				<h2 id="status-title">Noch kein Spieler aktiv</h2>
+				<p id="status-copy" class="section-copy">Ohne Spieler-Session kannst du nur die oeffentlichen Ranggruppen sehen.</p>
+				<div id="status-pills" class="pill-row"></div>
+			</section>
+
+			<section class="card summary-card">
+				<p class="eyebrow">Community Snapshot</p>
+				<h2>Gesamtbild</h2>
+				<div id="summary-grid" class="summary-grid"></div>
+			</section>
+
+			<section class="card groups-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Ranggruppen</p>
+						<h2>Wer landet in welchem sozialen Band?</h2>
+					</div>
+					<p class="section-copy">Jede Person wird anhand des Durchschnitts automatisch einer Gruppe zugeordnet.</p>
+				</div>
+				<div id="group-grid" class="group-grid"></div>
+			</section>
+
+			<section class="card board-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Top Board</p>
+						<h2>Stark bewertete Personen</h2>
+					</div>
+					<p class="section-copy">Hier siehst du die staerksten Namen im offenen Bereich.</p>
+				</div>
+				<div id="directory-list" class="directory-list"></div>
+			</section>
+
+			<section class="card my-ratings-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Deine Wertungen</p>
+						<h2>Was du zuletzt eingetragen hast</h2>
+					</div>
+					<p class="section-copy">Deine letzten Bewertungen erscheinen hier fuer schnellen Zugriff.</p>
+				</div>
+				<div id="my-ratings" class="stack-list"></div>
+			</section>
+
+			<section class="card inner-circle-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Innerer Kreis</p>
+						<h2>Hoechster Status</h2>
+					</div>
+					<p class="section-copy">Nur mit Admin-Einladung und Passwort erreichbar.</p>
+				</div>
+				<div id="inner-circle-panel" class="inner-circle-panel"></div>
+			</section>
+
+			<section class="card admin-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Admin</p>
+						<h2>Invites fuer den Inneren Kreis</h2>
+					</div>
+					<p id="admin-status" class="section-copy">Admin-Status wird geladen.</p>
+				</div>
+				<div id="admin-login-block" class="admin-block">
+					<form id="admin-login-form" class="inline-form">
+						<input id="admin-password" type="password" autocomplete="current-password" placeholder="Admin-Passwort">
+						<button type="submit" class="ghost-button">Admin anmelden</button>
+					</form>
+				</div>
+				<div id="admin-panel" class="admin-panel" hidden>
+					<form id="invite-form" class="invite-form">
+						<input id="invite-label" type="text" maxlength="48" placeholder="Invite-Label, z. B. Orbit 01" required>
+						<input id="invite-password" type="password" maxlength="48" placeholder="Invite-Passwort" required>
+						<input id="invite-days" type="number" min="1" max="60" value="14" required>
+						<button type="submit" class="primary-button">Invite erzeugen</button>
+						<button id="admin-logout" type="button" class="ghost-button">Admin logout</button>
+					</form>
+					<p id="admin-feedback" class="feedback"></p>
+					<div class="admin-columns">
+						<div>
+							<h3>Offene Invites</h3>
+							<div id="invite-list" class="stack-list"></div>
+						</div>
+						<div>
+							<h3>Mitglieder</h3>
+							<div id="member-list" class="stack-list"></div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="SocialRank.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>
