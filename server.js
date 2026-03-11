@@ -41,6 +41,20 @@ const CQ_ACHIEVEMENTS = [
 	{ id: "legend-path", unlocked: (stats) => stats.level >= 5 },
 ];
 
+const CQ_SINGLE_GAMES = {
+	"signal-sprint": { maxRawScore: 60, scoreMultiplier: 14, xpMultiplier: 5 },
+	"pattern-pulse": { maxRawScore: 12, scoreMultiplier: 90, xpMultiplier: 30 },
+};
+
+const CQ_DUEL_GAMES = {
+	"reaction-duel": {
+		winnerScore: 260,
+		winnerXp: 110,
+		loserScore: 90,
+		loserXp: 30,
+	},
+};
+
 if (!databaseUrl) {
 	throw new Error("DATABASE_URL is required to start the server.");
 }
@@ -495,6 +509,135 @@ app.delete("/api/cq/entries", async (request, response) => {
 	}
 });
 
+app.post("/api/cq/games/single", async (request, response) => {
+	try {
+		const session = await requireCqPlayer(request, response);
+		if (!session) {
+			return;
+		}
+
+		const payload = normalizeSingleGamePayload(request.body);
+		if (!payload) {
+			response.status(400).json({ error: "Ungültiges Single-Player-Ergebnis." });
+			return;
+		}
+
+		const rewards = buildSingleGameRewards(payload.gameType, payload.rawScore);
+		const client = await pool.connect();
+		try {
+			await client.query("BEGIN");
+			await client.query(
+				`INSERT INTO cq_game_results (
+					id, game_type, mode, primary_player_id, primary_points, primary_xp, payload, created_at
+				 ) VALUES ($1, $2, 'single', $3, $4, $5, $6::jsonb, NOW())`,
+				[
+					crypto.randomUUID(),
+					payload.gameType,
+					session.playerId,
+					rewards.score,
+					rewards.xp,
+					JSON.stringify({ rawScore: payload.rawScore, summary: payload.summary }),
+				],
+			);
+			await client.query(
+				`UPDATE cq_players
+				 SET game_sessions = game_sessions + 1,
+				     game_score = game_score + $2,
+				     game_xp = game_xp + $3,
+				     updated_at = NOW()
+				 WHERE id = $1`,
+				[session.playerId, rewards.score, rewards.xp],
+			);
+			await recalculateCqPlayerStats(client, session.playerId);
+			await refreshCqPlacements(client);
+			await client.query("COMMIT");
+		} catch (error) {
+			await client.query("ROLLBACK");
+			throw error;
+		} finally {
+			client.release();
+		}
+
+		const profile = await loadCqPlayerProfile(session.playerId);
+		response.status(201).json({ currentUser: profile, rewards });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.post("/api/cq/games/duel", async (request, response) => {
+	try {
+		const session = await requireCqPlayer(request, response);
+		if (!session) {
+			return;
+		}
+
+		const payload = normalizeDuelGamePayload(request.body);
+		if (!payload) {
+			response.status(400).json({ error: "Ungültiges Duel-Ergebnis." });
+			return;
+		}
+
+		if (payload.opponentPlayerId === session.playerId) {
+			response.status(400).json({ error: "Du kannst nicht gegen dich selbst spielen." });
+			return;
+		}
+
+		if (payload.winnerPlayerId !== session.playerId && payload.winnerPlayerId !== payload.opponentPlayerId) {
+			response.status(400).json({ error: "Der Sieger muss einer der beiden Spieler sein." });
+			return;
+		}
+
+		const opponentResult = await pool.query("SELECT id FROM cq_players WHERE id = $1", [payload.opponentPlayerId]);
+		if (!opponentResult.rows[0]) {
+			response.status(404).json({ error: "Gegner nicht gefunden." });
+			return;
+		}
+
+		const rewards = CQ_DUEL_GAMES[payload.gameType];
+		const winnerId = payload.winnerPlayerId;
+		const loserId = winnerId === session.playerId ? payload.opponentPlayerId : session.playerId;
+		const client = await pool.connect();
+		try {
+			await client.query("BEGIN");
+			await client.query(
+				`INSERT INTO cq_game_results (
+					id, game_type, mode, primary_player_id, opponent_player_id, winner_player_id,
+					primary_points, opponent_points, primary_xp, opponent_xp, payload, created_at
+				 ) VALUES ($1, $2, 'duel', $3, $4, $5, $6, $7, $8, $9, $10::jsonb, NOW())`,
+				[
+					crypto.randomUUID(),
+					payload.gameType,
+					session.playerId,
+					payload.opponentPlayerId,
+					winnerId,
+					winnerId === session.playerId ? rewards.winnerScore : rewards.loserScore,
+					winnerId === payload.opponentPlayerId ? rewards.winnerScore : rewards.loserScore,
+					winnerId === session.playerId ? rewards.winnerXp : rewards.loserXp,
+					winnerId === payload.opponentPlayerId ? rewards.winnerXp : rewards.loserXp,
+					JSON.stringify({ summary: payload.summary || "" }),
+				],
+			);
+			await applyDuelGameRewards(client, winnerId, rewards.winnerScore, rewards.winnerXp, true);
+			await applyDuelGameRewards(client, loserId, rewards.loserScore, rewards.loserXp, false);
+			await recalculateCqPlayerStats(client, session.playerId);
+			await recalculateCqPlayerStats(client, payload.opponentPlayerId);
+			await refreshCqPlacements(client);
+			await client.query("COMMIT");
+		} catch (error) {
+			await client.query("ROLLBACK");
+			throw error;
+		} finally {
+			client.release();
+		}
+
+		const profile = await loadCqPlayerProfile(session.playerId);
+		response.status(201).json({ currentUser: profile, winnerPlayerId: winnerId });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
 app.get("*", (_request, response) => {
 	response.sendFile(path.join(publicDir, "index.html"));
 });
@@ -542,6 +685,10 @@ async function initializeDatabase() {
 			type_variety INTEGER NOT NULL DEFAULT 0,
 			current_streak INTEGER NOT NULL DEFAULT 0,
 			best_month_count INTEGER NOT NULL DEFAULT 0,
+			game_sessions INTEGER NOT NULL DEFAULT 0,
+			game_wins INTEGER NOT NULL DEFAULT 0,
+			game_score INTEGER NOT NULL DEFAULT 0,
+			game_xp INTEGER NOT NULL DEFAULT 0,
 			xp INTEGER NOT NULL DEFAULT 0,
 			level INTEGER NOT NULL DEFAULT 1,
 			score INTEGER NOT NULL DEFAULT 0,
@@ -567,7 +714,27 @@ async function initializeDatabase() {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			expires_at TIMESTAMPTZ NOT NULL
 		);
+
+		CREATE TABLE IF NOT EXISTS cq_game_results (
+			id TEXT PRIMARY KEY,
+			game_type VARCHAR(32) NOT NULL,
+			mode VARCHAR(16) NOT NULL,
+			primary_player_id TEXT NOT NULL REFERENCES cq_players(id) ON DELETE CASCADE,
+			opponent_player_id TEXT REFERENCES cq_players(id) ON DELETE SET NULL,
+			winner_player_id TEXT REFERENCES cq_players(id) ON DELETE SET NULL,
+			primary_points INTEGER NOT NULL DEFAULT 0,
+			opponent_points INTEGER NOT NULL DEFAULT 0,
+			primary_xp INTEGER NOT NULL DEFAULT 0,
+			opponent_xp INTEGER NOT NULL DEFAULT 0,
+			payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		);
 	`);
+
+	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_sessions INTEGER NOT NULL DEFAULT 0");
+	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_wins INTEGER NOT NULL DEFAULT 0");
+	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_score INTEGER NOT NULL DEFAULT 0");
+	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_xp INTEGER NOT NULL DEFAULT 0");
 
 	await pool.query("DELETE FROM cq_sessions WHERE expires_at <= NOW()");
 
@@ -901,11 +1068,47 @@ function normalizeCqEntryPayload(body) {
 	return { name, date, type, notes };
 }
 
+function normalizeSingleGamePayload(body) {
+	const gameType = String(body?.gameType || "").trim();
+	const rawScore = Number(body?.rawScore);
+	const summary = String(body?.summary || "").trim().slice(0, 180);
+	if (!CQ_SINGLE_GAMES[gameType] || !Number.isFinite(rawScore) || rawScore < 0) {
+		return null;
+	}
+	return {
+		gameType,
+		rawScore: Math.round(rawScore),
+		summary,
+	};
+}
+
+function normalizeDuelGamePayload(body) {
+	const gameType = String(body?.gameType || "").trim();
+	const opponentPlayerId = String(body?.opponentPlayerId || "").trim();
+	const winnerPlayerId = String(body?.winnerPlayerId || "").trim();
+	const summary = String(body?.summary || "").trim().slice(0, 180);
+	if (!CQ_DUEL_GAMES[gameType] || !opponentPlayerId || !winnerPlayerId) {
+		return null;
+	}
+	return { gameType, opponentPlayerId, winnerPlayerId, summary };
+}
+
+function buildSingleGameRewards(gameType, rawScore) {
+	const config = CQ_SINGLE_GAMES[gameType];
+	const normalizedRawScore = Math.max(0, Math.min(config.maxRawScore, Math.round(rawScore)));
+	return {
+		rawScore: normalizedRawScore,
+		score: normalizedRawScore * config.scoreMultiplier,
+		xp: normalizedRawScore * config.xpMultiplier,
+	};
+}
+
 async function loadCqPlayerProfile(playerId) {
 	const [playerResult, entriesResult] = await Promise.all([
 		pool.query(
 			`SELECT id, handle, login_count, last_login_at, total_entries, unique_connections, type_variety,
-			        current_streak, best_month_count, xp, level, score, unlocked_achievements, placement,
+			        current_streak, best_month_count, game_sessions, game_wins, game_score, game_xp,
+			        xp, level, score, unlocked_achievements, placement,
 			        created_at, updated_at
 			 FROM cq_players WHERE id = $1`,
 			[playerId],
@@ -929,7 +1132,8 @@ async function loadCqPlayerProfile(playerId) {
 async function loadCqLeaderboard() {
 	const result = await pool.query(
 		`SELECT id, handle, login_count, last_login_at, total_entries, unique_connections, type_variety,
-		        current_streak, best_month_count, xp, level, score, unlocked_achievements, placement,
+		        current_streak, best_month_count, game_sessions, game_wins, game_score, game_xp,
+		        xp, level, score, unlocked_achievements, placement,
 		        created_at, updated_at
 		 FROM cq_players
 		 ORDER BY placement ASC, created_at ASC`,
@@ -954,6 +1158,10 @@ function serializeCqPlayer(row, entries = []) {
 			typeVariety: Number(row.type_variety) || 0,
 			currentStreak: Number(row.current_streak) || 0,
 			bestMonthCount: Number(row.best_month_count) || 0,
+			gameSessions: Number(row.game_sessions) || 0,
+			gameWins: Number(row.game_wins) || 0,
+			gameScore: Number(row.game_score) || 0,
+			gameXp: Number(row.game_xp) || 0,
 			latestDate,
 			xp,
 			level: Number(row.level) || 1,
@@ -976,6 +1184,12 @@ function serializeCqPlayer(row, entries = []) {
 }
 
 async function recalculateCqPlayerStats(client, playerId) {
+	const playerResult = await client.query(
+		"SELECT game_sessions, game_wins, game_score, game_xp FROM cq_players WHERE id = $1",
+		[playerId],
+	);
+	const gameStats = playerResult.rows[0] || { game_sessions: 0, game_wins: 0, game_score: 0, game_xp: 0 };
+
 	const entriesResult = await client.query(
 		`SELECT name, entry_date, type
 		 FROM cq_entries
@@ -989,7 +1203,12 @@ async function recalculateCqPlayerStats(client, playerId) {
 		date: row.entry_date instanceof Date ? row.entry_date.toISOString().slice(0, 10) : String(row.entry_date).slice(0, 10),
 		type: row.type,
 	}));
-	const stats = buildCqStats(entries);
+	const stats = buildCqStats(entries, {
+		gameSessions: Number(gameStats.game_sessions) || 0,
+		gameWins: Number(gameStats.game_wins) || 0,
+		gameScore: Number(gameStats.game_score) || 0,
+		gameXp: Number(gameStats.game_xp) || 0,
+	});
 
 	await client.query(
 		`UPDATE cq_players
@@ -1023,7 +1242,7 @@ async function refreshCqPlacements(client) {
 	const result = await client.query(
 		`SELECT id
 		 FROM cq_players
-		 ORDER BY score DESC, xp DESC, total_entries DESC, created_at ASC`,
+		 ORDER BY score DESC, xp DESC, game_wins DESC, total_entries DESC, created_at ASC`,
 	);
 
 	for (const [index, row] of result.rows.entries()) {
@@ -1031,13 +1250,30 @@ async function refreshCqPlacements(client) {
 	}
 }
 
-function buildCqStats(entries) {
+async function applyDuelGameRewards(client, playerId, scoreGain, xpGain, isWinner) {
+	await client.query(
+		`UPDATE cq_players
+		 SET game_sessions = game_sessions + 1,
+		     game_wins = game_wins + $2,
+		     game_score = game_score + $3,
+		     game_xp = game_xp + $4,
+		     updated_at = NOW()
+		 WHERE id = $1`,
+		[playerId, isWinner ? 1 : 0, scoreGain, xpGain],
+	);
+}
+
+function buildCqStats(entries, bonusStats = {}) {
 	const uniqueConnections = new Set(entries.map((entry) => entry.name.toLowerCase())).size;
 	const typeVariety = new Set(entries.map((entry) => entry.type)).size;
 	const dailyKeys = Array.from(new Set(entries.map((entry) => entry.date))).sort((left, right) => right.localeCompare(left));
 	const currentStreak = calculateCqCurrentStreak(dailyKeys);
 	const bestMonthCount = calculateCqBestMonthCount(entries);
-	const xp = (entries.length * 35) + (uniqueConnections * 30) + (typeVariety * 20) + (currentStreak * 25) + (bestMonthCount * 10);
+	const journalXp = (entries.length * 35) + (uniqueConnections * 30) + (typeVariety * 20) + (currentStreak * 25) + (bestMonthCount * 10);
+	const journalScoreBase = (entries.length * 12);
+	const gameXp = Number(bonusStats.gameXp) || 0;
+	const gameScore = Number(bonusStats.gameScore) || 0;
+	const xp = journalXp + gameXp;
 	const level = Math.max(1, Math.floor(xp / CQ_XP_PER_LEVEL) + 1);
 	const provisionalStats = {
 		totalEntries: entries.length,
@@ -1045,11 +1281,15 @@ function buildCqStats(entries) {
 		typeVariety,
 		currentStreak,
 		bestMonthCount,
+		gameSessions: Number(bonusStats.gameSessions) || 0,
+		gameWins: Number(bonusStats.gameWins) || 0,
+		gameScore,
+		gameXp,
 		level,
 		score: 0,
 	};
 	const provisionalAchievements = CQ_ACHIEVEMENTS.filter((achievement) => achievement.unlocked(provisionalStats)).length;
-	const score = xp + (entries.length * 12) + (provisionalAchievements * 100);
+	const score = xp + journalScoreBase + gameScore + (provisionalAchievements * 100);
 	const unlockedAchievements = CQ_ACHIEVEMENTS.filter((achievement) => achievement.unlocked({ ...provisionalStats, score })).length;
 
 	return {
@@ -1058,6 +1298,10 @@ function buildCqStats(entries) {
 		typeVariety,
 		currentStreak,
 		bestMonthCount,
+		gameSessions: Number(bonusStats.gameSessions) || 0,
+		gameWins: Number(bonusStats.gameWins) || 0,
+		gameScore,
+		gameXp,
 		xp,
 		level,
 		score,

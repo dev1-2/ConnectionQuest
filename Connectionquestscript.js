@@ -290,6 +290,14 @@ function renderAuth(currentUser, stats) {
 				<p class="mini-label">Logins</p>
 				<h3>${currentUser.loginCount}</h3>
 			</div>
+			<div>
+				<p class="mini-label">Game Wins</p>
+				<h3>${stats.gameWins || 0}</h3>
+			</div>
+			<div>
+				<p class="mini-label">Game Sessions</p>
+				<h3>${stats.gameSessions || 0}</h3>
+			</div>
 		</div>
 	`;
 	logoutButton.hidden = false;
@@ -317,6 +325,10 @@ function renderStats(currentUser, stats) {
 	document.querySelector("#achievement-copy").textContent = currentUser
 		? (stats.unlockedAchievements > 0 ? `${stats.unlockedAchievements} von ${ACHIEVEMENTS.length} Badges aktiviert.` : "Keine Badges freigeschaltet.")
 		: "Keine Badges freigeschaltet.";
+
+	document.querySelector("#player-note").textContent = currentUser
+		? `${currentUser.handle} sammelt mit Logs und Games Score, XP und Badges.`
+		: "Login erforderlich, um Punkte zu sammeln.";
 }
 
 function renderCalendar(entries, hasUser) {
@@ -463,6 +475,10 @@ function buildEmptyStats() {
 		typeVariety: 0,
 		currentStreak: 0,
 		bestMonthCount: 0,
+		gameSessions: 0,
+		gameWins: 0,
+		gameScore: 0,
+		gameXp: 0,
 		latestDate: null,
 		xp: 0,
 		score: 0,

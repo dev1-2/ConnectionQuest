@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Connection Quest Games</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Games.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="games-hero">
+			<section class="hero-card spotlight">
+				<p class="eyebrow">ARCADE MODE</p>
+				<h1>Connection Quest Games</h1>
+				<p class="hero-copy">
+					Ein Duel-Game und zwei Single-Player-Minigames, alle im selben Look und direkt an dein Scoreboard angebunden.
+				</p>
+				<div class="hero-badges">
+					<span>2 Player Duel</span>
+					<span>Single Player</span>
+					<span>DB Score Sync</span>
+				</div>
+				<div class="hero-actions">
+					<a class="hero-link" href="ConnectionQuest.html">Zurück zu Connection Quest</a>
+					<a class="hero-link" href="Leaderboard.html">Zum Leaderboard</a>
+				</div>
+			</section>
+
+			<section class="hero-card current-player" aria-live="polite">
+				<p class="mini-label">Aktiver Spieler</p>
+				<h2 id="current-player-name">Kein Spieler aktiv</h2>
+				<p id="current-player-copy" class="section-copy">Logge dich ein, damit Gewinne und Runs direkt gespeichert werden.</p>
+				<div class="mini-stats">
+					<div>
+						<p class="mini-label">Total Score</p>
+						<strong id="current-player-score">0</strong>
+					</div>
+					<div>
+						<p class="mini-label">Game Wins</p>
+						<strong id="current-player-wins">0</strong>
+					</div>
+					<div>
+						<p class="mini-label">Game Sessions</p>
+						<strong id="current-player-sessions">0</strong>
+					</div>
+					<div>
+						<p class="mini-label">Platz</p>
+						<strong id="current-player-placement">#0</strong>
+					</div>
+				</div>
+			</section>
+		</header>
+
+		<main class="games-layout">
+			<section class="card duel-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">2 Player</p>
+						<h2>Reaction Duel</h2>
+					</div>
+					<p class="section-copy">Aktiver Spieler gegen ein anderes Profil. Keys: <strong>A</strong> vs <strong>L</strong>.</p>
+				</div>
+				<label class="stack-field">
+					<span>Gegner</span>
+					<select id="duel-opponent"></select>
+				</label>
+				<div class="duel-stage" id="duel-stage">
+					<div class="duel-lane is-left">
+						<p class="mini-label">Player A</p>
+						<h3 id="duel-left-name">Du</h3>
+						<p>Drücke <strong>A</strong>, wenn das Signal kommt.</p>
+					</div>
+					<div class="duel-signal" id="duel-signal">Bereit?</div>
+					<div class="duel-lane is-right">
+						<p class="mini-label">Player B</p>
+						<h3 id="duel-right-name">Gegner</h3>
+						<p>Drücke <strong>L</strong>, wenn das Signal kommt.</p>
+					</div>
+				</div>
+				<div class="action-row">
+					<button type="button" class="primary-btn" id="duel-start">Duel starten</button>
+					<p id="duel-status" class="section-copy">Noch kein Duel gestartet.</p>
+				</div>
+			</section>
+
+			<section class="card game-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Single Player</p>
+						<h2>Signal Sprint</h2>
+					</div>
+					<p class="section-copy">20 Sekunden. Triff so viele Targets wie möglich.</p>
+				</div>
+				<div class="hud-row">
+					<div class="mini-stat-pill">Hits: <strong id="sprint-hits">0</strong></div>
+					<div class="mini-stat-pill">Timer: <strong id="sprint-time">20</strong></div>
+				</div>
+				<div class="target-stage" id="sprint-stage">
+					<button type="button" class="target-orb" id="sprint-target" hidden></button>
+				</div>
+				<div class="action-row">
+					<button type="button" class="primary-btn" id="sprint-start">Sprint starten</button>
+					<p id="sprint-status" class="section-copy">Noch kein Run gespielt.</p>
+				</div>
+			</section>
+
+			<section class="card game-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Single Player</p>
+						<h2>Pattern Pulse</h2>
+					</div>
+					<p class="section-copy">Merke dir die Sequenz und wiederhole sie fehlerfrei.</p>
+				</div>
+				<div class="hud-row">
+					<div class="mini-stat-pill">Runde: <strong id="pattern-round">0</strong></div>
+					<div class="mini-stat-pill">Status: <strong id="pattern-phase">Idle</strong></div>
+				</div>
+				<div class="pattern-grid">
+					<button type="button" class="pattern-pad pad-one" data-pad="0"></button>
+					<button type="button" class="pattern-pad pad-two" data-pad="1"></button>
+					<button type="button" class="pattern-pad pad-three" data-pad="2"></button>
+					<button type="button" class="pattern-pad pad-four" data-pad="3"></button>
+				</div>
+				<div class="action-row">
+					<button type="button" class="primary-btn" id="pattern-start">Pattern starten</button>
+					<p id="pattern-status" class="section-copy">Noch kein Run gespielt.</p>
+				</div>
+			</section>
+
+			<section class="card results-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Game Feed</p>
+						<h2>Letzte Rewards</h2>
+					</div>
+					<p class="section-copy">Jeder bestätigte Run fließt direkt in XP, Score und Platzierung.</p>
+				</div>
+				<div id="game-feed" class="game-feed empty-state">Noch keine Game-Rewards in dieser Sitzung.</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="Games.js"></script>
+</body>
+</html>

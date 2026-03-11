@@ -56,7 +56,7 @@ function renderPodium(rankedUsers, currentUserId) {
 			<div class="podium-copy">
 				<h3>${escapeHtml(entry.handle)}</h3>
 				<p>${entry.stats.score} Score • Level ${entry.stats.level}</p>
-				<p>${entry.stats.totalEntries} Interaktionen • ${entry.stats.unlockedAchievements} Badges</p>
+				<p>${entry.stats.totalEntries} Interaktionen • ${entry.stats.gameWins || 0} Game Wins • ${entry.stats.unlockedAchievements} Badges</p>
 			</div>
 		`;
 		podium.appendChild(item);
@@ -80,8 +80,8 @@ function renderList(rankedUsers, currentUserId) {
 			<div class="leaderboard-rank">#${entry.placement}</div>
 			<div class="leaderboard-copy">
 				<h3>${escapeHtml(entry.handle)}</h3>
-				<p>Level ${entry.stats.level} • ${entry.stats.xp} XP • ${entry.stats.currentStreak} Tage Streak</p>
-				<p>${entry.stats.totalEntries} Interaktionen • ${entry.stats.uniqueConnections} Connections • ${entry.stats.unlockedAchievements} Badges • ${entry.loginCount} Logins</p>
+				<p>Level ${entry.stats.level} • ${entry.stats.xp} XP • ${entry.stats.currentStreak} Tage Streak • ${entry.stats.gameScore || 0} Game Score</p>
+				<p>${entry.stats.totalEntries} Interaktionen • ${entry.stats.uniqueConnections} Connections • ${entry.stats.gameSessions || 0} Game Sessions • ${entry.stats.gameWins || 0} Wins • ${entry.loginCount} Logins</p>
 			</div>
 			<div class="leaderboard-score">${entry.stats.score}</div>
 		`;
