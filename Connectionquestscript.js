@@ -1,6 +1,4 @@
-const USERS_KEY = "connection-quest-users-v2";
-const SESSION_KEY = "connection-quest-session-v2";
-const XP_PER_LEVEL = 180;
+const SESSION_KEY = "connection-quest-session-token-v1";
 
 const ACHIEVEMENTS = [
 	{
@@ -48,8 +46,8 @@ const ACHIEVEMENTS = [
 ];
 
 const state = {
-	users: loadUsers(),
-	currentUserId: loadSession(),
+	sessionToken: loadSessionToken(),
+	currentUser: null,
 	selectedDate: todayString(),
 	visibleMonth: startOfMonth(new Date()),
 };
@@ -82,9 +80,14 @@ authForm.addEventListener("submit", handleAuthSubmit);
 logoutButton.addEventListener("click", handleLogout);
 
 dateInput.value = state.selectedDate;
-render();
+initialize();
 
-function handleAuthSubmit(event) {
+async function initialize() {
+	await hydrateSession();
+	render();
+}
+
+async function handleAuthSubmit(event) {
 	event.preventDefault();
 	const handle = authHandleInput.value.trim();
 	const pin = authPinInput.value.trim();
@@ -96,67 +99,65 @@ function handleAuthSubmit(event) {
 	}
 
 	if (intent === "register") {
-		handleRegister(handle, pin);
+		await handleRegister(handle, pin);
 		return;
 	}
 
-	handleLogin(handle, pin);
+	await handleLogin(handle, pin);
 }
 
-function handleRegister(handle, pin) {
-	const handleKey = toHandleKey(handle);
-	if (state.users.some((user) => user.handleKey === handleKey)) {
-		setAuthMessage("Dieser Spielername existiert bereits. Bitte einloggen.", true);
-		return;
+async function handleRegister(handle, pin) {
+	try {
+		const payload = await apiRequest("/api/cq/register", {
+			method: "POST",
+			body: { handle, pin },
+			auth: false,
+		});
+		state.sessionToken = payload.sessionToken;
+		saveSessionToken(state.sessionToken);
+		state.currentUser = payload.currentUser;
+		authForm.reset();
+		setAuthMessage(`${payload.currentUser.handle} wurde erstellt und in der Datenbank gespeichert.`);
+		syncCurrentUserDate();
+		render();
+	} catch (error) {
+		setAuthMessage(error.message, true);
 	}
-
-	const user = {
-		id: crypto.randomUUID(),
-		handle: normalizeHandle(handle),
-		handleKey,
-		pin,
-		createdAt: Date.now(),
-		entries: [],
-	};
-
-	state.users.unshift(user);
-	state.currentUserId = user.id;
-	saveUsers(state.users);
-	saveSession(user.id);
-	authForm.reset();
-	setAuthMessage(`${user.handle} wurde erstellt und eingeloggt.`);
-	render();
 }
 
-function handleLogin(handle, pin) {
-	const user = state.users.find((entry) => entry.handleKey === toHandleKey(handle));
-	if (!user) {
-		setAuthMessage("Kein passender Spieler gefunden. Bitte zuerst registrieren.", true);
-		return;
+async function handleLogin(handle, pin) {
+	try {
+		const payload = await apiRequest("/api/cq/login", {
+			method: "POST",
+			body: { handle, pin },
+			auth: false,
+		});
+		state.sessionToken = payload.sessionToken;
+		saveSessionToken(state.sessionToken);
+		state.currentUser = payload.currentUser;
+		authForm.reset();
+		setAuthMessage(`${payload.currentUser.handle} ist jetzt aktiv. Login wurde gespeichert.`);
+		syncCurrentUserDate();
+		render();
+	} catch (error) {
+		setAuthMessage(error.message, true);
 	}
-
-	if (user.pin !== pin) {
-		setAuthMessage("Die PIN stimmt nicht.", true);
-		return;
-	}
-
-	state.currentUserId = user.id;
-	saveSession(user.id);
-	authForm.reset();
-	setAuthMessage(`${user.handle} ist jetzt aktiv.`);
-	render();
 }
 
-function handleLogout() {
-	state.currentUserId = "";
-	window.localStorage.removeItem(SESSION_KEY);
+async function handleLogout() {
+	try {
+		await apiRequest("/api/cq/logout", { method: "POST" });
+	} catch {
+		// Ignore logout failures and clear local session anyway.
+	}
+	clearSession();
 	setAuthMessage("Spieler wurde ausgeloggt.");
 	render();
 }
 
-function handleSubmit(event) {
+async function handleSubmit(event) {
 	event.preventDefault();
-	const currentUser = getCurrentUser();
+	const currentUser = state.currentUser;
 	if (!currentUser) {
 		setAuthMessage("Bitte zuerst einloggen, um Interaktionen zu speichern.", true);
 		return;
@@ -171,26 +172,25 @@ function handleSubmit(event) {
 		return;
 	}
 
-	currentUser.entries.unshift({
-		id: crypto.randomUUID(),
-		name,
-		date,
-		type,
-		notes,
-		createdAt: Date.now(),
-	});
-
-	state.selectedDate = date;
-	state.visibleMonth = startOfMonth(new Date(date));
-	saveUsers(state.users);
-	form.reset();
-	dateInput.value = state.selectedDate;
-	typeInput.value = "Chat";
-	render();
+	try {
+		const payload = await apiRequest("/api/cq/entries", {
+			method: "POST",
+			body: { name, date, type, notes },
+		});
+		state.currentUser = payload.currentUser;
+		state.selectedDate = date;
+		state.visibleMonth = startOfMonth(new Date(date));
+		form.reset();
+		dateInput.value = state.selectedDate;
+		typeInput.value = "Chat";
+		render();
+	} catch (error) {
+		setAuthMessage(error.message, true);
+	}
 }
 
-function clearAllEntries() {
-	const currentUser = getCurrentUser();
+async function clearAllEntries() {
+	const currentUser = state.currentUser;
 	if (!currentUser || !currentUser.entries.length) {
 		return;
 	}
@@ -200,29 +200,37 @@ function clearAllEntries() {
 		return;
 	}
 
-	currentUser.entries = [];
-	state.selectedDate = todayString();
-	state.visibleMonth = startOfMonth(new Date());
-	saveUsers(state.users);
-	dateInput.value = state.selectedDate;
-	render();
+	try {
+		const payload = await apiRequest("/api/cq/entries", { method: "DELETE" });
+		state.currentUser = payload.currentUser;
+		state.selectedDate = todayString();
+		state.visibleMonth = startOfMonth(new Date());
+		dateInput.value = state.selectedDate;
+		render();
+	} catch (error) {
+		setAuthMessage(error.message, true);
+	}
 }
 
-function deleteEntry(id) {
-	const currentUser = getCurrentUser();
+async function deleteEntry(id) {
+	const currentUser = state.currentUser;
 	if (!currentUser) {
 		return;
 	}
 
-	currentUser.entries = currentUser.entries.filter((entry) => entry.id !== id);
-	saveUsers(state.users);
-	render();
+	try {
+		const payload = await apiRequest(`/api/cq/entries/${encodeURIComponent(id)}`, { method: "DELETE" });
+		state.currentUser = payload.currentUser;
+		render();
+	} catch (error) {
+		setAuthMessage(error.message, true);
+	}
 }
 
 function render() {
-	const currentUser = getCurrentUser();
+	const currentUser = state.currentUser;
 	const entries = currentUser?.entries || [];
-	const stats = currentUser ? buildStats(entries) : buildEmptyStats();
+	const stats = currentUser?.stats || buildEmptyStats();
 
 	renderSession(currentUser, stats);
 	renderAuth(currentUser, stats);
@@ -267,6 +275,10 @@ function renderAuth(currentUser, stats) {
 				<h3>${escapeHtml(currentUser.handle)}</h3>
 			</div>
 			<div>
+				<p class="mini-label">Platz</p>
+				<h3>#${currentUser.placement || 0}</h3>
+			</div>
+			<div>
 				<p class="mini-label">Level</p>
 				<h3>${stats.level}</h3>
 			</div>
@@ -275,8 +287,8 @@ function renderAuth(currentUser, stats) {
 				<h3>${stats.xp}</h3>
 			</div>
 			<div>
-				<p class="mini-label">Streak</p>
-				<h3>${stats.currentStreak} Tage</h3>
+				<p class="mini-label">Logins</p>
+				<h3>${currentUser.loginCount}</h3>
 			</div>
 		</div>
 	`;
@@ -444,53 +456,6 @@ function buildEntryNode(entry) {
 	return node;
 }
 
-function buildStats(entries) {
-	const uniqueConnections = new Set(entries.map((entry) => entry.name.toLowerCase())).size;
-	const typeVariety = new Set(entries.map((entry) => entry.type)).size;
-	const dailyKeys = Array.from(new Set(entries.map((entry) => entry.date))).sort((left, right) => right.localeCompare(left));
-	const currentStreak = calculateCurrentStreak(dailyKeys);
-	const bestMonthCount = calculateBestMonthCount(entries);
-	const latestDate = entries.length ? entries.reduce((latest, entry) => entry.date > latest ? entry.date : latest, entries[0].date) : null;
-
-	const xp = (entries.length * 35) + (uniqueConnections * 30) + (typeVariety * 20) + (currentStreak * 25) + (bestMonthCount * 10);
-	const level = Math.max(1, Math.floor(xp / XP_PER_LEVEL) + 1);
-	const xpIntoLevel = xp % XP_PER_LEVEL;
-	const xpToNextLevel = XP_PER_LEVEL;
-	const baseStats = {
-		totalEntries: entries.length,
-		uniqueConnections,
-		typeVariety,
-		currentStreak,
-		bestMonthCount,
-		level,
-		score: 0,
-	};
-	const provisionalAchievements = ACHIEVEMENTS.filter((achievement) => achievement.unlocked(baseStats)).length;
-	const score = xp + (entries.length * 12) + (provisionalAchievements * 100);
-	const finalStats = {
-		...baseStats,
-		score,
-	};
-	const unlockedAchievements = ACHIEVEMENTS.filter((achievement) => achievement.unlocked(finalStats)).length;
-
-	return {
-		totalEntries: entries.length,
-		uniqueConnections,
-		typeVariety,
-		currentStreak,
-		bestMonthCount,
-		latestDate,
-		xp,
-		score,
-		level,
-		xpIntoLevel,
-		xpToNextLevel,
-		progressPercent: Math.round((xpIntoLevel / xpToNextLevel) * 100),
-		unlockedAchievements,
-		levelMessage: buildLevelMessage(level, entries.length),
-	};
-}
-
 function buildEmptyStats() {
 	return {
 		totalEntries: 0,
@@ -503,24 +468,11 @@ function buildEmptyStats() {
 		score: 0,
 		level: 1,
 		xpIntoLevel: 0,
-		xpToNextLevel: XP_PER_LEVEL,
+		xpToNextLevel: 180,
 		progressPercent: 0,
 		unlockedAchievements: 0,
 		levelMessage: "Starte mit dem ersten Eintrag.",
 	};
-}
-
-function buildLevelMessage(level, totalEntries) {
-	if (totalEntries === 0) {
-		return "Starte mit dem ersten Eintrag.";
-	}
-	if (level < 3) {
-		return "Momentum baut sich auf. Jede Interaktion zaehlt in den Score.";
-	}
-	if (level < 5) {
-		return "Stabile Serie. Dein Profil arbeitet sich im Leaderboard nach oben.";
-	}
-	return "Starke Aktivitaet. Dein Board sieht bereits nach Endgame aus.";
 }
 
 function updateInteractionLock(isLoggedIn) {
@@ -531,7 +483,7 @@ function updateInteractionLock(isLoggedIn) {
 	clearAllButton.disabled = locked;
 	document.querySelector("#form-lock-copy").textContent = locked
 		? "Login erforderlich. Erst dann zaehlt jede Interaktion zu Score und XP."
-		: "Alles bleibt lokal im Browser gespeichert.";
+		: "Deine Daten werden serverseitig in der Datenbank gespeichert.";
 	if (locked) {
 		dateInput.value = state.selectedDate;
 	}
@@ -543,8 +495,24 @@ function setAuthMessage(message, isError = false) {
 	node.classList.toggle("is-error", isError);
 }
 
-function getCurrentUser() {
-	return state.users.find((user) => user.id === state.currentUserId) || null;
+async function hydrateSession() {
+	if (!state.sessionToken) {
+		state.currentUser = null;
+		return;
+	}
+
+	try {
+		const payload = await apiRequest("/api/cq/session");
+		state.currentUser = payload.currentUser;
+		if (!state.currentUser) {
+			clearSession();
+			return;
+		}
+		syncCurrentUserDate();
+		setAuthMessage(`Aktive Session für ${state.currentUser.handle}.`);
+	} catch {
+		clearSession();
+	}
 }
 
 function calculateCurrentStreak(sortedDescDates) {
@@ -604,26 +572,18 @@ function jumpToToday() {
 	render();
 }
 
-function loadUsers() {
-	try {
-		const raw = window.localStorage.getItem(USERS_KEY);
-		const parsed = raw ? JSON.parse(raw) : [];
-		return Array.isArray(parsed) ? parsed : [];
-	} catch {
-		return [];
-	}
-}
-
-function saveUsers(users) {
-	window.localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-function loadSession() {
+function loadSessionToken() {
 	return window.localStorage.getItem(SESSION_KEY) || "";
 }
 
-function saveSession(userId) {
-	window.localStorage.setItem(SESSION_KEY, userId);
+function saveSessionToken(token) {
+	window.localStorage.setItem(SESSION_KEY, token);
+}
+
+function clearSession() {
+	state.sessionToken = "";
+	state.currentUser = null;
+	window.localStorage.removeItem(SESSION_KEY);
 }
 
 function todayString() {
@@ -665,17 +625,39 @@ function monthFormatter(date) {
 	}).format(date);
 }
 
-function normalizeHandle(value) {
-	return value
-		.trim()
-		.split(/\s+/)
-		.filter(Boolean)
-		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-		.join(" ");
+function syncCurrentUserDate() {
+	const entries = state.currentUser?.entries || [];
+	const latestDate = entries[0]?.date || todayString();
+	state.selectedDate = latestDate;
+	state.visibleMonth = startOfMonth(new Date(latestDate));
+	dateInput.value = state.selectedDate;
 }
 
-function toHandleKey(value) {
-	return value.trim().toLowerCase();
+async function apiRequest(url, options = {}) {
+	const headers = {
+		"Content-Type": "application/json",
+		...(options.headers || {}),
+	};
+	if (options.auth !== false && state.sessionToken) {
+		headers.Authorization = `Bearer ${state.sessionToken}`;
+	}
+
+	const response = await fetch(url, {
+		method: options.method || "GET",
+		headers,
+		body: options.body ? JSON.stringify(options.body) : undefined,
+	});
+
+	const payload = await response.json().catch(() => ({}));
+	if (!response.ok) {
+		if (response.status === 401) {
+			clearSession();
+			render();
+		}
+		throw new Error(payload.error || "Anfrage konnte nicht verarbeitet werden.");
+	}
+
+	return payload;
 }
 
 function escapeHtml(value) {
