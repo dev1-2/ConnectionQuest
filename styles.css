@@ -193,6 +193,28 @@ h2 {
 	border: 1px solid var(--line);
 }
 
+.danger-button {
+	border: none;
+	border-radius: 18px;
+	padding: 0.95rem 1.15rem;
+	cursor: pointer;
+	font-weight: 800;
+	background: linear-gradient(135deg, #c0392b, #962d22);
+	color: #fff;
+	transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.danger-button:hover {
+	transform: translateY(-2px);
+	background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.danger-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	transform: none;
+}
+
 .primary-button {
 	background: linear-gradient(135deg, var(--ink), #315a93);
 	color: #fff;

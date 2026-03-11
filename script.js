@@ -26,6 +26,7 @@ const elements = {
 	authStatus: document.querySelector("#auth-status"),
 	controlPanel: document.querySelector(".control-panel"),
 	controlLockNote: document.querySelector("#control-lock-note"),
+	purgeButton: document.querySelector("#purge-button"),
 };
 
 const state = {
@@ -46,6 +47,7 @@ elements.resetButton.addEventListener("click", resetTournament);
 elements.adminForm.addEventListener("submit", handleLogin);
 elements.logoutButton.addEventListener("click", handleLogout);
 elements.adminToggle.addEventListener("click", toggleAdminPanel);
+elements.purgeButton.addEventListener("click", purgeDatabase);
 window.addEventListener("keydown", handleKeyboardVote);
 
 initializeApp();
@@ -137,6 +139,31 @@ async function resetTournament() {
 	}
 }
 
+async function purgeDatabase() {
+	if (!state.isAdmin) {
+		renderError("Nur Admins können die Datenbank löschen.");
+		return;
+	}
+
+	const confirmed = window.confirm(
+		"⚠️ Achtung! Alle Lehrer-Profile und Spielstände werden unwiderruflich gelöscht.\n\nFortfahren?"
+	);
+	if (!confirmed) {
+		return;
+	}
+
+	setBusy(true);
+	try {
+		const payload = await fetchJson("/api/admin/purge", { method: "POST" });
+		applyServerState(payload.state, payload.auth);
+		render(payload.message);
+	} catch (error) {
+		renderError(error.message);
+	} finally {
+		setBusy(false);
+	}
+}
+
 async function handleLogin(event) {
 	event.preventDefault();
 	if (state.isBusy) {
@@ -204,6 +231,7 @@ function renderAuthPanel() {
 		elements.adminForm.hidden = true;
 		elements.adminToggle.hidden = true;
 		elements.logoutButton.hidden = true;
+		elements.purgeButton.hidden = true;
 		return;
 	}
 
@@ -214,8 +242,11 @@ function renderAuthPanel() {
 		elements.adminToggle.hidden = false;
 		elements.adminToggle.textContent = state.adminPanelOpen ? "Admin schließen" : "Admin öffnen";
 		elements.logoutButton.hidden = false;
+		elements.purgeButton.hidden = false;
 		return;
 	}
+
+	elements.purgeButton.hidden = true;
 
 	elements.authStatus.textContent = "Admin-Rechte sind für Bearbeiten und Reset erforderlich.";
 	elements.adminBody.hidden = !state.adminPanelOpen;
@@ -363,6 +394,7 @@ function updateControlsState() {
 	elements.adminToggle.disabled = state.isBusy;
 	elements.adminPassword.disabled = state.isBusy;
 	elements.logoutButton.disabled = state.isBusy;
+	elements.purgeButton.disabled = state.isBusy || !state.isAdmin;
 	if (!state.adminConfigured) {
 		elements.teacherInput.disabled = true;
 		elements.applyButton.disabled = true;

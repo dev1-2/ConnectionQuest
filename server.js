@@ -159,6 +159,32 @@ app.post("/api/reset", requireAdmin, async (request, response) => {
 	}
 });
 
+app.post("/api/admin/purge", requireAdmin, async (request, response) => {
+	try {
+		const client = await pool.connect();
+		try {
+			await client.query("BEGIN");
+			await client.query("UPDATE app_state SET left_id = NULL, right_id = NULL, queue = '[]'::jsonb, rounds = 0, updated_at = NOW() WHERE state_key = 'main'");
+			await client.query("DELETE FROM teachers");
+			await client.query("COMMIT");
+		} catch (error) {
+			await client.query("ROLLBACK");
+			throw error;
+		} finally {
+			client.release();
+		}
+
+		const state = await loadRuntimeState();
+		response.json({
+			message: "Datenbank wurde vollständig gelöscht.",
+			state: serializeState(state),
+			auth: buildAuthState(request),
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
 app.post("/api/vote", async (request, response) => {
 	try {
 		const side = request.body?.side;
