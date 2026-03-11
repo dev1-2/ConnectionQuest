@@ -115,36 +115,21 @@
 			<section class="card admin-card">
 				<div class="section-head">
 					<div>
-						<p class="eyebrow">Admin</p>
-						<h2>Invites fuer den Inneren Kreis</h2>
+						<p class="eyebrow">Operations</p>
+						<h2>Verwaltung ausgelagert</h2>
 					</div>
-					<p id="admin-status" class="section-copy">Admin-Status wird geladen.</p>
+					<p id="admin-status" class="section-copy">Admin-Funktionen liegen jetzt gesammelt im zentralen Panel.</p>
 				</div>
-				<div id="admin-login-block" class="admin-block">
-					<form id="admin-login-form" class="inline-form">
-						<input id="admin-password" type="password" autocomplete="current-password" placeholder="Admin-Passwort">
-						<button type="submit" class="ghost-button">Admin anmelden</button>
-					</form>
-				</div>
-				<div id="admin-panel" class="admin-panel" hidden>
-					<form id="invite-form" class="invite-form">
-						<input id="invite-label" type="text" maxlength="48" placeholder="Invite-Label, z. B. Orbit 01" required>
-						<input id="invite-password" type="password" maxlength="48" placeholder="Invite-Passwort" required>
-						<input id="invite-days" type="number" min="1" max="60" value="14" required>
-						<button type="submit" class="primary-button">Invite erzeugen</button>
-						<button id="admin-logout" type="button" class="ghost-button">Admin logout</button>
-					</form>
-					<p id="admin-feedback" class="feedback"></p>
-					<div class="admin-columns">
-						<div>
-							<h3>Offene Invites</h3>
-							<div id="invite-list" class="stack-list"></div>
-						</div>
-						<div>
-							<h3>Mitglieder</h3>
-							<div id="member-list" class="stack-list"></div>
-						</div>
-					</div>
+				<div class="stack-list">
+					<article class="stack-item">
+						<strong>Admin Panel</strong>
+						<p>Inner-Circle-Invites, Systemstatus und Verwaltungswege sind jetzt bewusst von der Nutzerseite getrennt.</p>
+						<a class="ghost-button" href="Admin.html">Zum Admin Panel</a>
+					</article>
+					<article class="stack-item">
+						<strong>Warum getrennt?</strong>
+						<p>Die Social-Rank-Seite bleibt dadurch klar fuer Nutzer, waehrend Admins einen eigenen Kontrollraum bekommen.</p>
+					</article>
 				</div>
 			</section>
 		</main>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
+	<title>Connection Quest Admin</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Admin.css">
+</head>
+<body>
+	<div class="admin-shell">
+		<header class="admin-hero card">
+			<div>
+				<p class="eyebrow">Operations</p>
+				<h1>Zentrales Admin Panel</h1>
+				<p class="hero-copy">Alle Verwaltungsfunktionen sind jetzt an einem Ort gebuendelt: Status, Systemzahlen, Inner-Circle-Invites und die Weiterleitung in das separate Teacher-Ranking-Backoffice.</p>
+			</div>
+			<div class="hero-actions">
+				<a class="hero-link" href="Hub.html">Hub</a>
+				<a class="hero-link" href="Guide.html">Guide</a>
+				<a class="ghost-link" href="LehrerRanking.html">Teacher Ranking Admin</a>
+			</div>
+		</header>
+
+		<main class="admin-layout">
+			<section class="card auth-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Zugang</p>
+						<h2>Admin Status</h2>
+					</div>
+					<p id="admin-status" class="section-copy">Status wird geladen.</p>
+				</div>
+				<form id="admin-login-form" class="inline-form">
+					<input id="admin-password" type="password" autocomplete="current-password" placeholder="Admin-Passwort">
+					<button type="submit" class="primary-button">Admin anmelden</button>
+					<button id="admin-logout" type="button" class="ghost-button">Logout</button>
+				</form>
+				<p id="admin-feedback" class="feedback"></p>
+			</section>
+
+			<section class="card overview-card">
+				<p class="eyebrow">System Overview</p>
+				<h2>Gesamtzahlen</h2>
+				<div id="overview-grid" class="overview-grid"></div>
+			</section>
+
+			<section class="card activity-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Aktive Spieler</p>
+						<h2>Neueste Logins</h2>
+					</div>
+					<p class="section-copy">Schneller Blick auf aktuelle Aktivitaet und Status.</p>
+				</div>
+				<div id="recent-players" class="stack-list"></div>
+			</section>
+
+			<section class="card leaderboard-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Top Spieler</p>
+						<h2>Obere Spitze</h2>
+					</div>
+					<p class="section-copy">Verwaltungssicht auf die staerksten Accounts.</p>
+				</div>
+				<div id="top-players" class="stack-list"></div>
+			</section>
+
+			<section class="card inner-circle-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Inner Circle</p>
+						<h2>Invites und Mitglieder</h2>
+					</div>
+					<p class="section-copy">Der hoechste Status wird nur hier verwaltet.</p>
+				</div>
+				<form id="invite-form" class="invite-form" hidden>
+					<input id="invite-label" type="text" maxlength="48" placeholder="Invite-Label" required>
+					<input id="invite-password" type="password" maxlength="48" placeholder="Invite-Passwort" required>
+					<input id="invite-days" type="number" min="1" max="60" value="14" required>
+					<button type="submit" class="primary-button">Invite erzeugen</button>
+				</form>
+				<p id="invite-feedback" class="feedback"></p>
+				<div class="panel-columns">
+					<div>
+						<h3>Invites</h3>
+						<div id="invite-list" class="stack-list"></div>
+					</div>
+					<div>
+						<h3>Mitglieder</h3>
+						<div id="member-list" class="stack-list"></div>
+					</div>
+				</div>
+			</section>
+
+			<section class="card routes-card">
+				<p class="eyebrow">Struktur</p>
+				<h2>Verwaltungspfade</h2>
+				<div class="route-grid">
+					<a class="route-card" href="SocialRank.html"><strong>Social Rank</strong><span>Oeffentliche Bewertungsseite ohne Admin-Unordnung.</span></a>
+					<a class="route-card" href="LehrerRanking.html"><strong>Teacher Ranking</strong><span>Separates Spezial-Backoffice fuer Lehrerprofile.</span></a>
+					<a class="route-card" href="Hub.html"><strong>Hub</strong><span>Sauberer Einstieg fuer Nutzer ohne Verwaltungsballast.</span></a>
+					<a class="route-card" href="Guide.html"><strong>Guide</strong><span>Nutzererklaerung getrennt von Operations.</span></a>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="Admin.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

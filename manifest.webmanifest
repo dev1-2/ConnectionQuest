@@ -21,6 +21,10 @@
 			"url": "/SocialRank.html"
 		},
 		{
+			"name": "Admin",
+			"url": "/Admin.html"
+		},
+		{
 			"name": "Journal",
 			"url": "/ConnectionQuest.html"
 		},

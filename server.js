@@ -501,6 +501,15 @@ app.get("/api/admin/inner-circle", requireAdmin, async (request, response) => {
 	}
 });
 
+app.get("/api/admin/overview", requireAdmin, async (request, response) => {
+	try {
+		const overview = await loadAdminOverview();
+		response.json({ overview, auth: buildAuthState(request) });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
 app.post("/api/admin/inner-circle/invites", requireAdmin, async (request, response) => {
 	try {
 		const label = String(request.body?.label || "").trim().slice(0, 48);
@@ -1625,6 +1634,65 @@ async function loadInnerCircleMembers() {
 		level: Number(row.level) || 1,
 		joinedAt: row.inner_circle_joined_at,
 	}));
+}
+
+async function loadAdminOverview() {
+	const [
+		playerCountResult,
+		entryCountResult,
+		ratingCountResult,
+		peopleCountResult,
+		inviteCountResult,
+		teacherCountResult,
+		latestPlayersResult,
+		topPlayersResult,
+	] = await Promise.all([
+		pool.query("SELECT COUNT(*)::int AS count FROM cq_players"),
+		pool.query("SELECT COUNT(*)::int AS count FROM cq_entries"),
+		pool.query("SELECT COUNT(*)::int AS count FROM cq_social_ratings"),
+		pool.query("SELECT COUNT(*)::int AS count FROM cq_social_people"),
+		pool.query("SELECT COUNT(*)::int AS count FROM cq_inner_circle_invites"),
+		pool.query("SELECT COUNT(*)::int AS count FROM teachers"),
+		pool.query(
+			`SELECT handle, last_login_at, status_tier
+			 FROM cq_players
+			 ORDER BY last_login_at DESC NULLS LAST, created_at DESC
+			 LIMIT 8`,
+		),
+		pool.query(
+			`SELECT handle, score, level, placement, status_tier
+			 FROM cq_players
+			 ORDER BY placement ASC, created_at ASC
+			 LIMIT 6`,
+		),
+	]);
+
+	const members = await loadInnerCircleMembers();
+
+	return {
+		stats: {
+			players: Number(playerCountResult.rows[0]?.count) || 0,
+			entries: Number(entryCountResult.rows[0]?.count) || 0,
+			ratings: Number(ratingCountResult.rows[0]?.count) || 0,
+			people: Number(peopleCountResult.rows[0]?.count) || 0,
+			invites: Number(inviteCountResult.rows[0]?.count) || 0,
+			teacherProfiles: Number(teacherCountResult.rows[0]?.count) || 0,
+			innerCircleMembers: members.length,
+		},
+		recentPlayers: latestPlayersResult.rows.map((row) => ({
+			handle: row.handle,
+			lastLoginAt: row.last_login_at,
+			statusTier: row.status_tier || "standard",
+		})),
+		topPlayers: topPlayersResult.rows.map((row) => ({
+			handle: row.handle,
+			score: Number(row.score) || 0,
+			level: Number(row.level) || 1,
+			placement: Number(row.placement) || 0,
+			statusTier: row.status_tier || "standard",
+		})),
+		innerCircleMembers: members,
+	};
 }
 
 async function loadCqPlayerProfile(playerId) {

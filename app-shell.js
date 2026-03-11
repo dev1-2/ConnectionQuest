@@ -16,6 +16,11 @@ const PAGE_META = {
 		category: "Start",
 		quickLinks: ["Hub.html", "ConnectionQuest.html", "Games.html", "Leaderboard.html"],
 	},
+	"Admin.html": {
+		title: "Admin",
+		category: "Operations",
+		quickLinks: ["Hub.html", "LehrerRanking.html", "SocialRank.html", "Analytics.html"],
+	},
 	"SocialRank.html": {
 		title: "Social Rank",
 		category: "Social",
@@ -84,20 +89,20 @@ const NAV_GROUPS = [
 		links: ["Hub.html", "Guide.html", "index.html"],
 	},
 	{
-		label: "Core",
+		label: "Use",
 		links: ["ConnectionQuest.html", "Games.html", "Leaderboard.html", "Profile.html"],
 	},
 	{
-		label: "Social",
+		label: "Network",
 		links: ["Community.html", "Network.html", "SocialRank.html", "Notifications.html"],
 	},
 	{
-		label: "Meta",
+		label: "System",
 		links: ["Rewards.html", "Events.html", "Analytics.html"],
 	},
 	{
-		label: "Other",
-		links: ["LehrerRanking.html"],
+		label: "Operations",
+		links: ["Admin.html", "LehrerRanking.html"],
 	},
 ];
 

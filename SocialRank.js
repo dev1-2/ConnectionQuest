@@ -3,12 +3,6 @@ const SESSION_KEY = "connection-quest-session-token-v1";
 const state = {
 	sessionToken: window.localStorage.getItem(SESSION_KEY) || "",
 	data: buildEmptyState(),
-	admin: {
-		isAdmin: false,
-		adminConfigured: false,
-		invites: [],
-		members: [],
-	},
 };
 
 const elements = {
@@ -27,33 +21,16 @@ const elements = {
 	directoryList: document.querySelector("#directory-list"),
 	myRatings: document.querySelector("#my-ratings"),
 	innerCirclePanel: document.querySelector("#inner-circle-panel"),
-	adminStatus: document.querySelector("#admin-status"),
-	adminLoginBlock: document.querySelector("#admin-login-block"),
-	adminLoginForm: document.querySelector("#admin-login-form"),
-	adminPassword: document.querySelector("#admin-password"),
-	adminPanel: document.querySelector("#admin-panel"),
-	inviteForm: document.querySelector("#invite-form"),
-	inviteLabel: document.querySelector("#invite-label"),
-	invitePassword: document.querySelector("#invite-password"),
-	inviteDays: document.querySelector("#invite-days"),
-	adminFeedback: document.querySelector("#admin-feedback"),
-	inviteList: document.querySelector("#invite-list"),
-	memberList: document.querySelector("#member-list"),
-	adminLogout: document.querySelector("#admin-logout"),
 };
 
 elements.personRating.addEventListener("input", () => {
 	elements.ratingValue.textContent = `${elements.personRating.value} / 10`;
 });
 elements.ratingForm.addEventListener("submit", handleRatingSubmit);
-elements.adminLoginForm.addEventListener("submit", handleAdminLogin);
-elements.inviteForm.addEventListener("submit", handleInviteCreate);
-elements.adminLogout.addEventListener("click", handleAdminLogout);
-
 initialize();
 
 async function initialize() {
-	await Promise.all([hydrateSocialRank(), hydrateAdminStatus()]);
+	await hydrateSocialRank();
 	render();
 }
 
@@ -62,23 +39,6 @@ async function hydrateSocialRank() {
 	if (state.data.currentUserId && !state.sessionToken) {
 		state.sessionToken = window.localStorage.getItem(SESSION_KEY) || "";
 	}
-}
-
-async function hydrateAdminStatus() {
-	const payload = await fetchJson("/api/admin/status");
-	state.admin.isAdmin = Boolean(payload.auth?.isAdmin);
-	state.admin.adminConfigured = Boolean(payload.auth?.adminConfigured);
-	if (state.admin.isAdmin) {
-		await hydrateAdminPanel();
-	}
-}
-
-async function hydrateAdminPanel() {
-	const payload = await fetchJson("/api/admin/inner-circle");
-	state.admin.invites = payload.invites || [];
-	state.admin.members = payload.members || [];
-	state.admin.isAdmin = Boolean(payload.auth?.isAdmin);
-	state.admin.adminConfigured = Boolean(payload.auth?.adminConfigured);
 }
 
 async function handleRatingSubmit(event) {
@@ -108,59 +68,6 @@ async function handleRatingSubmit(event) {
 	}
 }
 
-async function handleAdminLogin(event) {
-	event.preventDefault();
-	const password = elements.adminPassword.value.trim();
-	if (!password) {
-		setFeedback(elements.adminFeedback, "Bitte Admin-Passwort eingeben.", true);
-		return;
-	}
-	try {
-		await fetchJson("/api/admin/login", { method: "POST", body: { password } });
-		elements.adminPassword.value = "";
-		await hydrateAdminStatus();
-		setFeedback(elements.adminFeedback, "Admin aktiv.", false);
-		renderAdmin();
-	} catch (error) {
-		setFeedback(elements.adminFeedback, error.message, true);
-	}
-}
-
-async function handleInviteCreate(event) {
-	event.preventDefault();
-	try {
-		const payload = await fetchJson("/api/admin/inner-circle/invites", {
-			method: "POST",
-			body: {
-				label: elements.inviteLabel.value.trim(),
-				password: elements.invitePassword.value.trim(),
-				expiresInDays: Number(elements.inviteDays.value),
-			},
-		});
-		state.admin.invites = payload.invites || [];
-		state.admin.members = payload.members || [];
-		elements.inviteForm.reset();
-		elements.inviteDays.value = "14";
-		setFeedback(elements.adminFeedback, `${payload.message} Code: ${payload.invite.inviteCode}`, false);
-		renderAdmin();
-	} catch (error) {
-		setFeedback(elements.adminFeedback, error.message, true);
-	}
-}
-
-async function handleAdminLogout() {
-	try {
-		await fetchJson("/api/admin/logout", { method: "POST" });
-		state.admin.isAdmin = false;
-		state.admin.invites = [];
-		state.admin.members = [];
-		setFeedback(elements.adminFeedback, "Admin ausgeloggt.", false);
-		renderAdmin();
-	} catch (error) {
-		setFeedback(elements.adminFeedback, error.message, true);
-	}
-}
-
 function render() {
 	renderStatus();
 	renderSummary();
@@ -168,7 +75,6 @@ function render() {
 	renderDirectory();
 	renderMyRatings();
 	renderInnerCircle();
-	renderAdmin();
 }
 
 function renderStatus() {
@@ -348,40 +254,6 @@ function renderInnerCircle() {
 	elements.innerCirclePanel.appendChild(memberPanel);
 }
 
-function renderAdmin() {
-	if (!state.admin.adminConfigured) {
-		elements.adminStatus.textContent = "Admin-Zugang ist nicht konfiguriert.";
-		elements.adminLoginBlock.hidden = true;
-		elements.adminPanel.hidden = true;
-		return;
-	}
-	elements.adminStatus.textContent = state.admin.isAdmin
-		? "Als Admin angemeldet. Invite-Erstellung ist frei."
-		: "Fuer Invite-Erstellung ist Admin-Anmeldung erforderlich.";
-	elements.adminLoginBlock.hidden = state.admin.isAdmin;
-	elements.adminPanel.hidden = !state.admin.isAdmin;
-	elements.inviteList.innerHTML = "";
-	elements.memberList.innerHTML = "";
-	state.admin.invites.forEach((invite) => {
-		const item = document.createElement("article");
-		item.className = "stack-item";
-		item.innerHTML = `<strong>${escapeHtml(invite.label)}</strong><p><span class="inline-code">${escapeHtml(invite.inviteCode)}</span> • ${invite.isActive ? "aktiv" : "geschlossen"}</p>`;
-		elements.inviteList.appendChild(item);
-	});
-	if (!state.admin.invites.length) {
-		elements.inviteList.innerHTML = '<article class="stack-item"><strong>Keine Invites</strong><p>Noch keine Codes erzeugt.</p></article>';
-	}
-	state.admin.members.forEach((member) => {
-		const item = document.createElement("article");
-		item.className = "stack-item";
-		item.innerHTML = `<strong>${escapeHtml(member.handle)}</strong><p>Level ${member.level} • Score ${member.score}</p>`;
-		elements.memberList.appendChild(item);
-	});
-	if (!state.admin.members.length) {
-		elements.memberList.innerHTML = '<article class="stack-item"><strong>Keine Mitglieder</strong><p>Der Innere Kreis ist noch leer.</p></article>';
-	}
-}
-
 async function apiRequest(url, options = {}) {
 	const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
 	if (options.auth !== false && state.sessionToken) {
@@ -390,20 +262,6 @@ async function apiRequest(url, options = {}) {
 	const response = await fetch(url, {
 		method: options.method || "GET",
 		headers,
-		body: options.body ? JSON.stringify(options.body) : undefined,
-	});
-	const payload = await response.json().catch(() => ({}));
-	if (!response.ok) {
-		throw new Error(payload.error || "Anfrage fehlgeschlagen.");
-	}
-	return payload;
-}
-
-async function fetchJson(url, options = {}) {
-	const response = await fetch(url, {
-		method: options.method || "GET",
-		credentials: "same-origin",
-		headers: { "Content-Type": "application/json", ...(options.headers || {}) },
 		body: options.body ? JSON.stringify(options.body) : undefined,
 	});
 	const payload = await response.json().catch(() => ({}));
