@@ -1,4 +1,6 @@
-const STORAGE_KEY = "connection-quest-entries";
+const USERS_KEY = "connection-quest-users-v2";
+const SESSION_KEY = "connection-quest-session-v2";
+const XP_PER_LEVEL = 180;
 
 const ACHIEVEMENTS = [
 	{
@@ -9,32 +11,32 @@ const ACHIEVEMENTS = [
 		unlocked: (stats) => stats.totalEntries >= 1,
 	},
 	{
-		id: "three-connections",
-		title: "Social Radar",
+		id: "network-builder",
+		title: "Network Builder",
 		icon: "02",
-		description: "Erfasse 3 verschiedene Namen.",
+		description: "Erfasse 3 verschiedene Connections.",
 		unlocked: (stats) => stats.uniqueConnections >= 3,
 	},
 	{
 		id: "variety-run",
 		title: "Variety Run",
 		icon: "03",
-		description: "Nutze mindestens 4 verschiedene Moment-Typen.",
+		description: "Nutze mindestens 4 Moment-Typen.",
 		unlocked: (stats) => stats.typeVariety >= 4,
 	},
 	{
 		id: "streak-starter",
 		title: "Consistency Spark",
 		icon: "04",
-		description: "Schaffe eine 3-Tage-Serie mit Einträgen.",
+		description: "Schaffe eine 3-Tage-Serie.",
 		unlocked: (stats) => stats.currentStreak >= 3,
 	},
 	{
-		id: "power-month",
-		title: "Power Month",
+		id: "score-climber",
+		title: "Score Climber",
 		icon: "05",
-		description: "Lege 8 Einträge in einem Monat an.",
-		unlocked: (stats) => stats.bestMonthCount >= 8,
+		description: "Erreiche 600 Score.",
+		unlocked: (stats) => stats.score >= 600,
 	},
 	{
 		id: "legend-path",
@@ -46,16 +48,22 @@ const ACHIEVEMENTS = [
 ];
 
 const state = {
-	entries: loadEntries(),
+	users: loadUsers(),
+	currentUserId: loadSession(),
 	selectedDate: todayString(),
 	visibleMonth: startOfMonth(new Date()),
 };
 
 const form = document.querySelector("#entry-form");
+const authForm = document.querySelector("#auth-form");
+const logoutButton = document.querySelector("#logout-player");
+const clearAllButton = document.querySelector("#clear-all");
 const nameInput = document.querySelector("#name");
 const dateInput = document.querySelector("#date");
 const typeInput = document.querySelector("#type");
 const notesInput = document.querySelector("#notes");
+const authHandleInput = document.querySelector("#auth-handle");
+const authPinInput = document.querySelector("#auth-pin");
 const calendarGrid = document.querySelector("#calendar-grid");
 const calendarLabel = document.querySelector("#calendar-label");
 const selectedDateLabel = document.querySelector("#selected-date-label");
@@ -63,19 +71,97 @@ const selectedDateSummary = document.querySelector("#selected-date-summary");
 const selectedDayList = document.querySelector("#selected-day-list");
 const recentList = document.querySelector("#recent-list");
 const achievementList = document.querySelector("#achievement-list");
+const leaderboardList = document.querySelector("#leaderboard-list");
 const entryTemplate = document.querySelector("#entry-template");
 
 document.querySelector("#prev-month").addEventListener("click", () => changeMonth(-1));
 document.querySelector("#next-month").addEventListener("click", () => changeMonth(1));
 document.querySelector("#today-btn").addEventListener("click", jumpToToday);
-document.querySelector("#clear-all").addEventListener("click", clearAllEntries);
+clearAllButton.addEventListener("click", clearAllEntries);
 form.addEventListener("submit", handleSubmit);
+authForm.addEventListener("submit", handleAuthSubmit);
+logoutButton.addEventListener("click", handleLogout);
 
 dateInput.value = state.selectedDate;
 render();
 
+function handleAuthSubmit(event) {
+	event.preventDefault();
+	const handle = authHandleInput.value.trim();
+	const pin = authPinInput.value.trim();
+	const intent = String(event.submitter?.value || "login");
+
+	if (!handle || pin.length < 4) {
+		setAuthMessage("Bitte Spielername und eine PIN mit mindestens 4 Zeichen eingeben.", true);
+		return;
+	}
+
+	if (intent === "register") {
+		handleRegister(handle, pin);
+		return;
+	}
+
+	handleLogin(handle, pin);
+}
+
+function handleRegister(handle, pin) {
+	const handleKey = toHandleKey(handle);
+	if (state.users.some((user) => user.handleKey === handleKey)) {
+		setAuthMessage("Dieser Spielername existiert bereits. Bitte einloggen.", true);
+		return;
+	}
+
+	const user = {
+		id: crypto.randomUUID(),
+		handle: normalizeHandle(handle),
+		handleKey,
+		pin,
+		createdAt: Date.now(),
+		entries: [],
+	};
+
+	state.users.unshift(user);
+	state.currentUserId = user.id;
+	saveUsers(state.users);
+	saveSession(user.id);
+	authForm.reset();
+	setAuthMessage(`${user.handle} wurde erstellt und eingeloggt.`);
+	render();
+}
+
+function handleLogin(handle, pin) {
+	const user = state.users.find((entry) => entry.handleKey === toHandleKey(handle));
+	if (!user) {
+		setAuthMessage("Kein passender Spieler gefunden. Bitte zuerst registrieren.", true);
+		return;
+	}
+
+	if (user.pin !== pin) {
+		setAuthMessage("Die PIN stimmt nicht.", true);
+		return;
+	}
+
+	state.currentUserId = user.id;
+	saveSession(user.id);
+	authForm.reset();
+	setAuthMessage(`${user.handle} ist jetzt aktiv.`);
+	render();
+}
+
+function handleLogout() {
+	state.currentUserId = "";
+	window.localStorage.removeItem(SESSION_KEY);
+	setAuthMessage("Spieler wurde ausgeloggt.");
+	render();
+}
+
 function handleSubmit(event) {
 	event.preventDefault();
+	const currentUser = getCurrentUser();
+	if (!currentUser) {
+		setAuthMessage("Bitte zuerst einloggen, um Interaktionen zu speichern.", true);
+		return;
+	}
 
 	const name = nameInput.value.trim();
 	const date = dateInput.value;
@@ -86,7 +172,7 @@ function handleSubmit(event) {
 		return;
 	}
 
-	state.entries.unshift({
+	currentUser.entries.unshift({
 		id: crypto.randomUUID(),
 		name,
 		date,
@@ -97,7 +183,7 @@ function handleSubmit(event) {
 
 	state.selectedDate = date;
 	state.visibleMonth = startOfMonth(new Date(date));
-	saveEntries(state.entries);
+	saveUsers(state.users);
 	form.reset();
 	dateInput.value = state.selectedDate;
 	typeInput.value = "Chat";
@@ -105,68 +191,132 @@ function handleSubmit(event) {
 }
 
 function clearAllEntries() {
-	if (!state.entries.length) {
+	const currentUser = getCurrentUser();
+	if (!currentUser || !currentUser.entries.length) {
 		return;
 	}
 
-	const confirmed = window.confirm("Wirklich alle Einträge löschen?");
+	const confirmed = window.confirm("Wirklich alle Interaktionen dieses Spielers löschen?");
 	if (!confirmed) {
 		return;
 	}
 
-	state.entries = [];
-	saveEntries(state.entries);
+	currentUser.entries = [];
 	state.selectedDate = todayString();
 	state.visibleMonth = startOfMonth(new Date());
+	saveUsers(state.users);
 	dateInput.value = state.selectedDate;
 	render();
 }
 
 function deleteEntry(id) {
-	state.entries = state.entries.filter((entry) => entry.id !== id);
-	saveEntries(state.entries);
+	const currentUser = getCurrentUser();
+	if (!currentUser) {
+		return;
+	}
+
+	currentUser.entries = currentUser.entries.filter((entry) => entry.id !== id);
+	saveUsers(state.users);
 	render();
 }
 
 function render() {
-	const stats = buildStats(state.entries);
-	renderStats(stats);
-	renderCalendar();
-	renderSelectedDay();
-	renderAchievements(stats);
-	renderRecentEntries();
+	const currentUser = getCurrentUser();
+	const entries = currentUser?.entries || [];
+	const stats = currentUser ? buildStats(entries) : buildEmptyStats();
+
+	renderSession(currentUser, stats);
+	renderAuth(currentUser, stats);
+	renderStats(currentUser, stats);
+	renderCalendar(entries, Boolean(currentUser));
+	renderSelectedDay(entries, Boolean(currentUser));
+	renderAchievements(stats, Boolean(currentUser));
+	renderRecentEntries(entries, Boolean(currentUser));
+	renderLeaderboard(currentUser?.id || "");
+	updateInteractionLock(Boolean(currentUser));
 }
 
-function renderStats(stats) {
-	document.querySelector("#unique-count").textContent = String(stats.uniqueConnections);
-	document.querySelector("#entry-count").textContent = String(stats.totalEntries);
-	document.querySelector("#streak-count").textContent = `${stats.currentStreak} ${stats.currentStreak === 1 ? "Tag" : "Tage"}`;
-	document.querySelector("#achievement-count").textContent = String(stats.unlockedAchievements);
-
-	document.querySelector("#unique-copy").textContent =
-		stats.uniqueConnections > 0 ? `Mit ${stats.uniqueConnections} verschiedenen Namen geloggt.` : "Noch keine Namen erfasst.";
-	document.querySelector("#entry-copy").textContent =
-		stats.totalEntries > 0 ? `Letzter Log: ${formatDate(stats.latestDate)}` : "Dein Journal wartet auf den ersten Log.";
-	document.querySelector("#streak-copy").textContent =
-		stats.currentStreak > 0 ? `Aktiv an ${stats.currentStreak} Tagen in Folge.` : "Noch keine Aktivität in Folge.";
-	document.querySelector("#achievement-copy").textContent =
-		stats.unlockedAchievements > 0 ? `${stats.unlockedAchievements} von ${ACHIEVEMENTS.length} Badges aktiviert.` : "Keine Badges freigeschaltet.";
-
+function renderSession(currentUser, stats) {
+	document.querySelector("#session-player").textContent = currentUser ? currentUser.handle : "Kein Spieler aktiv";
+	document.querySelector("#session-score").textContent = `${stats.score} Score`;
 	document.querySelector("#level-value").textContent = String(stats.level);
 	document.querySelector("#xp-value").textContent = `${stats.xp} XP`;
 	document.querySelector("#progress-text").textContent = `${stats.xpIntoLevel} / ${stats.xpToNextLevel} XP`;
 	document.querySelector("#progress-fill").style.width = `${stats.progressPercent}%`;
-	document.querySelector("#level-note").textContent = stats.levelMessage;
+	document.querySelector("#level-note").textContent = currentUser ? stats.levelMessage : "Starte mit einem Login und deinem ersten Log.";
+	document.querySelector("#player-note").textContent = currentUser
+		? `${currentUser.handle} sammelt mit jeder Interaktion Score, XP und Badges.`
+		: "Login erforderlich, um Punkte zu sammeln.";
 }
 
-function renderCalendar() {
+function renderAuth(currentUser, stats) {
+	const authStateCopy = document.querySelector("#auth-state-copy");
+	const profileSummary = document.querySelector("#profile-summary");
+	if (!currentUser) {
+		authStateCopy.textContent = "Registriere einen Spieler oder logge dich ein.";
+		profileSummary.classList.add("empty-state");
+		profileSummary.innerHTML = "Logge dich ein, um dein Profil, XP und Interaktionen zu sehen.";
+		logoutButton.hidden = true;
+		return;
+	}
+
+	authStateCopy.textContent = `Aktiv: ${currentUser.handle}`;
+	profileSummary.classList.remove("empty-state");
+	profileSummary.innerHTML = `
+		<div class="profile-grid">
+			<div>
+				<p class="mini-label">Spieler</p>
+				<h3>${escapeHtml(currentUser.handle)}</h3>
+			</div>
+			<div>
+				<p class="mini-label">Level</p>
+				<h3>${stats.level}</h3>
+			</div>
+			<div>
+				<p class="mini-label">XP</p>
+				<h3>${stats.xp}</h3>
+			</div>
+			<div>
+				<p class="mini-label">Streak</p>
+				<h3>${stats.currentStreak} Tage</h3>
+			</div>
+		</div>
+	`;
+	logoutButton.hidden = false;
+}
+
+function renderStats(currentUser, stats) {
+	document.querySelector("#score-count").textContent = String(stats.score);
+	document.querySelector("#entry-count").textContent = String(stats.totalEntries);
+	document.querySelector("#unique-count").textContent = String(stats.uniqueConnections);
+	document.querySelector("#streak-count").textContent = `${stats.currentStreak} ${stats.currentStreak === 1 ? "Tag" : "Tage"}`;
+	document.querySelector("#achievement-count").textContent = String(stats.unlockedAchievements);
+
+	document.querySelector("#score-copy").textContent = currentUser
+		? `Jede Interaktion gibt Punkte. ${stats.score} Score bisher.`
+		: "Noch keine Punkte gesammelt.";
+	document.querySelector("#entry-copy").textContent = currentUser
+		? (stats.totalEntries > 0 ? `Letzte Interaktion: ${formatDate(stats.latestDate)}` : "Dein Journal wartet auf den ersten Log.")
+		: "Login erforderlich für Interaktionen.";
+	document.querySelector("#unique-copy").textContent = currentUser
+		? (stats.uniqueConnections > 0 ? `${stats.uniqueConnections} verschiedene Namen geloggt.` : "Noch keine Namen erfasst.")
+		: "Noch keine Namen erfasst.";
+	document.querySelector("#streak-copy").textContent = currentUser
+		? (stats.currentStreak > 0 ? `Aktiv an ${stats.currentStreak} Tagen in Folge.` : "Noch keine Aktivität in Folge.")
+		: "Noch keine Aktivität in Folge.";
+	document.querySelector("#achievement-copy").textContent = currentUser
+		? (stats.unlockedAchievements > 0 ? `${stats.unlockedAchievements} von ${ACHIEVEMENTS.length} Badges aktiviert.` : "Keine Badges freigeschaltet.")
+		: "Keine Badges freigeschaltet.";
+}
+
+function renderCalendar(entries, hasUser) {
 	calendarGrid.innerHTML = "";
 	calendarLabel.textContent = monthFormatter(state.visibleMonth);
 
 	const monthStart = startOfMonth(state.visibleMonth);
 	const startWeekday = (monthStart.getDay() + 6) % 7;
 	const gridStart = addDays(monthStart, -startWeekday);
-	const entriesByDate = groupEntriesByDate(state.entries);
+	const entriesByDate = groupEntriesByDate(entries);
 
 	for (let index = 0; index < 42; index += 1) {
 		const day = addDays(gridStart, index);
@@ -193,7 +343,7 @@ function renderCalendar() {
 		button.innerHTML = `
 			<span class="day-number">${day.getDate()}</span>
 			<div class="day-dots">${items.slice(0, 4).map(() => "<span></span>").join("")}</div>
-			<small>${items.length ? `${items.length} Log${items.length > 1 ? "s" : ""}` : ""}</small>
+			<small>${hasUser && items.length ? `${items.length} Log${items.length > 1 ? "s" : ""}` : ""}</small>
 		`;
 		button.addEventListener("click", () => {
 			state.selectedDate = dayKey;
@@ -208,18 +358,23 @@ function renderCalendar() {
 	}
 }
 
-function renderSelectedDay() {
-	const dayEntries = state.entries
+function renderSelectedDay(entries, hasUser) {
+	const dayEntries = entries
 		.filter((entry) => entry.date === state.selectedDate)
 		.sort((left, right) => right.createdAt - left.createdAt);
 
-	selectedDateLabel.textContent = formatDate(state.selectedDate);
-	selectedDateSummary.textContent = dayEntries.length
-		? `${dayEntries.length} Eintrag${dayEntries.length > 1 ? "e" : ""} an diesem Tag.`
-		: "Noch keine Einträge für diesen Tag.";
+	selectedDateLabel.textContent = hasUser ? formatDate(state.selectedDate) : "Login erforderlich";
+	selectedDateSummary.textContent = !hasUser
+		? "Logge dich ein, um deine Tagesansicht zu sehen."
+		: (dayEntries.length ? `${dayEntries.length} Eintrag${dayEntries.length > 1 ? "e" : ""} an diesem Tag.` : "Noch keine Einträge für diesen Tag.");
 
 	selectedDayList.innerHTML = "";
-	selectedDayList.classList.toggle("empty-state", dayEntries.length === 0);
+	selectedDayList.classList.toggle("empty-state", dayEntries.length === 0 || !hasUser);
+
+	if (!hasUser) {
+		selectedDayList.textContent = "Login erforderlich, um deine Interaktionen zu sehen.";
+		return;
+	}
 
 	if (!dayEntries.length) {
 		selectedDayList.textContent = "Noch keine Einträge für diesen Tag.";
@@ -231,11 +386,11 @@ function renderSelectedDay() {
 	});
 }
 
-function renderAchievements(stats) {
+function renderAchievements(stats, hasUser) {
 	achievementList.innerHTML = "";
 
 	ACHIEVEMENTS.forEach((achievement) => {
-		const unlocked = achievement.unlocked(stats);
+		const unlocked = hasUser && achievement.unlocked(stats);
 		const item = document.createElement("article");
 		item.className = `achievement-item${unlocked ? "" : " locked"}`;
 		item.innerHTML = `
@@ -250,16 +405,21 @@ function renderAchievements(stats) {
 	});
 }
 
-function renderRecentEntries() {
+function renderRecentEntries(entries, hasUser) {
 	recentList.innerHTML = "";
-	recentList.classList.toggle("empty-state", state.entries.length === 0);
+	recentList.classList.toggle("empty-state", entries.length === 0 || !hasUser);
 
-	if (!state.entries.length) {
+	if (!hasUser) {
+		recentList.textContent = "Login erforderlich, um letzte Interaktionen zu sehen.";
+		return;
+	}
+
+	if (!entries.length) {
 		recentList.textContent = "Noch keine Einträge vorhanden.";
 		return;
 	}
 
-	state.entries
+	entries
 		.slice()
 		.sort((left, right) => {
 			if (left.date === right.date) {
@@ -275,6 +435,46 @@ function renderRecentEntries() {
 				: `${formatDate(entry.date)} • Keine Notiz`;
 			recentList.appendChild(node);
 		});
+}
+
+function renderLeaderboard(currentUserId) {
+	leaderboardList.innerHTML = "";
+
+	if (!state.users.length) {
+		leaderboardList.textContent = "Noch keine Spieler vorhanden.";
+		leaderboardList.classList.add("empty-state");
+		return;
+	}
+
+	leaderboardList.classList.remove("empty-state");
+	const sortedUsers = state.users
+		.map((user) => ({
+			user,
+			stats: buildStats(user.entries || []),
+		}))
+		.sort((left, right) => {
+			if (right.stats.score !== left.stats.score) {
+				return right.stats.score - left.stats.score;
+			}
+			if (right.stats.xp !== left.stats.xp) {
+				return right.stats.xp - left.stats.xp;
+			}
+			return right.stats.totalEntries - left.stats.totalEntries;
+		});
+
+	sortedUsers.forEach(({ user, stats }, index) => {
+		const item = document.createElement("article");
+		item.className = `leaderboard-item${user.id === currentUserId ? " is-active" : ""}`;
+		item.innerHTML = `
+			<div class="leaderboard-rank">#${index + 1}</div>
+			<div class="leaderboard-copy">
+				<h3>${escapeHtml(user.handle)}</h3>
+				<p>Level ${stats.level} • ${stats.totalEntries} Interaktionen • ${stats.unlockedAchievements} Badges</p>
+			</div>
+			<div class="leaderboard-score">${stats.score}</div>
+		`;
+		leaderboardList.appendChild(item);
+	});
 }
 
 function buildEntryNode(entry) {
@@ -294,18 +494,26 @@ function buildStats(entries) {
 	const bestMonthCount = calculateBestMonthCount(entries);
 	const latestDate = entries.length ? entries.reduce((latest, entry) => entry.date > latest ? entry.date : latest, entries[0].date) : null;
 
-	const baseXp = (entries.length * 20) + (uniqueConnections * 35) + (typeVariety * 25) + (currentStreak * 15);
-	const level = Math.max(1, Math.floor(baseXp / 120) + 1);
-	const xpIntoLevel = baseXp % 120;
-	const xpToNextLevel = 120;
-	const unlockedAchievements = ACHIEVEMENTS.filter((achievement) => achievement.unlocked({
+	const xp = (entries.length * 35) + (uniqueConnections * 30) + (typeVariety * 20) + (currentStreak * 25) + (bestMonthCount * 10);
+	const level = Math.max(1, Math.floor(xp / XP_PER_LEVEL) + 1);
+	const xpIntoLevel = xp % XP_PER_LEVEL;
+	const xpToNextLevel = XP_PER_LEVEL;
+	const baseStats = {
 		totalEntries: entries.length,
 		uniqueConnections,
 		typeVariety,
 		currentStreak,
 		bestMonthCount,
 		level,
-	})).length;
+		score: 0,
+	};
+	const provisionalAchievements = ACHIEVEMENTS.filter((achievement) => achievement.unlocked(baseStats)).length;
+	const score = xp + (entries.length * 12) + (provisionalAchievements * 100);
+	const finalStats = {
+		...baseStats,
+		score,
+	};
+	const unlockedAchievements = ACHIEVEMENTS.filter((achievement) => achievement.unlocked(finalStats)).length;
 
 	return {
 		totalEntries: entries.length,
@@ -314,7 +522,8 @@ function buildStats(entries) {
 		currentStreak,
 		bestMonthCount,
 		latestDate,
-		xp: baseXp,
+		xp,
+		score,
 		level,
 		xpIntoLevel,
 		xpToNextLevel,
@@ -324,17 +533,60 @@ function buildStats(entries) {
 	};
 }
 
+function buildEmptyStats() {
+	return {
+		totalEntries: 0,
+		uniqueConnections: 0,
+		typeVariety: 0,
+		currentStreak: 0,
+		bestMonthCount: 0,
+		latestDate: null,
+		xp: 0,
+		score: 0,
+		level: 1,
+		xpIntoLevel: 0,
+		xpToNextLevel: XP_PER_LEVEL,
+		progressPercent: 0,
+		unlockedAchievements: 0,
+		levelMessage: "Starte mit dem ersten Eintrag.",
+	};
+}
+
 function buildLevelMessage(level, totalEntries) {
 	if (totalEntries === 0) {
 		return "Starte mit dem ersten Eintrag.";
 	}
 	if (level < 3) {
-		return "Momentum baut sich auf. Noch ein paar Logs bis zur nächsten Stufe.";
+		return "Momentum baut sich auf. Jede Interaktion zaehlt in den Score.";
 	}
 	if (level < 5) {
-		return "Stabile Serie. Der Tracker sammelt langsam echte Historie.";
+		return "Stabile Serie. Dein Profil arbeitet sich im Leaderboard nach oben.";
 	}
-	return "Starke Aktivität. Dein Board sieht bereits nach Endgame aus.";
+	return "Starke Aktivitaet. Dein Board sieht bereits nach Endgame aus.";
+}
+
+function updateInteractionLock(isLoggedIn) {
+	const locked = !isLoggedIn;
+	Array.from(form.elements).forEach((element) => {
+		element.disabled = locked;
+	});
+	clearAllButton.disabled = locked;
+	document.querySelector("#form-lock-copy").textContent = locked
+		? "Login erforderlich. Erst dann zaehlt jede Interaktion zu Score und XP."
+		: "Alles bleibt lokal im Browser gespeichert.";
+	if (locked) {
+		dateInput.value = state.selectedDate;
+	}
+}
+
+function setAuthMessage(message, isError = false) {
+	const node = document.querySelector("#auth-message");
+	node.textContent = message;
+	node.classList.toggle("is-error", isError);
+}
+
+function getCurrentUser() {
+	return state.users.find((user) => user.id === state.currentUserId) || null;
 }
 
 function calculateCurrentStreak(sortedDescDates) {
@@ -394,9 +646,9 @@ function jumpToToday() {
 	render();
 }
 
-function loadEntries() {
+function loadUsers() {
 	try {
-		const raw = window.localStorage.getItem(STORAGE_KEY);
+		const raw = window.localStorage.getItem(USERS_KEY);
 		const parsed = raw ? JSON.parse(raw) : [];
 		return Array.isArray(parsed) ? parsed : [];
 	} catch {
@@ -404,8 +656,16 @@ function loadEntries() {
 	}
 }
 
-function saveEntries(entries) {
-	window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+function saveUsers(users) {
+	window.localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
+
+function loadSession() {
+	return window.localStorage.getItem(SESSION_KEY) || "";
+}
+
+function saveSession(userId) {
+	window.localStorage.setItem(SESSION_KEY, userId);
 }
 
 function todayString() {
@@ -445,4 +705,26 @@ function monthFormatter(date) {
 		month: "long",
 		year: "numeric",
 	}).format(date);
+}
+
+function normalizeHandle(value) {
+	return value
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean)
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+		.join(" ");
+}
+
+function toHandleKey(value) {
+	return value.trim().toLowerCase();
+}
+
+function escapeHtml(value) {
+	return String(value)
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#39;");
 }

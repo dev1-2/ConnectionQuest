@@ -10,6 +10,7 @@
 	--teal: #1f8a86;
 	--sky: #7ac6d2;
 	--olive: #7b8f53;
+	--plum: #7a5af8;
 	--shadow: 0 20px 60px rgba(84, 62, 17, 0.12);
 }
 
@@ -99,9 +100,12 @@ h1 {
 .hero-text,
 .section-copy,
 .level-note,
+.player-note,
 .stat-card p:last-child,
 .entry-notes,
-.empty-state {
+	.empty-state,
+	.auth-message,
+	.leaderboard-copy p {
 	color: var(--muted);
 }
 
@@ -118,12 +122,48 @@ h1 {
 	gap: 0.75rem;
 }
 
+.hero-actions {
+	margin-top: 1.1rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.85rem;
+}
+
 .hero-badges span,
 .xp-chip,
-.entry-type {
+	.entry-type,
+	.session-banner {
 	border-radius: 999px;
 	padding: 0.55rem 0.9rem;
 	background: rgba(31, 42, 44, 0.06);
+}
+
+.session-banner {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-top: 1rem;
+	font-weight: 700;
+	flex-wrap: wrap;
+}
+
+.hero-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.85rem 1.15rem;
+	border-radius: 999px;
+	background: linear-gradient(135deg, var(--coral), var(--gold));
+	color: #fffdf9;
+	text-decoration: none;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+	transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.hero-link:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 18px 32px rgba(84, 62, 17, 0.18);
 }
 
 .level-panel {
@@ -139,7 +179,8 @@ h1 {
 .level-head,
 .section-head,
 .progress-meta,
-.entry-topline {
+	.entry-topline,
+	.profile-grid {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -181,14 +222,18 @@ h1 {
 	padding: 1.4rem;
 }
 
+.auth-card {
+	grid-column: span 4;
+}
+
 .form-card {
-	grid-column: span 5;
+	grid-column: span 8;
 }
 
 .stats-grid {
-	grid-column: span 7;
+	grid-column: span 12;
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(5, minmax(0, 1fr));
 	gap: 1.25rem;
 }
 
@@ -201,14 +246,18 @@ h1 {
 .accent-two { border-top: 8px solid var(--coral); }
 .accent-three { border-top: 8px solid var(--teal); }
 .accent-four { border-top: 8px solid var(--olive); }
+.accent-five { border-top: 8px solid var(--plum); }
 
 .calendar-card {
 	grid-column: span 7;
 }
 
+.achievement-card {
+	grid-column: span 7;
+}
+
 .day-card,
-.achievement-card,
-.timeline-card {
+.leaderboard-card {
 	grid-column: span 5;
 }
 
@@ -216,14 +265,16 @@ h1 {
 	grid-column: span 12;
 }
 
-.entry-form {
+.entry-form,
+.auth-form {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 1rem;
 	margin-top: 1.25rem;
 }
 
-.entry-form label {
+.entry-form label,
+.auth-form label {
 	display: flex;
 	flex-direction: column;
 	gap: 0.45rem;
@@ -283,7 +334,8 @@ textarea {
 
 .ghost-btn,
 .danger-btn,
-.delete-btn {
+	.delete-btn,
+	.auth-ghost {
 	padding: 0.7rem 0.95rem;
 	background: rgba(255, 255, 255, 0.52);
 	color: var(--text);
@@ -292,6 +344,36 @@ textarea {
 .danger-btn,
 .delete-btn {
 	border-color: rgba(239, 107, 87, 0.28);
+}
+
+.auth-actions,
+.auth-footer-actions {
+	display: flex;
+	gap: 0.8rem;
+	flex-wrap: wrap;
+}
+
+.auth-message.is-error {
+	color: #9b2a1f;
+}
+
+.profile-summary {
+	margin-top: 1rem;
+	padding: 1rem;
+	border-radius: 18px;
+	background: rgba(255, 255, 255, 0.46);
+}
+
+.profile-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1rem;
+	align-items: start;
+}
+
+.profile-grid h3 {
+	margin: 0.3rem 0 0;
+	font-size: 1.15rem;
 }
 
 .calendar-actions {
@@ -363,14 +445,16 @@ textarea {
 
 .day-list,
 .recent-list,
-.achievement-list {
+	.achievement-list,
+	.leaderboard-list {
 	display: grid;
 	gap: 0.85rem;
 	margin-top: 1.2rem;
 }
 
 .entry-item,
-.achievement-item {
+	.achievement-item,
+	.leaderboard-item {
 	display: flex;
 	justify-content: space-between;
 	gap: 1rem;
@@ -381,14 +465,27 @@ textarea {
 	border: 1px solid rgba(31, 42, 44, 0.08);
 }
 
+.leaderboard-item.is-active {
+	border-color: rgba(31, 138, 134, 0.35);
+	box-shadow: inset 0 0 0 1px rgba(31, 138, 134, 0.12);
+}
+
+.leaderboard-rank,
+.leaderboard-score {
+	font-weight: 700;
+	font-size: 1.2rem;
+}
+
 .entry-item h3,
-.achievement-item h3 {
+	.achievement-item h3,
+	.leaderboard-copy h3 {
 	margin: 0;
 	font-size: 1.02rem;
 }
 
 .entry-item p,
-.achievement-item p {
+	.achievement-item p,
+	.leaderboard-copy p {
 	margin: 0.35rem 0 0;
 }
 
@@ -422,13 +519,19 @@ textarea {
 		grid-template-columns: 1fr;
 	}
 
+	.auth-card,
 	.form-card,
 	.stats-grid,
 	.calendar-card,
 	.day-card,
 	.achievement-card,
+	.leaderboard-card,
 	.timeline-card {
 		grid-column: span 1;
+	}
+
+	.stats-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
 
@@ -445,13 +548,16 @@ textarea {
 	}
 
 	.entry-form,
-	.stats-grid {
+	.auth-form,
+	.stats-grid,
+	.profile-grid {
 		grid-template-columns: 1fr;
 	}
 
 	.section-head,
 	.level-head,
-	.entry-topline {
+	.entry-topline,
+	.auth-actions {
 		align-items: flex-start;
 		flex-direction: column;
 	}
@@ -463,5 +569,19 @@ textarea {
 	.calendar-day {
 		min-height: 84px;
 		padding: 0.65rem;
+	}
+
+	.leaderboard-item,
+	.entry-item,
+	.achievement-item,
+	.auth-footer-actions {
+		align-items: flex-start;
+	}
+
+	.hero-link,
+	.primary-btn,
+	.danger-btn,
+	.auth-ghost {
+		width: 100%;
 	}
 }

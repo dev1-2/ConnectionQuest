@@ -40,6 +40,9 @@ app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: "1mb" }));
+app.get("/", (_request, response) => {
+	response.sendFile(path.join(publicDir, "Welcome.html"));
+});
 app.use("/api/", rateLimit({
 	windowMs: 15 * 60 * 1000,
 	max: 400,
