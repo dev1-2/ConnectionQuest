@@ -1,17 +1,17 @@
 :root {
-	--bg: #f7f1df;
-	--panel: rgba(255, 251, 243, 0.86);
-	--panel-strong: #fff8eb;
-	--text: #1f2a2c;
-	--muted: #5c6a6d;
-	--line: rgba(31, 42, 44, 0.12);
-	--gold: #f2b544;
-	--coral: #ef6b57;
-	--teal: #1f8a86;
-	--sky: #7ac6d2;
-	--olive: #7b8f53;
-	--plum: #7a5af8;
-	--shadow: 0 20px 60px rgba(84, 62, 17, 0.12);
+	--bg: #050505;
+	--panel: rgba(255, 255, 255, 0.04);
+	--line: rgba(255, 255, 255, 0.12);
+	--text: #f5f5f5;
+	--muted: rgba(255, 255, 255, 0.58);
+	--soft: rgba(255, 255, 255, 0.2);
+	--shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+	--gold: #ffd700;
+	--coral: #ff6b6b;
+	--teal: #20c997;
+	--sky: #00d4ff;
+	--olive: #7fff7f;
+	--plum: #da70d6;
 }
 
 * {
@@ -23,10 +23,9 @@ body {
 	min-height: 100vh;
 	font-family: "Space Grotesk", sans-serif;
 	color: var(--text);
-	background:
-		radial-gradient(circle at top left, rgba(242, 181, 68, 0.38), transparent 26%),
-		radial-gradient(circle at 80% 15%, rgba(31, 138, 134, 0.22), transparent 20%),
-		linear-gradient(135deg, #f8eed6 0%, #f5e1bc 45%, #f0d9bd 100%);
+	background: #050505;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 
 button,
@@ -301,8 +300,8 @@ select,
 textarea {
 	width: 100%;
 	padding: 0.92rem 1rem;
-	background: rgba(255, 255, 255, 0.58);
-	color: var(--text);
+	background: rgba(255, 255, 255, 0.85);
+	color: #050505;
 }
 
 textarea {
@@ -327,7 +326,7 @@ textarea {
 .primary-btn {
 	padding: 1rem 1.25rem;
 	border: none;
-	background: linear-gradient(135deg, var(--teal), #2ba7a2);
+	background: #1f365c;
 	color: white;
 	font-weight: 700;
 }
@@ -337,8 +336,8 @@ textarea {
 	.delete-btn,
 	.auth-ghost {
 	padding: 0.7rem 0.95rem;
-	background: rgba(255, 255, 255, 0.52);
-	color: var(--text);
+	background: #1f365c;
+	color: white;
 }
 
 .danger-btn,
@@ -419,7 +418,7 @@ textarea {
 }
 
 .calendar-day.today .day-number {
-	color: var(--coral);
+	color: rgba(255, 255, 255, 0.7);
 }
 
 .calendar-day.has-entry {
@@ -440,7 +439,7 @@ textarea {
 	width: 9px;
 	height: 9px;
 	border-radius: 50%;
-	background: var(--teal);
+	background: rgba(255, 255, 255, 0.15);
 }
 
 .day-list,
