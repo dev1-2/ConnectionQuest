@@ -187,32 +187,52 @@ app.post("/api/admin/purge", requireAdmin, async (request, response) => {
 
 app.post("/api/vote", async (request, response) => {
 	try {
-		const side = request.body?.side;
+		const { leftId, rightId, side } = request.body || {};
 		if (side !== "left" && side !== "right") {
 			response.status(400).json({ error: "Ungültige Auswahl." });
 			return;
 		}
-
-		const state = await loadRuntimeState();
-		if (!state.currentPair.left || !state.currentPair.right) {
-			response.status(400).json({ error: "Kein aktives Duell vorhanden." });
+		if (!leftId || !rightId || leftId === rightId) {
+			response.status(400).json({ error: "Ungültiges Duell." });
 			return;
 		}
 
-		const winner = side === "left" ? state.currentPair.left : state.currentPair.right;
-		const loser = side === "left" ? state.currentPair.right : state.currentPair.left;
+		const winnerId = side === "left" ? leftId : rightId;
+		const loserId = side === "left" ? rightId : leftId;
 
-		winner.wins += 1;
-		winner.matches += 1;
-		loser.losses += 1;
-		loser.matches += 1;
-		state.rounds += 1;
+		const client = await pool.connect();
+		let winnerRow, loserRow;
+		try {
+			await client.query("BEGIN");
+			const winnerResult = await client.query(
+				"UPDATE teachers SET wins = wins + 1, matches = matches + 1 WHERE id = $1 RETURNING *",
+				[winnerId],
+			);
+			const loserResult = await client.query(
+				"UPDATE teachers SET losses = losses + 1, matches = matches + 1 WHERE id = $1 RETURNING *",
+				[loserId],
+			);
+			await client.query(
+				"UPDATE app_state SET rounds = rounds + 1, updated_at = NOW() WHERE state_key = 'main'",
+			);
+			await client.query("COMMIT");
+			winnerRow = winnerResult.rows[0];
+			loserRow = loserResult.rows[0];
+		} catch (error) {
+			await client.query("ROLLBACK");
+			throw error;
+		} finally {
+			client.release();
+		}
 
-		advanceBattle(state, winner.id, loser.id);
-		await persistBattleState(state, [winner.id, loser.id]);
+		if (!winnerRow || !loserRow) {
+			response.status(400).json({ error: "Lehrer nicht gefunden." });
+			return;
+		}
 
+		const state = await loadRuntimeState();
 		response.json({
-			message: `${winner.name} gewinnt gegen ${loser.name}.`,
+			message: `${winnerRow.name} gewinnt gegen ${loserRow.name}.`,
 			state: serializeState(state),
 			auth: buildAuthState(request),
 		});
@@ -286,30 +306,13 @@ async function loadRuntimeState() {
 		matches: Number(row.matches),
 	}));
 
-	const appState = appStateResult.rows[0] || {
-		rounds: 0,
-		queue: [],
-		left_id: null,
-		right_id: null,
-	};
+	const appState = appStateResult.rows[0] || { rounds: 0 };
 
-	const validIds = new Set(teachers.map((teacher) => teacher.id));
-	const state = {
+	return {
 		teachers,
 		rounds: Number(appState.rounds) || 0,
-		queue: Array.isArray(appState.queue) ? appState.queue.filter((id) => validIds.has(id)) : [],
-		currentPair: {
-			left: teachers.find((teacher) => teacher.id === appState.left_id) || null,
-			right: teachers.find((teacher) => teacher.id === appState.right_id) || null,
-		},
+		currentPair: generateRandomPair(teachers),
 	};
-
-	if (teachers.length >= 2 && (!state.currentPair.left || !state.currentPair.right)) {
-		setupBattle(state);
-		await persistBattleState(state);
-	}
-
-	return state;
 }
 
 async function replaceRuntimeState(state) {
@@ -339,68 +342,12 @@ async function replaceRuntimeState(state) {
 		await client.query(
 			`UPDATE app_state
 			 SET rounds = $1,
-			     queue = $2::jsonb,
-			     left_id = $3,
-			     right_id = $4,
+			     queue = '[]'::jsonb,
+			     left_id = NULL,
+			     right_id = NULL,
 			     updated_at = NOW()
 			 WHERE state_key = 'main'`,
-			[
-				state.rounds,
-				JSON.stringify(state.queue),
-				state.currentPair.left?.id || null,
-				state.currentPair.right?.id || null,
-			],
-		);
-
-		await client.query("COMMIT");
-	} catch (error) {
-		await client.query("ROLLBACK");
-		throw error;
-	} finally {
-		client.release();
-	}
-}
-
-async function persistBattleState(state, teacherIds = null) {
-	const client = await pool.connect();
-	try {
-		await client.query("BEGIN");
-
-		const teacherIdSet = Array.isArray(teacherIds) ? new Set(teacherIds) : null;
-		const teachersToUpdate = teacherIdSet
-			? state.teachers.filter((teacher) => teacherIdSet.has(teacher.id))
-			: [];
-
-		for (const teacher of teachersToUpdate) {
-			await client.query(
-				`UPDATE teachers
-				 SET wins = $2,
-				     losses = $3,
-				     matches = $4
-				 WHERE id = $1`,
-				[
-					teacher.id,
-					teacher.wins,
-					teacher.losses,
-					teacher.matches,
-				],
-			);
-		}
-
-		await client.query(
-			`UPDATE app_state
-			 SET rounds = $1,
-			     queue = $2::jsonb,
-			     left_id = $3,
-			     right_id = $4,
-			     updated_at = NOW()
-			 WHERE state_key = 'main'`,
-			[
-				state.rounds,
-				JSON.stringify(state.queue),
-				state.currentPair.left?.id || null,
-				state.currentPair.right?.id || null,
-			],
+			[state.rounds],
 		);
 
 		await client.query("COMMIT");
@@ -451,73 +398,25 @@ function sanitizeImageUrl(value) {
 }
 
 function createStateFromTeachers(teachers) {
-	const state = {
+	return {
 		teachers: normalizeTeacherPayload(teachers),
 		rounds: 0,
-		queue: [],
 		currentPair: { left: null, right: null },
 	};
-	setupBattle(state);
-	return state;
 }
 
-function setupBattle(state) {
-	if (state.teachers.length < 2) {
-		state.currentPair = { left: null, right: null };
-		state.queue = [];
-		return;
+function generateRandomPair(teachers) {
+	if (teachers.length < 2) {
+		return { left: null, right: null };
 	}
-
-	state.queue = shuffle(state.teachers.map((teacher) => teacher.id));
-	const leftId = state.queue.shift();
-	const rightId = state.queue.shift();
-	state.currentPair.left = findTeacher(state, leftId);
-	state.currentPair.right = findTeacher(state, rightId);
-	state.queue = state.queue.filter((id) => id !== leftId && id !== rightId);
-	if (!state.currentPair.left || !state.currentPair.right) {
-		state.currentPair.left = state.teachers[0] || null;
-		state.currentPair.right = state.teachers[1] || null;
-	}
-}
-
-function advanceBattle(state, winnerId, loserId) {
-	const winner = findTeacher(state, winnerId);
-	const loser = findTeacher(state, loserId);
-
-	state.currentPair.left = winner;
-
-	if (loser && loser.id !== winner.id) {
-		state.queue.push(loser.id);
-	}
-
-	let nextChallenger = null;
-	while (state.queue.length > 0 && !nextChallenger) {
-		const candidateId = state.queue.shift();
-		if (candidateId !== winner.id) {
-			nextChallenger = findTeacher(state, candidateId);
-		}
-	}
-
-	if (!nextChallenger) {
-		nextChallenger = state.teachers.find((teacher) => teacher.id !== winner.id) || null;
-	}
-
-	state.currentPair.right = nextChallenger;
-	state.queue = state.queue.filter((id) => id !== winner.id && id !== state.currentPair.right?.id);
-	if (!state.queue.length) {
-		state.queue = shuffle(
-			state.teachers
-				.map((teacher) => teacher.id)
-				.filter((id) => id !== winner.id && id !== state.currentPair.right?.id),
-		);
-	}
+	const shuffled = shuffle(teachers);
+	return { left: shuffled[0], right: shuffled[1] };
 }
 
 function serializeState(state) {
 	return {
 		teachers: state.teachers,
 		rounds: state.rounds,
-		queue: state.queue,
 		currentPair: state.currentPair,
 	};
 }

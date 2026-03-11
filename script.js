@@ -74,7 +74,11 @@ async function handleVote(side) {
 	try {
 		const payload = await fetchJson("/api/vote", {
 			method: "POST",
-			body: JSON.stringify({ side }),
+			body: JSON.stringify({
+				leftId: state.currentPair.left.id,
+				rightId: state.currentPair.right.id,
+				side,
+			}),
 		});
 		applyServerState(payload.state, payload.auth);
 		render(payload.message);
