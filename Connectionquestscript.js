@@ -71,7 +71,6 @@ const selectedDateSummary = document.querySelector("#selected-date-summary");
 const selectedDayList = document.querySelector("#selected-day-list");
 const recentList = document.querySelector("#recent-list");
 const achievementList = document.querySelector("#achievement-list");
-const leaderboardList = document.querySelector("#leaderboard-list");
 const entryTemplate = document.querySelector("#entry-template");
 
 document.querySelector("#prev-month").addEventListener("click", () => changeMonth(-1));
@@ -232,7 +231,6 @@ function render() {
 	renderSelectedDay(entries, Boolean(currentUser));
 	renderAchievements(stats, Boolean(currentUser));
 	renderRecentEntries(entries, Boolean(currentUser));
-	renderLeaderboard(currentUser?.id || "");
 	updateInteractionLock(Boolean(currentUser));
 }
 
@@ -435,46 +433,6 @@ function renderRecentEntries(entries, hasUser) {
 				: `${formatDate(entry.date)} • Keine Notiz`;
 			recentList.appendChild(node);
 		});
-}
-
-function renderLeaderboard(currentUserId) {
-	leaderboardList.innerHTML = "";
-
-	if (!state.users.length) {
-		leaderboardList.textContent = "Noch keine Spieler vorhanden.";
-		leaderboardList.classList.add("empty-state");
-		return;
-	}
-
-	leaderboardList.classList.remove("empty-state");
-	const sortedUsers = state.users
-		.map((user) => ({
-			user,
-			stats: buildStats(user.entries || []),
-		}))
-		.sort((left, right) => {
-			if (right.stats.score !== left.stats.score) {
-				return right.stats.score - left.stats.score;
-			}
-			if (right.stats.xp !== left.stats.xp) {
-				return right.stats.xp - left.stats.xp;
-			}
-			return right.stats.totalEntries - left.stats.totalEntries;
-		});
-
-	sortedUsers.forEach(({ user, stats }, index) => {
-		const item = document.createElement("article");
-		item.className = `leaderboard-item${user.id === currentUserId ? " is-active" : ""}`;
-		item.innerHTML = `
-			<div class="leaderboard-rank">#${index + 1}</div>
-			<div class="leaderboard-copy">
-				<h3>${escapeHtml(user.handle)}</h3>
-				<p>Level ${stats.level} • ${stats.totalEntries} Interaktionen • ${stats.unlockedAchievements} Badges</p>
-			</div>
-			<div class="leaderboard-score">${stats.score}</div>
-		`;
-		leaderboardList.appendChild(item);
-	});
 }
 
 function buildEntryNode(entry) {
@@ -728,3 +686,4 @@ function escapeHtml(value) {
 		.replaceAll('"', "&quot;")
 		.replaceAll("'", "&#39;");
 }
+

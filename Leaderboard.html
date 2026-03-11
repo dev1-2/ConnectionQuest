@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Connection Quest Leaderboard</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Leaderboard.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="leader-hero">
+			<section class="hero-card spotlight">
+				<p class="eyebrow">LOCAL RANKING</p>
+				<h1>Leaderboard</h1>
+				<p class="hero-copy">
+					Alle lokalen Profile, sortiert nach Score, XP, Aktivität und freigeschalteten Badges.
+				</p>
+				<div class="hero-actions">
+					<a class="hero-link" href="ConnectionQuest.html">Zurück zu Connection Quest</a>
+					<a class="ghost-link" href="Welcome.html">Welcome Intro</a>
+				</div>
+			</section>
+
+			<section class="hero-card current-player" aria-live="polite">
+				<p class="mini-label">Aktiver Spieler</p>
+				<h2 id="current-player-name">Kein Spieler aktiv</h2>
+				<p id="current-player-copy" class="section-copy">Logge dich in Connection Quest ein, damit dein Profil markiert wird.</p>
+				<div class="mini-stats">
+					<div>
+						<p class="mini-label">Score</p>
+						<strong id="current-player-score">0</strong>
+					</div>
+					<div>
+						<p class="mini-label">Level</p>
+						<strong id="current-player-level">1</strong>
+					</div>
+				</div>
+			</section>
+		</header>
+
+		<main class="leader-layout">
+			<section class="card summary-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Overview</p>
+						<h2>Board Stats</h2>
+					</div>
+				</div>
+				<div class="summary-grid">
+					<article class="stat-box accent-one">
+						<p class="mini-label">Spieler</p>
+						<h3 id="player-count">0</h3>
+					</article>
+					<article class="stat-box accent-two">
+						<p class="mini-label">Top Score</p>
+						<h3 id="top-score">0</h3>
+					</article>
+					<article class="stat-box accent-three">
+						<p class="mini-label">Top Level</p>
+						<h3 id="top-level">1</h3>
+					</article>
+					<article class="stat-box accent-four">
+						<p class="mini-label">Logs Gesamt</p>
+						<h3 id="total-logs">0</h3>
+					</article>
+				</div>
+			</section>
+
+			<section class="card podium-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Podium</p>
+						<h2>Top 3</h2>
+					</div>
+					<p class="section-copy">Die stärksten lokalen Profile auf einen Blick.</p>
+				</div>
+				<div id="podium" class="podium empty-state">Noch keine Spieler vorhanden.</div>
+			</section>
+
+			<section class="card ranking-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Ranking</p>
+						<h2>Alle Spieler</h2>
+					</div>
+					<p class="section-copy">Sortierung nach Score, dann XP und Interaktionen.</p>
+				</div>
+				<div id="leaderboard-list" class="leaderboard-list empty-state">Noch keine Spieler vorhanden.</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="Leaderboard.js"></script>
+</body>
+</html>
