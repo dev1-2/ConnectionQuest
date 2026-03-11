@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
+	<title>Connection Quest Network</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Network.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="network-hero">
+			<section class="hero-card spotlight">
+				<p class="eyebrow">RELATION HUB</p>
+				<h1>Network Routes</h1>
+				<p class="hero-copy">Ein neuer Bereich fuer Rivalen, naechste Gegner, Social Cluster und Wege durch die App. Damit fuehlt sich das Projekt mehr wie ein Netzwerk mit Rollen und Beziehungen an.</p>
+				<div class="hero-actions">
+					<a class="hero-link" href="Profile.html">Profil</a>
+					<a class="hero-link" href="Community.html">Community</a>
+					<a class="ghost-link" href="Notifications.html">Inbox</a>
+					<a class="ghost-link" href="Games.html">Games</a>
+					<a class="ghost-link" href="Rewards.html">Rewards</a>
+					<a class="ghost-link" href="Events.html">Events</a>
+					<a class="ghost-link" href="Analytics.html">Analytics</a>
+				</div>
+			</section>
+
+			<section class="hero-card radar-card">
+				<p class="mini-label">Radar</p>
+				<h2 id="network-title">Kein Netzprofil</h2>
+				<p id="network-copy" class="section-copy">Sobald ein aktiver Spieler vorhanden ist, zeigt der Network-Hub Rivalen, Aufstiegsrouten und soziale Cluster.</p>
+				<div id="network-topline" class="topline-grid"></div>
+			</section>
+		</header>
+
+		<main class="network-layout">
+			<section class="card rival-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Rivals</p>
+						<h2>Naechste Gegner</h2>
+					</div>
+					<p class="section-copy">Direkte Kandidaten fuer mehr Spannung und schnellere Rueckkehr in die App.</p>
+				</div>
+				<div id="network-rivals" class="card-list empty-state">Noch keine Rivalen sichtbar.</div>
+			</section>
+
+			<section class="card cluster-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Clusters</p>
+						<h2>Community Segmente</h2>
+					</div>
+					<p class="section-copy">Das Netz nach Rollen strukturiert: Grinder, Streak-Holder, Arcade-Fokus und Journal-Stars.</p>
+				</div>
+				<div id="network-clusters" class="cluster-grid"></div>
+			</section>
+
+			<section class="card discovery-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Discover</p>
+						<h2>Neue Wege</h2>
+					</div>
+					<p class="section-copy">Empfohlene Bewegungen, die Profile, Games und Ranking quer verbinden.</p>
+				</div>
+				<div id="network-discovery" class="card-list empty-state">Noch keine Discovery-Karten.</div>
+			</section>
+
+			<section class="card routes-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Flow Routes</p>
+						<h2>Direkte Spruenge</h2>
+					</div>
+					<p class="section-copy">Dieser Bereich verknuepft die App sichtbar und fuehrt direkt zu passenden Folgeschritten.</p>
+				</div>
+				<div class="route-grid">
+					<a class="route-link" href="ConnectionQuest.html">Journal-Fokus</a>
+					<a class="route-link" href="Games.html">Rivalen-Duel</a>
+					<a class="route-link" href="Leaderboard.html">Score-Vergleich</a>
+					<a class="route-link" href="Notifications.html">Inbox-Druck</a>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="Network.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

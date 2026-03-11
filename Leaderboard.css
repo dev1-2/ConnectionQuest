@@ -196,6 +196,10 @@ h2 {
 	grid-column: span 8;
 }
 
+.activity-card {
+	grid-column: span 12;
+}
+
 .summary-grid {
 	grid-template-columns: repeat(4, minmax(0, 1fr));
 	margin-top: 1rem;
@@ -216,6 +220,42 @@ h2 {
 	align-items: center;
 	justify-content: space-between;
 	gap: 1rem;
+}
+
+.ranking-tools,
+.highlight-grid,
+.activity-feed {
+	display: grid;
+	gap: 1rem;
+}
+
+.ranking-tools {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	margin-top: 1rem;
+}
+
+.tool-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+}
+
+.tool-field span {
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--muted);
+}
+
+.tool-field input,
+.tool-field select {
+	width: 100%;
+	padding: 0.92rem 1rem;
+	border-radius: 16px;
+	border: 1px solid var(--line);
+	background: rgba(255, 255, 255, 0.85);
+	color: #050505;
+	font: inherit;
 }
 
 .podium-item,
@@ -266,6 +306,52 @@ h2 {
 	margin: 0.35rem 0 0;
 }
 
+.highlight-grid {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	margin-top: 1rem;
+}
+
+.highlight-item,
+.feed-item {
+	padding: 1rem;
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.15);
+	border: 1px solid var(--line);
+}
+
+.highlight-item h3,
+.feed-item h3 {
+	font-size: 1.1rem;
+}
+
+.highlight-item p,
+.feed-item p {
+	margin: 0.35rem 0 0;
+	color: var(--muted);
+}
+
+.feed-item {
+	display: grid;
+	gap: 0.55rem;
+}
+
+.feed-head {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	align-items: center;
+}
+
+.feed-tag {
+	padding: 0.35rem 0.65rem;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.08);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
 .empty-state {
 	padding: 1rem;
 	border-radius: 18px;
@@ -280,12 +366,18 @@ h2 {
 
 	.summary-card,
 	.podium-card,
-	.ranking-card {
+	.ranking-card,
+	.activity-card {
 		grid-column: span 1;
 	}
 
 	.summary-grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.highlight-grid,
+	.ranking-tools {
+		grid-template-columns: 1fr;
 	}
 }
 
@@ -309,7 +401,8 @@ h2 {
 	}
 
 	.section-head,
-	.leaderboard-item {
+	.leaderboard-item,
+	.feed-head {
 		align-items: flex-start;
 		flex-direction: column;
 	}

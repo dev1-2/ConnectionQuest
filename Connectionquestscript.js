@@ -48,6 +48,7 @@ const ACHIEVEMENTS = [
 const state = {
 	sessionToken: loadSessionToken(),
 	currentUser: null,
+	pulseData: buildEmptyPulse(),
 	selectedDate: todayString(),
 	visibleMonth: startOfMonth(new Date()),
 };
@@ -69,6 +70,13 @@ const selectedDateSummary = document.querySelector("#selected-date-summary");
 const selectedDayList = document.querySelector("#selected-day-list");
 const recentList = document.querySelector("#recent-list");
 const achievementList = document.querySelector("#achievement-list");
+const missionList = document.querySelector("#mission-list");
+const returnBonus = document.querySelector("#return-bonus");
+const weeklyList = document.querySelector("#weekly-list");
+const recommendationList = document.querySelector("#recommendation-list");
+const communityStats = document.querySelector("#community-stats");
+const communityHighlights = document.querySelector("#community-highlights");
+const communityFeed = document.querySelector("#community-feed");
 const entryTemplate = document.querySelector("#entry-template");
 
 document.querySelector("#prev-month").addEventListener("click", () => changeMonth(-1));
@@ -84,6 +92,7 @@ initialize();
 
 async function initialize() {
 	await hydrateSession();
+	await hydratePulse();
 	render();
 }
 
@@ -117,6 +126,7 @@ async function handleRegister(handle, pin) {
 		saveSessionToken(state.sessionToken);
 		state.currentUser = payload.currentUser;
 		authForm.reset();
+		await hydratePulse();
 		setAuthMessage(`${payload.currentUser.handle} wurde erstellt und in der Datenbank gespeichert.`);
 		syncCurrentUserDate();
 		render();
@@ -136,6 +146,7 @@ async function handleLogin(handle, pin) {
 		saveSessionToken(state.sessionToken);
 		state.currentUser = payload.currentUser;
 		authForm.reset();
+		await hydratePulse();
 		setAuthMessage(`${payload.currentUser.handle} ist jetzt aktiv. Login wurde gespeichert.`);
 		syncCurrentUserDate();
 		render();
@@ -151,6 +162,7 @@ async function handleLogout() {
 		// Ignore logout failures and clear local session anyway.
 	}
 	clearSession();
+	await hydratePulse();
 	setAuthMessage("Spieler wurde ausgeloggt.");
 	render();
 }
@@ -183,6 +195,7 @@ async function handleSubmit(event) {
 		form.reset();
 		dateInput.value = state.selectedDate;
 		typeInput.value = "Chat";
+		await hydratePulse();
 		render();
 	} catch (error) {
 		setAuthMessage(error.message, true);
@@ -206,6 +219,7 @@ async function clearAllEntries() {
 		state.selectedDate = todayString();
 		state.visibleMonth = startOfMonth(new Date());
 		dateInput.value = state.selectedDate;
+		await hydratePulse();
 		render();
 	} catch (error) {
 		setAuthMessage(error.message, true);
@@ -221,6 +235,7 @@ async function deleteEntry(id) {
 	try {
 		const payload = await apiRequest(`/api/cq/entries/${encodeURIComponent(id)}`, { method: "DELETE" });
 		state.currentUser = payload.currentUser;
+		await hydratePulse();
 		render();
 	} catch (error) {
 		setAuthMessage(error.message, true);
@@ -235,6 +250,7 @@ function render() {
 	renderSession(currentUser, stats);
 	renderAuth(currentUser, stats);
 	renderStats(currentUser, stats);
+	renderPulse(currentUser);
 	renderCalendar(entries, Boolean(currentUser));
 	renderSelectedDay(entries, Boolean(currentUser));
 	renderAchievements(stats, Boolean(currentUser));
@@ -329,6 +345,190 @@ function renderStats(currentUser, stats) {
 	document.querySelector("#player-note").textContent = currentUser
 		? `${currentUser.handle} sammelt mit Logs und Games Score, XP und Badges.`
 		: "Login erforderlich, um Punkte zu sammeln.";
+}
+
+function renderPulse(currentUser) {
+	const pulse = state.pulseData || buildEmptyPulse();
+	renderMissions(pulse.missions || [], Boolean(currentUser));
+	renderWeeklyChallenges(pulse.weeklyChallenges || [], Boolean(currentUser));
+	renderRecommendations(pulse.recommendations || []);
+	renderReturnBonus(pulse.returnBonus || buildEmptyPulse().returnBonus);
+	renderCommunity(pulse);
+}
+
+function renderMissions(missions, hasUser) {
+	missionList.innerHTML = "";
+	missionList.classList.toggle("empty-state", !hasUser || missions.length === 0);
+
+	if (!hasUser) {
+		missionList.textContent = "Logge dich ein, um deine taeglichen Missionen zu sehen.";
+		return;
+	}
+
+	if (!missions.length) {
+		missionList.textContent = "Noch keine Missionen verfuegbar.";
+		return;
+	}
+
+	missions.forEach((mission) => {
+		const node = document.createElement("article");
+		node.className = "mission-item";
+		node.innerHTML = `
+			<div class="mission-head">
+				<div class="mission-copy">
+					<h3>${escapeHtml(mission.title)}</h3>
+					<p>${escapeHtml(mission.description)}</p>
+				</div>
+				<span class="mission-badge${mission.completed ? " is-complete" : ""}">${mission.completed ? "Complete" : "Active"}</span>
+			</div>
+			<div class="mission-progress" aria-hidden="true"><span style="width:${mission.progressPercent}%"></span></div>
+			<div class="mission-foot">
+				<span>${mission.current} / ${mission.target}</span>
+				<strong>${escapeHtml(mission.rewardLabel)}</strong>
+			</div>
+		`;
+		missionList.appendChild(node);
+	});
+}
+
+function renderReturnBonus(data) {
+	returnBonus.innerHTML = "";
+	returnBonus.classList.remove("empty-state");
+	const node = document.createElement("article");
+	node.className = "return-bonus-shell";
+	node.innerHTML = `
+		<div class="feed-head">
+			<div class="return-copy">
+				<h3>${escapeHtml(data.title || "Noch kein Rueckkehr-Ziel aktiv")}</h3>
+				<p>${escapeHtml(data.description || "")}</p>
+			</div>
+			<span class="return-status">${escapeHtml(data.status || "Idle")}</span>
+		</div>
+		<div class="return-progress" aria-hidden="true"><span style="width:${data.progressPercent || 0}%"></span></div>
+		<div class="return-meta"><span>${escapeHtml(data.progressLabel || "")}</span></div>
+	`;
+	returnBonus.appendChild(node);
+}
+
+function renderWeeklyChallenges(challenges, hasUser) {
+	weeklyList.innerHTML = "";
+	weeklyList.classList.toggle("empty-state", !hasUser || challenges.length === 0);
+
+	if (!hasUser) {
+		weeklyList.textContent = "Weekly Challenges werden nach dem Login aktiviert.";
+		return;
+	}
+
+	if (!challenges.length) {
+		weeklyList.textContent = "Noch keine Weekly Challenges verfuegbar.";
+		return;
+	}
+
+	challenges.forEach((challenge) => {
+		const node = document.createElement("article");
+		node.className = "mission-item";
+		node.innerHTML = `
+			<div class="mission-head">
+				<div class="mission-copy">
+					<h3>${escapeHtml(challenge.title)}</h3>
+					<p>${escapeHtml(challenge.description)}</p>
+				</div>
+				<span class="mission-badge${challenge.completed ? " is-complete" : ""}">${challenge.completed ? "Weekly Clear" : "Week Live"}</span>
+			</div>
+			<div class="mission-progress" aria-hidden="true"><span style="width:${challenge.progressPercent}%"></span></div>
+			<div class="mission-foot">
+				<span>${challenge.current} / ${challenge.target}</span>
+				<strong>${escapeHtml(challenge.rewardLabel)}</strong>
+			</div>
+		`;
+		weeklyList.appendChild(node);
+	});
+}
+
+function renderRecommendations(items) {
+	recommendationList.innerHTML = "";
+	recommendationList.classList.toggle("empty-state", items.length === 0);
+
+	if (!items.length) {
+		recommendationList.textContent = "Noch keine persoenlichen Empfehlungen sichtbar.";
+		return;
+	}
+
+	items.forEach((item) => {
+		const node = document.createElement("article");
+		node.className = "recommendation-item";
+		node.innerHTML = `
+			<div class="mission-head">
+				<h3>${escapeHtml(item.title)}</h3>
+				<span class="mission-badge">${escapeHtml(item.tag || "Hint")}</span>
+			</div>
+			<p>${escapeHtml(item.copy || "")}</p>
+		`;
+		recommendationList.appendChild(node);
+	});
+}
+
+function renderCommunity(pulse) {
+	const stats = pulse.communityStats || {};
+	communityStats.innerHTML = "";
+	[
+		{ label: "Spieler", value: stats.playerCount || 0 },
+		{ label: "Aktiv 7 Tage", value: stats.activePlayers7d || 0 },
+		{ label: "Logs heute", value: stats.entriesToday || 0 },
+		{ label: "Games 7 Tage", value: stats.games7d || 0 },
+	].forEach((item) => {
+		const node = document.createElement("article");
+		node.className = "community-stat";
+		node.innerHTML = `<small class="mini-label">${escapeHtml(item.label)}</small><strong>${item.value}</strong>`;
+		communityStats.appendChild(node);
+	});
+
+	communityHighlights.innerHTML = "";
+	const highlights = [pulse.highlights?.scoreLeader, pulse.highlights?.streakLeader, pulse.highlights?.gameLeader].filter(Boolean);
+	if (!highlights.length) {
+		communityHighlights.classList.add("empty-state");
+		communityHighlights.textContent = "Noch keine Community-Highlights vorhanden.";
+	} else {
+		communityHighlights.classList.remove("empty-state");
+		highlights.forEach((item) => {
+			const node = document.createElement("article");
+			node.className = "highlight-item";
+			node.innerHTML = `
+				<div class="highlight-head">
+					<div class="highlight-copy">
+						<h3>${escapeHtml(item.handle)}</h3>
+						<p>${escapeHtml(item.label)}</p>
+					</div>
+					<strong>${item.value}</strong>
+				</div>
+			`;
+			communityHighlights.appendChild(node);
+		});
+	}
+
+	communityFeed.innerHTML = "";
+	communityFeed.classList.toggle("empty-state", (pulse.activityFeed || []).length === 0);
+	if (!(pulse.activityFeed || []).length) {
+		communityFeed.textContent = "Noch keine Community-Aktivitaet sichtbar.";
+		return;
+	}
+
+	pulse.activityFeed.forEach((entry) => {
+		const node = document.createElement("article");
+		const tag = entry.type === "game" ? "Game" : "Log";
+		node.className = "feed-item";
+		node.innerHTML = `
+			<div class="feed-head">
+				<h3>${escapeHtml(entry.title)}</h3>
+				<span class="feed-tag">${tag}</span>
+			</div>
+			<div class="feed-copy">
+				<p>${escapeHtml(entry.detail || "")}</p>
+			</div>
+			<div class="feed-meta">${formatRelativeTime(entry.occurredAt)}</div>
+		`;
+		communityFeed.appendChild(node);
+	});
 }
 
 function renderCalendar(entries, hasUser) {
@@ -491,6 +691,33 @@ function buildEmptyStats() {
 	};
 }
 
+function buildEmptyPulse() {
+	return {
+		communityStats: {
+			playerCount: 0,
+			activePlayers7d: 0,
+			entriesToday: 0,
+			games7d: 0,
+		},
+		highlights: {
+			scoreLeader: null,
+			streakLeader: null,
+			gameLeader: null,
+		},
+		activityFeed: [],
+		missions: [],
+		weeklyChallenges: [],
+		recommendations: [],
+		returnBonus: {
+			title: "Noch kein Rueckkehr-Ziel aktiv.",
+			description: "",
+			progressLabel: "",
+			progressPercent: 0,
+			status: "Idle",
+		},
+	};
+}
+
 function updateInteractionLock(isLoggedIn) {
 	const locked = !isLoggedIn;
 	Array.from(form.elements).forEach((element) => {
@@ -528,6 +755,14 @@ async function hydrateSession() {
 		setAuthMessage(`Aktive Session für ${state.currentUser.handle}.`);
 	} catch {
 		clearSession();
+	}
+}
+
+async function hydratePulse() {
+	try {
+		state.pulseData = await apiRequest("/api/cq/pulse");
+	} catch {
+		state.pulseData = buildEmptyPulse();
 	}
 }
 
@@ -632,6 +867,31 @@ function formatDate(value) {
 		month: "long",
 		year: "numeric",
 	}).format(new Date(value));
+}
+
+function formatRelativeTime(value) {
+	if (!value) {
+		return "Gerade eben";
+	}
+
+	const timestamp = new Date(value).getTime();
+	if (!Number.isFinite(timestamp)) {
+		return "Gerade eben";
+	}
+
+	const diffMinutes = Math.max(0, Math.round((Date.now() - timestamp) / 60000));
+	if (diffMinutes < 1) {
+		return "Gerade eben";
+	}
+	if (diffMinutes < 60) {
+		return `vor ${diffMinutes} Min.`;
+	}
+	const diffHours = Math.round(diffMinutes / 60);
+	if (diffHours < 24) {
+		return `vor ${diffHours} Std.`;
+	}
+	const diffDays = Math.round(diffHours / 24);
+	return `vor ${diffDays} Tag${diffDays === 1 ? "" : "en"}`;
 }
 
 function monthFormatter(date) {

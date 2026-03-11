@@ -186,8 +186,10 @@ h2 {
 }
 
 .duel-card { grid-column: span 12; }
+.loop-card { grid-column: span 12; }
 .game-card { grid-column: span 6; }
 .results-card { grid-column: span 12; }
+.community-game-card { grid-column: span 12; }
 
 .section-head {
 	display: flex;
@@ -316,6 +318,57 @@ select:disabled,
 	gap: 0.8rem;
 }
 
+.games-side-list {
+	margin-top: 1.2rem;
+	display: grid;
+	gap: 0.8rem;
+}
+
+.loop-item {
+	padding: 1rem;
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid var(--line);
+	display: grid;
+	gap: 0.55rem;
+}
+
+.loop-head {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	align-items: center;
+}
+
+.loop-tag {
+	padding: 0.35rem 0.65rem;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.08);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.loop-progress {
+	height: 10px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.08);
+	overflow: hidden;
+}
+
+.loop-progress span {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: linear-gradient(90deg, var(--teal), var(--sky));
+}
+
+.loop-meta {
+	font-size: 0.85rem;
+	color: var(--muted);
+}
+
 .feed-item {
 	padding: 1rem;
 	border-radius: 20px;
@@ -345,8 +398,10 @@ select:disabled,
 		grid-template-columns: 1fr;
 	}
 
+	.loop-card,
 	.game-card,
 	.results-card,
+	.community-game-card,
 	.duel-card {
 		grid-column: span 12;
 	}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
+	<title>Connection Quest Rewards</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Rewards.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="rewards-hero">
+			<section class="hero-card spotlight">
+				<p class="eyebrow">REWARDS HUB</p>
+				<h1>Unlock Store</h1>
+				<p class="hero-copy">Ein kompletter neuer Bereich fuer Freischaltungen, Titel, Themes und Status-Symbole. Auch ohne echte Kauf-Logik fuehlt sich das Netz dadurch deutlich spieliger und groesser an.</p>
+				<div class="hero-actions">
+					<a class="hero-link" href="Profile.html">Profil</a>
+					<a class="hero-link" href="Events.html">Events</a>
+					<a class="ghost-link" href="Analytics.html">Analytics</a>
+					<a class="ghost-link" href="ConnectionQuest.html">Journal</a>
+				</div>
+			</section>
+
+			<section class="hero-card account-card">
+				<p class="mini-label">Active Vault</p>
+				<h2 id="rewards-player">Kein Spieler aktiv</h2>
+				<p id="rewards-copy" class="section-copy">Mit aktivem Spieler zeigen sich hier deine freischaltbaren Titel, kosmetischen Statuswerte und naechsten Unlocks.</p>
+				<div id="vault-stats" class="vault-grid"></div>
+			</section>
+		</header>
+
+		<main class="rewards-layout">
+			<section class="card unlock-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Unlocked</p>
+						<h2>Dein Inventar</h2>
+					</div>
+					<p class="section-copy">Bereits verdiente Titel, Themes und Prestige-Marker.</p>
+				</div>
+				<div id="owned-rewards" class="reward-grid empty-state">Noch keine Rewards sichtbar.</div>
+			</section>
+
+			<section class="card shop-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Shop Floor</p>
+						<h2>Naechste Unlocks</h2>
+					</div>
+					<p class="section-copy">Diese Rewards sind absichtlich an Score, Streak, Games und Aktivitaet gebunden.</p>
+				</div>
+				<div id="locked-rewards" class="reward-grid empty-state">Noch keine kommenden Rewards sichtbar.</div>
+			</section>
+
+			<section class="card prestige-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Prestige</p>
+						<h2>Status Marker</h2>
+					</div>
+					<p class="section-copy">Schnelle Statussymbole, die einem Profil mehr Identitaet im Netz geben.</p>
+				</div>
+				<div id="prestige-list" class="reward-grid"></div>
+			</section>
+
+			<section class="card route-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Reward Routes</p>
+						<h2>Direkt zum Unlock</h2>
+					</div>
+					<p class="section-copy">Jeder Reward braucht eine klare Route in eine passende Seite.</p>
+				</div>
+				<div class="route-grid">
+					<a class="route-link" href="ConnectionQuest.html">Mehr Journal-Logs</a>
+					<a class="route-link" href="Games.html">Mehr Game-Wins</a>
+					<a class="route-link" href="Leaderboard.html">Rang verbessern</a>
+					<a class="route-link" href="Notifications.html">Inbox-Trigger nutzen</a>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="Rewards.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

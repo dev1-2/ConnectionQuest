@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
+	<title>Connection Quest Community</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Community.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="community-hero">
+			<section class="hero-card spotlight">
+				<p class="eyebrow">NETWORK HUB</p>
+				<h1>Community Grid</h1>
+				<p class="hero-copy">Diese Seite macht aus den Einzelprofilen ein Netz: Trends, Aktivitaet, Top-Mover, Streak-Fokus und schnelle Wege zu allen Bereichen.</p>
+				<div class="hero-actions">
+					<a class="hero-link" href="ConnectionQuest.html">Connection Quest</a>
+					<a class="hero-link" href="Profile.html">Profil</a>
+					<a class="hero-link" href="Notifications.html">Inbox</a>
+					<a class="hero-link" href="Network.html">Network</a>
+					<a class="hero-link" href="Rewards.html">Rewards</a>
+					<a class="hero-link" href="Events.html">Events</a>
+					<a class="hero-link" href="Analytics.html">Analytics</a>
+					<a class="ghost-link" href="Games.html">Games</a>
+					<a class="ghost-link" href="Leaderboard.html">Leaderboard</a>
+				</div>
+			</section>
+
+			<section class="hero-card feed-card">
+				<p class="mini-label">Live Pulse</p>
+				<h2 id="community-title">Kein Live-Puls</h2>
+				<p id="community-copy" class="section-copy">Die Community-Dichte erscheint hier, sobald Profile, Logs und Games vorhanden sind.</p>
+				<div id="community-topline" class="topline-grid"></div>
+			</section>
+		</header>
+
+		<main class="community-layout">
+			<section class="card network-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Network Stats</p>
+						<h2>Community Status</h2>
+					</div>
+					<p class="section-copy">Die groben Bewegungen des gesamten Systems auf einen Blick.</p>
+				</div>
+				<div id="community-stats-grid" class="stat-grid"></div>
+			</section>
+
+			<section class="card movers-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Leaders</p>
+						<h2>Top Segmente</h2>
+					</div>
+					<p class="section-copy">Wer fuehrt bei Score, Streak, Games und Journal-Aktivitaet.</p>
+				</div>
+				<div id="community-leaders" class="panel-grid"></div>
+			</section>
+
+			<section class="card stream-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Activity Stream</p>
+						<h2>Live Feed</h2>
+					</div>
+					<p class="section-copy">Logs und Games laufen hier gemeinsam zusammen und machen die Anwendung wie ein Netzwerk spuerbar.</p>
+				</div>
+				<div id="community-feed" class="feed-list empty-state">Noch keine Community-Aktivitaet sichtbar.</div>
+			</section>
+
+			<section class="card board-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Cross Board</p>
+						<h2>Mehrere Rankings</h2>
+					</div>
+					<p class="section-copy">Nicht nur der Gesamtscore zaehlt. Diese Seite zeigt mehrere soziale Perspektiven.</p>
+				</div>
+				<div id="community-boards" class="board-grid"></div>
+			</section>
+
+			<section class="card routes-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Route Links</p>
+						<h2>Springe ins Netz</h2>
+					</div>
+					<p class="section-copy">Von hier aus kommst du schnell zu Profil, Journal, Games und Ranking.</p>
+				</div>
+				<div class="route-grid">
+					<a class="route-link" href="Profile.html">Zum Profil-Hub</a>
+					<a class="route-link" href="ConnectionQuest.html">Zum Journal</a>
+					<a class="route-link" href="Games.html">Zum Arcade-Hub</a>
+					<a class="route-link" href="Notifications.html">Zur Inbox</a>
+					<a class="route-link" href="Network.html">Zum Network-Hub</a>
+					<a class="route-link" href="Rewards.html">Zu Rewards</a>
+					<a class="route-link" href="Events.html">Zu Events</a>
+					<a class="route-link" href="Analytics.html">Zu Analytics</a>
+					<a class="route-link" href="Leaderboard.html">Zum Leaderboard</a>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="Community.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

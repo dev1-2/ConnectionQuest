@@ -1,0 +1,36 @@
+{
+	"name": "Connection Quest",
+	"short_name": "CQ",
+	"description": "Connection Quest kombiniert Journal, Games, Retention-Loops und Leaderboards in einer installierbaren App.",
+	"start_url": "/index.html",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#050505",
+	"theme_color": "#050505",
+	"shortcuts": [
+		{
+			"name": "Journal",
+			"url": "/ConnectionQuest.html"
+		},
+		{
+			"name": "Games",
+			"url": "/Games.html"
+		},
+		{
+			"name": "Community",
+			"url": "/Community.html"
+		},
+		{
+			"name": "Inbox",
+			"url": "/Notifications.html"
+		}
+	],
+	"icons": [
+		{
+			"src": "/icon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+					"purpose": "any maskable"
+		}
+	]
+}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
+	<title>Connection Quest Profile</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Profile.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="profile-hero">
+			<section class="hero-card spotlight">
+				<p class="eyebrow">PLAYER HUB</p>
+				<h1>Dein Profilnetz</h1>
+				<p class="hero-copy">Alle persoenlichen Signale an einem Ort: Fortschritt, Gewohnheiten, Journal-Dichte, Spielanteil und naechste Hebel fuer mehr Aktivitaet.</p>
+				<div class="hero-actions">
+					<a class="hero-link" href="ConnectionQuest.html">Connection Quest</a>
+					<a class="hero-link" href="Games.html">Games</a>
+					<a class="ghost-link" href="Community.html">Community</a>
+					<a class="ghost-link" href="Notifications.html">Inbox</a>
+					<a class="ghost-link" href="Network.html">Network</a>
+					<a class="ghost-link" href="Rewards.html">Rewards</a>
+					<a class="ghost-link" href="Events.html">Events</a>
+					<a class="ghost-link" href="Analytics.html">Analytics</a>
+					<a class="ghost-link" href="Leaderboard.html">Leaderboard</a>
+				</div>
+			</section>
+
+			<section class="hero-card identity-card" aria-live="polite">
+				<p class="mini-label">Aktives Profil</p>
+				<h2 id="profile-handle">Kein Spieler aktiv</h2>
+				<p id="profile-copy" class="section-copy">Logge dich in Connection Quest ein, damit das Profilzentrum mit deinen Daten gefuellt wird.</p>
+				<div class="identity-stats">
+					<div>
+						<p class="mini-label">Score</p>
+						<strong id="profile-score">0</strong>
+					</div>
+					<div>
+						<p class="mini-label">Level</p>
+						<strong id="profile-level">1</strong>
+					</div>
+					<div>
+						<p class="mini-label">Streak</p>
+						<strong id="profile-streak">0</strong>
+					</div>
+					<div>
+						<p class="mini-label">Platz</p>
+						<strong id="profile-placement">#0</strong>
+					</div>
+				</div>
+			</section>
+		</header>
+
+		<main class="profile-layout">
+			<section class="card focus-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Focus</p>
+						<h2>Naechste Schritte</h2>
+					</div>
+					<p class="section-copy">Die Seite priorisiert direkt, was dein Profil als naechstes wachsen laesst.</p>
+				</div>
+				<div id="profile-recommendations" class="card-list empty-state">Noch keine Empfehlungen.</div>
+			</section>
+
+			<section class="card snapshot-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Snapshot</p>
+						<h2>Performance Mix</h2>
+					</div>
+					<p class="section-copy">Journal, Games und Kontinuitaet im direkten Vergleich.</p>
+				</div>
+				<div id="profile-snapshot" class="metric-grid"></div>
+			</section>
+
+			<section class="card challenge-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Loops</p>
+						<h2>Daily und Weekly</h2>
+					</div>
+					<p class="section-copy">Deine kurzfristigen und mittelfristigen Aktivitaetsziele an einem Ort.</p>
+				</div>
+				<div id="profile-missions" class="card-list empty-state">Noch keine Daily-Daten.</div>
+				<div id="profile-weekly" class="card-list empty-state">Noch keine Weekly-Daten.</div>
+			</section>
+
+			<section class="card timeline-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Journal Feed</p>
+						<h2>Letzte Logs</h2>
+					</div>
+					<p class="section-copy">Die letzten Eintraege deines aktiven Profils.</p>
+				</div>
+				<div id="profile-entries" class="card-list empty-state">Noch keine Logs sichtbar.</div>
+			</section>
+
+			<section class="card badges-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Achievements</p>
+						<h2>Badges und Staerken</h2>
+					</div>
+					<p class="section-copy">Freigeschaltete Badges und markante Kennzahlen als kompaktes Profilbild.</p>
+				</div>
+				<div id="profile-badges" class="badge-grid"></div>
+			</section>
+
+			<section class="card route-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Quick Routes</p>
+						<h2>Springe weiter</h2>
+					</div>
+					<p class="section-copy">Das Profil ist ein Knotenpunkt und verlinkt direkt zu den anderen Schleifen.</p>
+				</div>
+				<div class="route-grid">
+					<a class="route-link" href="ConnectionQuest.html">Journal bearbeiten</a>
+					<a class="route-link" href="Games.html">Games spielen</a>
+					<a class="route-link" href="Community.html">Community beobachten</a>
+					<a class="route-link" href="Notifications.html">Inbox checken</a>
+					<a class="route-link" href="Network.html">Network scannen</a>
+					<a class="route-link" href="Rewards.html">Rewards ansehen</a>
+					<a class="route-link" href="Events.html">Event-Fokus oeffnen</a>
+					<a class="route-link" href="Analytics.html">Analytics lesen</a>
+					<a class="route-link" href="Leaderboard.html">Platzierung pruefen</a>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="Profile.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

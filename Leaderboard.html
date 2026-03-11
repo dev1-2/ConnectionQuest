@@ -3,7 +3,9 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
 	<title>Connection Quest Leaderboard</title>
+	<link rel="manifest" href="manifest.webmanifest">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
@@ -20,6 +22,13 @@
 				</p>
 				<div class="hero-actions">
 					<a class="hero-link" href="ConnectionQuest.html">Zurück zu Connection Quest</a>
+					<a class="hero-link" href="Profile.html">Profil Hub</a>
+					<a class="hero-link" href="Community.html">Community Hub</a>
+					<a class="hero-link" href="Notifications.html">Inbox</a>
+					<a class="hero-link" href="Network.html">Network</a>
+					<a class="hero-link" href="Rewards.html">Rewards</a>
+					<a class="hero-link" href="Events.html">Events</a>
+					<a class="hero-link" href="Analytics.html">Analytics</a>
 					<a class="hero-link" href="Games.html">Games Hub</a>
 					<a class="ghost-link" href="index.html">Zum Intro</a>
 				</div>
@@ -87,13 +96,42 @@
 						<p class="mini-label">Ranking</p>
 						<h2>Alle Spieler</h2>
 					</div>
-					<p class="section-copy">Sortierung nach Score, dann XP und Interaktionen.</p>
+					<p class="section-copy">Sortierung, Suche und Live-Feed machen das Board deutlich naeher an einer echten App.</p>
+				</div>
+				<div class="ranking-tools">
+					<label class="tool-field">
+						<span>Suche</span>
+						<input id="leaderboard-search" type="search" placeholder="Spielername suchen">
+					</label>
+					<label class="tool-field">
+						<span>Sortierung</span>
+						<select id="leaderboard-sort">
+							<option value="score">Score</option>
+							<option value="streak">Streak</option>
+							<option value="games">Game Wins</option>
+							<option value="logins">Logins</option>
+							<option value="entries">Interaktionen</option>
+						</select>
+					</label>
 				</div>
 				<div id="leaderboard-list" class="leaderboard-list empty-state">Noch keine Spieler vorhanden.</div>
+			</section>
+
+			<section class="card activity-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Live Feed</p>
+						<h2>Aktuelle Bewegung</h2>
+					</div>
+					<p class="section-copy">Neue Logs und Game-Runs zeigen, dass das Board wirklich lebt.</p>
+				</div>
+				<div id="leaderboard-highlights" class="highlight-grid"></div>
+				<div id="leaderboard-feed" class="activity-feed empty-state">Noch keine Feed-Daten vorhanden.</div>
 			</section>
 		</main>
 	</div>
 
 	<script src="Leaderboard.js"></script>
+	<script src="app-shell.js"></script>
 </body>
 </html>

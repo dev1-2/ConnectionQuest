@@ -55,6 +55,76 @@ const CQ_DUEL_GAMES = {
 	},
 };
 
+const CQ_DAILY_MISSIONS = [
+	{
+		id: "daily-log",
+		title: "Daily Log",
+		description: "Lege heute mindestens einen neuen Moment an.",
+		target: 1,
+		rewardLabel: "+90 XP Momentum",
+		metric: (engagement) => engagement.entriesToday,
+	},
+	{
+		id: "fresh-faces",
+		title: "Fresh Faces",
+		description: "Logge heute 2 verschiedene Connections.",
+		target: 2,
+		rewardLabel: "+120 Score Push",
+		metric: (engagement) => engagement.uniqueConnectionsToday,
+	},
+	{
+		id: "arcade-return",
+		title: "Arcade Return",
+		description: "Spiele heute mindestens eine Game-Session.",
+		target: 1,
+		rewardLabel: "+1 Return Check",
+		metric: (engagement) => engagement.gamesToday,
+	},
+	{
+		id: "triple-pressure",
+		title: "Triple Pressure",
+		description: "Erreiche heute insgesamt 3 Aktionen aus Logs und Games.",
+		target: 3,
+		rewardLabel: "+180 XP Burst",
+		metric: (engagement) => engagement.entriesToday + engagement.gamesToday,
+	},
+];
+
+const CQ_WEEKLY_CHALLENGES = [
+	{
+		id: "weekly-logs",
+		title: "Weekly Journal Push",
+		description: "Erreiche 5 neue Logs innerhalb von 7 Tagen.",
+		target: 5,
+		rewardLabel: "+420 XP Weekly",
+		metric: (engagement) => engagement.entries7d,
+	},
+	{
+		id: "weekly-network",
+		title: "Network Expansion",
+		description: "Logge 4 verschiedene Connections in den letzten 7 Tagen.",
+		target: 4,
+		rewardLabel: "+350 Score Spread",
+		metric: (engagement) => engagement.uniqueConnections7d,
+	},
+	{
+		id: "weekly-arcade",
+		title: "Arcade Habit",
+		description: "Spiele 4 Game-Sessions in den letzten 7 Tagen.",
+		target: 4,
+		rewardLabel: "+2 Prestige Pings",
+		metric: (engagement) => engagement.games7d,
+	},
+	{
+		id: "weekly-rivalry",
+		title: "Rivalry Loop",
+		description: "Spiele 2 Duels in den letzten 7 Tagen.",
+		target: 2,
+		rewardLabel: "+1 Duel Badge Pulse",
+		metric: (engagement) => engagement.duels7d,
+	},
+];
+
 if (!databaseUrl) {
 	throw new Error("DATABASE_URL is required to start the server.");
 }
@@ -294,6 +364,32 @@ app.get("/api/cq/leaderboard", async (request, response) => {
 		response.json({
 			currentUserId: session?.playerId || null,
 			leaderboard,
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.get("/api/cq/pulse", async (request, response) => {
+	try {
+		const session = await loadCqSession(request);
+		const [communityStats, highlights, activityFeed, currentUser, engagement] = await Promise.all([
+			loadCqCommunityStats(),
+			loadCqHighlights(),
+			loadCqActivityFeed(),
+			session ? loadCqPlayerProfile(session.playerId) : Promise.resolve(null),
+			session ? loadCqPlayerEngagement(session.playerId) : Promise.resolve(null),
+		]);
+
+		response.json({
+			currentUserId: session?.playerId || null,
+			communityStats,
+			highlights,
+			activityFeed,
+			missions: currentUser && engagement ? buildCqDailyMissions(engagement) : [],
+			weeklyChallenges: currentUser && engagement ? buildCqWeeklyChallenges(engagement) : [],
+			recommendations: currentUser && engagement ? buildCqRecommendations(currentUser, engagement) : buildAnonymousRecommendations(),
+			returnBonus: currentUser && engagement ? buildCqReturnBonus(currentUser, engagement) : buildAnonymousReturnBonus(),
 		});
 	} catch (error) {
 		sendServerError(response, error);
@@ -1183,6 +1279,191 @@ function serializeCqPlayer(row, entries = []) {
 	};
 }
 
+async function loadCqPlayerEngagement(playerId) {
+	const [playerResult, entryResult, gameResult] = await Promise.all([
+		pool.query(
+			`SELECT last_login_at
+			 FROM cq_players
+			 WHERE id = $1`,
+			[playerId],
+		),
+		pool.query(
+			`SELECT
+				COUNT(*) FILTER (WHERE entry_date = CURRENT_DATE)::int AS entries_today,
+				COUNT(*) FILTER (WHERE entry_date >= CURRENT_DATE - INTERVAL '6 days')::int AS entries_7d,
+				COUNT(DISTINCT CASE WHEN entry_date = CURRENT_DATE THEN LOWER(name) END)::int AS unique_connections_today,
+				COUNT(DISTINCT CASE WHEN entry_date >= CURRENT_DATE - INTERVAL '6 days' THEN LOWER(name) END)::int AS unique_connections_7d,
+				COUNT(DISTINCT CASE WHEN entry_date = CURRENT_DATE THEN type END)::int AS type_variety_today,
+				MAX(created_at) AS last_entry_at
+			 FROM cq_entries
+			 WHERE player_id = $1`,
+			[playerId],
+		),
+		pool.query(
+			`SELECT
+				COUNT(*) FILTER (WHERE created_at >= date_trunc('day', NOW()))::int AS games_today,
+				COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int AS games_7d,
+				COUNT(*) FILTER (
+					WHERE mode = 'duel'
+					  AND created_at >= NOW() - INTERVAL '7 days'
+					  AND (primary_player_id = $1 OR opponent_player_id = $1)
+				)::int AS duels_7d,
+				MAX(created_at) AS last_game_at
+			 FROM cq_game_results
+			 WHERE primary_player_id = $1 OR opponent_player_id = $1`,
+			[playerId],
+		),
+	]);
+
+	const player = playerResult.rows[0] || {};
+	const entry = entryResult.rows[0] || {};
+	const game = gameResult.rows[0] || {};
+	const lastActivityAt = [player.last_login_at, entry.last_entry_at, game.last_game_at]
+		.filter(Boolean)
+		.map((value) => new Date(value))
+		.sort((left, right) => right.getTime() - left.getTime())[0] || null;
+
+	return {
+		entriesToday: Number(entry.entries_today) || 0,
+		entries7d: Number(entry.entries_7d) || 0,
+		uniqueConnectionsToday: Number(entry.unique_connections_today) || 0,
+		uniqueConnections7d: Number(entry.unique_connections_7d) || 0,
+		typeVarietyToday: Number(entry.type_variety_today) || 0,
+		gamesToday: Number(game.games_today) || 0,
+		games7d: Number(game.games_7d) || 0,
+		duels7d: Number(game.duels_7d) || 0,
+		lastActivityAt: lastActivityAt ? lastActivityAt.toISOString() : null,
+	};
+}
+
+async function loadCqCommunityStats() {
+	const [playersResult, entriesResult, gamesResult, activePlayersResult] = await Promise.all([
+		pool.query("SELECT COUNT(*)::int AS player_count FROM cq_players"),
+		pool.query(
+			`SELECT
+				COUNT(*) FILTER (WHERE entry_date = CURRENT_DATE)::int AS entries_today,
+				COUNT(*) FILTER (WHERE entry_date >= CURRENT_DATE - INTERVAL '6 days')::int AS entries_7d
+			 FROM cq_entries`,
+		),
+		pool.query(
+			`SELECT
+				COUNT(*) FILTER (WHERE created_at >= date_trunc('day', NOW()))::int AS games_today,
+				COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int AS games_7d
+			 FROM cq_game_results`,
+		),
+		pool.query(
+			`SELECT COUNT(DISTINCT player_id)::int AS active_players_7d
+			 FROM (
+				SELECT player_id
+				FROM cq_entries
+				WHERE entry_date >= CURRENT_DATE - INTERVAL '6 days'
+				UNION
+				SELECT primary_player_id AS player_id
+				FROM cq_game_results
+				WHERE created_at >= NOW() - INTERVAL '7 days'
+				UNION
+				SELECT opponent_player_id AS player_id
+				FROM cq_game_results
+				WHERE opponent_player_id IS NOT NULL AND created_at >= NOW() - INTERVAL '7 days'
+			 ) AS recent_players`,
+		),
+	]);
+
+	return {
+		playerCount: Number(playersResult.rows[0]?.player_count) || 0,
+		entriesToday: Number(entriesResult.rows[0]?.entries_today) || 0,
+		entries7d: Number(entriesResult.rows[0]?.entries_7d) || 0,
+		gamesToday: Number(gamesResult.rows[0]?.games_today) || 0,
+		games7d: Number(gamesResult.rows[0]?.games_7d) || 0,
+		activePlayers7d: Number(activePlayersResult.rows[0]?.active_players_7d) || 0,
+	};
+}
+
+async function loadCqHighlights() {
+	const result = await pool.query(
+		`SELECT handle, score, current_streak, game_wins, total_entries, placement
+		 FROM cq_players
+		 ORDER BY placement ASC, created_at ASC`,
+	);
+
+	const players = result.rows;
+	const scoreLeader = players[0] || null;
+	const streakLeader = players.reduce((best, row) => (
+		!best || Number(row.current_streak) > Number(best.current_streak) ? row : best
+	), null);
+	const gameLeader = players.reduce((best, row) => (
+		!best || Number(row.game_wins) > Number(best.game_wins) ? row : best
+	), null);
+
+	return {
+		scoreLeader: scoreLeader ? {
+			handle: scoreLeader.handle,
+			value: Number(scoreLeader.score) || 0,
+			label: `#${Number(scoreLeader.placement) || 1} im Gesamtranking`,
+		} : null,
+		streakLeader: streakLeader ? {
+			handle: streakLeader.handle,
+			value: Number(streakLeader.current_streak) || 0,
+			label: "Tage aktuelle Streak",
+		} : null,
+		gameLeader: gameLeader ? {
+			handle: gameLeader.handle,
+			value: Number(gameLeader.game_wins) || 0,
+			label: "Game Wins gesamt",
+		} : null,
+	};
+}
+
+async function loadCqActivityFeed() {
+	const result = await pool.query(
+		`SELECT *
+		 FROM (
+			SELECT
+				e.id,
+				e.created_at AS occurred_at,
+				'entry' AS event_type,
+				p.handle AS actor_handle,
+				e.type AS entry_type,
+				e.name AS target_name,
+				NULL::TEXT AS opponent_handle,
+				NULL::TEXT AS winner_handle,
+				e.notes AS summary
+			FROM cq_entries e
+			JOIN cq_players p ON p.id = e.player_id
+
+			UNION ALL
+
+			SELECT
+				g.id,
+				g.created_at AS occurred_at,
+				'game' AS event_type,
+				p.handle AS actor_handle,
+				g.game_type AS entry_type,
+				NULL::TEXT AS target_name,
+				opponent.handle AS opponent_handle,
+				winner.handle AS winner_handle,
+				COALESCE(g.payload->>'summary', '') AS summary
+			FROM cq_game_results g
+			JOIN cq_players p ON p.id = g.primary_player_id
+			LEFT JOIN cq_players opponent ON opponent.id = g.opponent_player_id
+			LEFT JOIN cq_players winner ON winner.id = g.winner_player_id
+		 ) AS feed
+		 ORDER BY occurred_at DESC
+		 LIMIT 12`,
+	);
+
+	return result.rows.map((row) => ({
+		id: row.id,
+		type: row.event_type,
+		actorHandle: row.actor_handle,
+		occurredAt: row.occurred_at,
+		title: row.event_type === "entry"
+			? `${row.actor_handle} hat ${row.entry_type} mit ${row.target_name} geloggt`
+			: buildCqGameFeedTitle(row),
+		detail: buildCqFeedDetail(row),
+	}));
+}
+
 async function recalculateCqPlayerStats(client, playerId) {
 	const playerResult = await client.query(
 		"SELECT game_sessions, game_wins, game_score, game_xp FROM cq_players WHERE id = $1",
@@ -1309,6 +1590,142 @@ function buildCqStats(entries, bonusStats = {}) {
 	};
 }
 
+function buildCqDailyMissions(engagement) {
+	return CQ_DAILY_MISSIONS.map((mission) => {
+		const current = Math.max(0, Number(mission.metric(engagement)) || 0);
+		const target = Math.max(1, mission.target);
+		return {
+			id: mission.id,
+			title: mission.title,
+			description: mission.description,
+			rewardLabel: mission.rewardLabel,
+			current,
+			target,
+			completed: current >= target,
+			progressPercent: Math.min(100, Math.round((Math.min(current, target) / target) * 100)),
+		};
+	});
+}
+
+function buildCqWeeklyChallenges(engagement) {
+	return CQ_WEEKLY_CHALLENGES.map((mission) => {
+		const current = Math.max(0, Number(mission.metric(engagement)) || 0);
+		const target = Math.max(1, mission.target);
+		return {
+			id: mission.id,
+			title: mission.title,
+			description: mission.description,
+			rewardLabel: mission.rewardLabel,
+			current,
+			target,
+			completed: current >= target,
+			progressPercent: Math.min(100, Math.round((Math.min(current, target) / target) * 100)),
+		};
+	});
+}
+
+function buildCqRecommendations(currentUser, engagement) {
+	const cards = [];
+	if ((engagement.entriesToday || 0) === 0) {
+		cards.push({
+			id: "rec-log",
+			title: "Heute fehlt noch ein Log",
+			copy: "Ein einziger neuer Eintrag aktiviert sofort Daily-Progress, Streak-Druck und mehr Sichtbarkeit im Feed.",
+			tag: "Journal",
+		});
+	}
+	if ((engagement.gamesToday || 0) === 0) {
+		cards.push({
+			id: "rec-game",
+			title: "Arcade-Loop heute noch offen",
+			copy: "Ein kurzer Sprint oder ein Duel bringt sofort Game-Score, Feed-Aktivitaet und Weekly-Fortschritt.",
+			tag: "Arcade",
+		});
+	}
+	if ((engagement.uniqueConnections7d || 0) < 4) {
+		cards.push({
+			id: "rec-network",
+			title: "Mehr Variety hebt dein Profil",
+			copy: `Nur noch ${Math.max(0, 4 - (engagement.uniqueConnections7d || 0))} neue Connection${Math.max(0, 4 - (engagement.uniqueConnections7d || 0)) === 1 ? "" : "s"} bis zur Weekly Network Expansion.`,
+			tag: "Growth",
+		});
+	}
+	if ((currentUser?.stats?.currentStreak || 0) >= 3) {
+		cards.push({
+			id: "rec-streak",
+			title: "Deine Streak ist jetzt sichtbar wertvoll",
+			copy: `${currentUser.handle} hat schon ${currentUser.stats.currentStreak} Tage aufgebaut. Heute nicht auslassen, sonst faellt der Druckmoment weg.`,
+			tag: "Streak",
+		});
+	}
+
+	if (!cards.length) {
+		cards.push({
+			id: "rec-hot",
+			title: "Profil laeuft bereits heiss",
+			copy: "Halte den Mix aus Journal und Games stabil, damit dein Ranking nicht nur durch einen Kanal getragen wird.",
+			tag: "Momentum",
+		});
+	}
+
+	return cards.slice(0, 3);
+}
+
+function buildAnonymousRecommendations() {
+	return [
+		{
+			id: "rec-anon-1",
+			title: "Spieler aktivieren",
+			copy: "Erst mit Login werden Daily- und Weekly-Loops, persoenliche Empfehlungen und Rueckkehr-Ziele freigeschaltet.",
+			tag: "Login",
+		},
+		{
+			id: "rec-anon-2",
+			title: "Journal plus Arcade kombinieren",
+			copy: "Die App bindet staerker, wenn Logs, Games und Ranking im selben Profil zusammenlaufen.",
+			tag: "Mix",
+		},
+	];
+}
+
+function buildCqReturnBonus(currentUser, engagement) {
+	const streak = Number(currentUser?.stats?.currentStreak) || 0;
+	const milestones = [3, 5, 7, 14, 30];
+	const nextMilestone = milestones.find((value) => value > streak) || (streak + 7);
+	const progressPercent = Math.min(100, Math.round((Math.min(streak, nextMilestone) / nextMilestone) * 100));
+	const daysSinceActivity = calculateDaysSince(engagement.lastActivityAt);
+
+	if (streak === 0) {
+		return {
+			title: daysSinceActivity > 1 ? "Comeback-Fenster offen" : "Momentum starten",
+			description: daysSinceActivity > 1
+				? `Du warst ${daysSinceActivity} Tage inaktiv. Ein Log oder ein Game startet den Push neu.`
+				: "Ein neuer Log heute aktiviert wieder deinen Tagesfluss und die Daily-Missions.",
+			progressLabel: `0 / ${nextMilestone} Tage bis zur ersten echten Streak`,
+			progressPercent: 0,
+			status: daysSinceActivity > 1 ? "Comeback" : "Start",
+		};
+	}
+
+	return {
+		title: `Streak auf ${nextMilestone} Tage ziehen`,
+		description: `${currentUser.handle} ist bereits ${streak} Tage in Folge aktiv. Heute zaehlt direkt fuer den naechsten Meilenstein.`,
+		progressLabel: `${streak} / ${nextMilestone} Tage`,
+		progressPercent,
+		status: streak >= 7 ? "Hot" : "Building",
+	};
+}
+
+function buildAnonymousReturnBonus() {
+	return {
+		title: "Logge dich ein fuer Daily-Loops",
+		description: "Mit aktivem Spieler bekommst du taegliche Missionen, Community-Momentum und persoenliche Rueckkehr-Ziele.",
+		progressLabel: "Login erforderlich",
+		progressPercent: 0,
+		status: "Locked",
+	};
+}
+
 function calculateCqCurrentStreak(sortedDescDates) {
 	if (!sortedDescDates.length) {
 		return 0;
@@ -1354,6 +1771,37 @@ function buildCqLevelMessage(level, totalEntries) {
 		return "Stabile Serie. Dein Profil arbeitet sich im Leaderboard nach oben.";
 	}
 	return "Starke Aktivitaet. Dein Board sieht bereits nach Endgame aus.";
+}
+
+function buildCqGameFeedTitle(row) {
+	if (row.opponent_handle) {
+		const winner = row.winner_handle || row.actor_handle;
+		return `${row.actor_handle} spielte ${row.entry_type} gegen ${row.opponent_handle} - Sieger: ${winner}`;
+	}
+	return `${row.actor_handle} hat ${row.entry_type} abgeschlossen`;
+}
+
+function buildCqFeedDetail(row) {
+	if (row.summary) {
+		return String(row.summary).slice(0, 180);
+	}
+	if (row.event_type === "entry") {
+		return "Neuer Journal-Eintrag im Live-Feed.";
+	}
+	return row.opponent_handle ? "Duel-Rewards wurden direkt ins Ranking geschrieben." : "Game-Rewards wurden direkt ins Profil uebernommen.";
+}
+
+function calculateDaysSince(value) {
+	if (!value) {
+		return 999;
+	}
+
+	const timestamp = new Date(value).getTime();
+	if (!Number.isFinite(timestamp)) {
+		return 999;
+	}
+
+	return Math.max(0, Math.floor((Date.now() - timestamp) / 86400000));
 }
 
 function addDays(date, days) {

@@ -236,6 +236,17 @@ h1 {
 	gap: 1.25rem;
 }
 
+.mission-card,
+.return-card,
+.weekly-card,
+.recommendation-card {
+	grid-column: span 6;
+}
+
+.community-card {
+	grid-column: span 12;
+}
+
 .stat-card h2 {
 	margin-top: 0.4rem;
 	font-size: 3rem;
@@ -262,6 +273,147 @@ h1 {
 
 .timeline-card {
 	grid-column: span 12;
+}
+
+.mission-list,
+.community-feed,
+.community-highlights,
+.community-stats,
+.recommendation-list {
+	margin-top: 1.2rem;
+}
+
+.mission-list,
+.community-feed,
+.community-highlights,
+.recommendation-list {
+	display: grid;
+	gap: 0.85rem;
+}
+
+.mission-item,
+.feed-item,
+.highlight-item,
+.community-stat,
+.return-bonus-shell,
+.recommendation-item {
+	padding: 1rem;
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.5);
+	border: 1px solid rgba(31, 42, 44, 0.08);
+}
+
+.mission-item,
+.feed-item,
+.return-bonus-shell {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.mission-head,
+.feed-head,
+.highlight-head,
+.community-stats {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	align-items: center;
+}
+
+.mission-head h3,
+.highlight-head h3,
+.feed-head h3,
+.community-stat strong,
+.return-bonus-shell h3,
+.recommendation-item h3 {
+	margin: 0;
+	font-size: 1.05rem;
+}
+
+.mission-copy,
+.feed-copy,
+.return-copy,
+.highlight-copy,
+.recommendation-item p {
+	color: var(--muted);
+}
+
+.mission-meta,
+.feed-meta,
+.highlight-meta {
+	font-size: 0.82rem;
+	color: var(--muted);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+.mission-progress,
+.return-progress {
+	height: 10px;
+	border-radius: 999px;
+	background: rgba(31, 42, 44, 0.08);
+	overflow: hidden;
+}
+
+.mission-progress span,
+.return-progress span {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: linear-gradient(90deg, var(--coral), var(--gold));
+}
+
+.mission-foot,
+.return-meta {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	align-items: center;
+	flex-wrap: wrap;
+	color: var(--muted);
+	font-size: 0.92rem;
+}
+
+.mission-badge,
+.return-status,
+.feed-tag {
+	padding: 0.35rem 0.65rem;
+	border-radius: 999px;
+	background: rgba(31, 42, 44, 0.08);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.mission-badge.is-complete {
+	background: rgba(32, 201, 151, 0.16);
+	color: #14634e;
+}
+
+.community-stats {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0.85rem;
+}
+
+.community-highlights {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	margin-top: 0.85rem;
+}
+
+.community-stat small,
+.highlight-copy p,
+.feed-copy p,
+.return-copy p,
+.mission-copy p,
+.recommendation-item p {
+	margin: 0.35rem 0 0;
+}
+
+.recommendation-item {
+	display: grid;
+	gap: 0.55rem;
 }
 
 .entry-form,
@@ -521,6 +673,11 @@ textarea {
 	.auth-card,
 	.form-card,
 	.stats-grid,
+	.mission-card,
+	.return-card,
+	.weekly-card,
+	.recommendation-card,
+	.community-card,
 	.calendar-card,
 	.day-card,
 	.achievement-card,
@@ -531,6 +688,11 @@ textarea {
 
 	.stats-grid {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.community-stats,
+	.community-highlights {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
@@ -549,14 +711,22 @@ textarea {
 	.entry-form,
 	.auth-form,
 	.stats-grid,
-	.profile-grid {
+	.profile-grid,
+	.community-stats,
+	.community-highlights {
 		grid-template-columns: 1fr;
 	}
 
 	.section-head,
 	.level-head,
 	.entry-topline,
-	.auth-actions {
+	.auth-actions,
+	.mission-head,
+	.feed-head,
+	.highlight-head,
+	.community-stats,
+	.mission-foot,
+	.return-meta {
 		align-items: flex-start;
 		flex-direction: column;
 	}

@@ -3,7 +3,9 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
 	<title>Connection Quest Games</title>
+	<link rel="manifest" href="manifest.webmanifest">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
@@ -25,6 +27,13 @@
 				</div>
 				<div class="hero-actions">
 					<a class="hero-link" href="ConnectionQuest.html">Zurück zu Connection Quest</a>
+					<a class="hero-link" href="Profile.html">Profil Hub</a>
+					<a class="hero-link" href="Community.html">Community Hub</a>
+					<a class="hero-link" href="Notifications.html">Inbox</a>
+					<a class="hero-link" href="Network.html">Network</a>
+					<a class="hero-link" href="Rewards.html">Rewards</a>
+					<a class="hero-link" href="Events.html">Events</a>
+					<a class="hero-link" href="Analytics.html">Analytics</a>
 					<a class="hero-link" href="Leaderboard.html">Zum Leaderboard</a>
 				</div>
 			</section>
@@ -55,6 +64,18 @@
 		</header>
 
 		<main class="games-layout">
+			<section class="card loop-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Retention Loop</p>
+						<h2>Heute und diese Woche</h2>
+					</div>
+					<p class="section-copy">Games sollen nicht isoliert wirken, sondern taeglich und woechentlich in den Gesamt-Loop einzahlen.</p>
+				</div>
+				<div id="games-missions" class="games-side-list empty-state">Login erforderlich fuer taegliche und woechentliche Ziele.</div>
+				<div id="games-recommendations" class="games-side-list empty-state">Noch keine Empfehlungen.</div>
+			</section>
+
 			<section class="card duel-card">
 				<div class="section-head">
 					<div>
@@ -141,9 +162,21 @@
 				</div>
 				<div id="game-feed" class="game-feed empty-state">Noch keine Game-Rewards in dieser Sitzung.</div>
 			</section>
+
+			<section class="card community-game-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Community Feed</p>
+						<h2>Live auf dem Board</h2>
+					</div>
+					<p class="section-copy">Auch im Games-Bereich bleibt sichtbar, was im restlichen Netzwerk gerade passiert.</p>
+				</div>
+				<div id="games-community-feed" class="game-feed empty-state">Noch keine Activity sichtbar.</div>
+			</section>
 		</main>
 	</div>
 
 	<script src="Games.js"></script>
+	<script src="app-shell.js"></script>
 </body>
 </html>

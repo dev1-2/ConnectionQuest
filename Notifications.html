@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
+	<title>Connection Quest Notifications</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Notifications.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="notify-hero">
+			<section class="hero-card spotlight">
+				<p class="eyebrow">INBOX HUB</p>
+				<h1>Notifications Center</h1>
+				<p class="hero-copy">Eine echte Zentrale fuer Druck, Fortschritt und soziale Signale: Missionen, Rangbedrohungen, Community-Moves und schnelle Rueckwege in die App.</p>
+				<div class="hero-actions">
+					<a class="hero-link" href="ConnectionQuest.html">Journal</a>
+					<a class="hero-link" href="Games.html">Games</a>
+					<a class="ghost-link" href="Profile.html">Profil</a>
+					<a class="ghost-link" href="Network.html">Network</a>
+					<a class="ghost-link" href="Rewards.html">Rewards</a>
+					<a class="ghost-link" href="Events.html">Events</a>
+					<a class="ghost-link" href="Analytics.html">Analytics</a>
+				</div>
+			</section>
+
+			<section class="hero-card status-card">
+				<p class="mini-label">Status</p>
+				<h2 id="notify-title">Keine Signale</h2>
+				<p id="notify-copy" class="section-copy">Sobald Aktivitaet, Missionen oder Rivalen relevant werden, erscheint hier der Fokus des Tages.</p>
+				<div id="notify-topline" class="topline-grid"></div>
+			</section>
+		</header>
+
+		<main class="notify-layout">
+			<section class="card urgent-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Urgent</p>
+						<h2>Jetzt reagieren</h2>
+					</div>
+					<p class="section-copy">Diese Signale erzeugen unmittelbaren Rueckkehr- oder Reaktionsdruck.</p>
+				</div>
+				<div id="urgent-list" class="card-list empty-state">Noch keine dringenden Hinweise.</div>
+			</section>
+
+			<section class="card progress-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Progress</p>
+						<h2>Missionen und Fortschritt</h2>
+					</div>
+					<p class="section-copy">Fast geschaffte Ziele und offene Weekly-Loops gebuendelt.</p>
+				</div>
+				<div id="progress-list" class="card-list empty-state">Noch keine Fortschrittsmeldungen.</div>
+			</section>
+
+			<section class="card social-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Social</p>
+						<h2>Rivalen und Feed</h2>
+					</div>
+					<p class="section-copy">Platzdruck, Community-Moves und soziale Reize fuer die naechste Session.</p>
+				</div>
+				<div id="social-list" class="card-list empty-state">Noch keine sozialen Hinweise.</div>
+			</section>
+
+			<section class="card route-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Action Routes</p>
+						<h2>Direkte Wege</h2>
+					</div>
+					<p class="section-copy">Jede Notification soll direkt in die passende Aktion uebergehen.</p>
+				</div>
+				<div class="route-grid">
+					<a class="route-link" href="ConnectionQuest.html">Neuen Log anlegen</a>
+					<a class="route-link" href="Games.html">Game-Loop starten</a>
+					<a class="route-link" href="Leaderboard.html">Rang checken</a>
+					<a class="route-link" href="Community.html">Community ansehen</a>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="Notifications.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

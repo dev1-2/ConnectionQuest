@@ -3,7 +3,9 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
 	<title>Connection Quest</title>
+	<link rel="manifest" href="manifest.webmanifest">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
@@ -30,6 +32,13 @@
 				</div>
 				<div class="hero-actions">
 					<a class="hero-link" href="index.html">Zum Intro</a>
+					<a class="hero-link" href="Profile.html">Zum Profil</a>
+					<a class="hero-link" href="Community.html">Zur Community</a>
+					<a class="hero-link" href="Notifications.html">Zur Inbox</a>
+					<a class="hero-link" href="Network.html">Zum Network</a>
+					<a class="hero-link" href="Rewards.html">Zu Rewards</a>
+					<a class="hero-link" href="Events.html">Zu Events</a>
+					<a class="hero-link" href="Analytics.html">Zu Analytics</a>
 					<a class="hero-link" href="Leaderboard.html">Zum Leaderboard</a>
 					<a class="hero-link" href="Games.html">Zu den Games</a>
 				</div>
@@ -158,6 +167,63 @@
 				</article>
 			</section>
 
+			<section class="card mission-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Daily Loop</p>
+						<h2>Mission Board</h2>
+					</div>
+					<p class="section-copy">Taegliche Aufgaben halten Score, Streak und Rueckkehr-Druck aktiv.</p>
+				</div>
+				<div id="mission-list" class="mission-list empty-state">Logge dich ein, um deine taeglichen Missionen zu sehen.</div>
+			</section>
+
+			<section class="card return-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Retention</p>
+						<h2>Return Bonus</h2>
+					</div>
+					<p class="section-copy">Die App zeigt, wie nah du am naechsten Comeback- oder Streak-Meilenstein bist.</p>
+				</div>
+				<div id="return-bonus" class="return-bonus empty-state">Noch kein Rueckkehr-Ziel aktiv.</div>
+			</section>
+
+			<section class="card weekly-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Weekly Run</p>
+						<h2>Challenge Track</h2>
+					</div>
+					<p class="section-copy">Diese 7-Tage-Ziele sorgen dafuer, dass Nutzer nicht nach einem Tag wieder verschwinden.</p>
+				</div>
+				<div id="weekly-list" class="mission-list empty-state">Weekly Challenges werden nach dem Login aktiviert.</div>
+			</section>
+
+			<section class="card recommendation-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Next Moves</p>
+						<h2>Persoenliche Empfehlungen</h2>
+					</div>
+					<p class="section-copy">Das System zeigt direkt, welcher naechste Schritt die meiste Bindung erzeugt.</p>
+				</div>
+				<div id="recommendation-list" class="recommendation-list empty-state">Noch keine persoenlichen Empfehlungen sichtbar.</div>
+			</section>
+
+			<section class="card community-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Community Pulse</p>
+						<h2>Live Activity</h2>
+					</div>
+					<p class="section-copy">Ein zentraler Feed plus Live-Zahlen machen die Anwendung wie ein richtiges Netzwerk lebendiger.</p>
+				</div>
+				<div id="community-stats" class="community-stats"></div>
+				<div id="community-highlights" class="community-highlights"></div>
+				<div id="community-feed" class="community-feed empty-state">Noch keine Community-Aktivitaet sichtbar.</div>
+			</section>
+
 			<section class="card calendar-card">
 				<div class="section-head">
 					<div>
@@ -236,6 +302,7 @@
 	</template>
 
 	<script src="Connectionquestscript.js"></script>
+	<script src="app-shell.js"></script>
 </body>
 </html>
 

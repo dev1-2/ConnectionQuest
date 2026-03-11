@@ -5,6 +5,12 @@ const state = {
 	currentUser: null,
 	leaderboard: [],
 	feed: [],
+	pulseData: {
+		missions: [],
+		weeklyChallenges: [],
+		recommendations: [],
+		activityFeed: [],
+	},
 	sprint: {
 		running: false,
 		hits: 0,
@@ -34,6 +40,9 @@ const sprintTarget = document.querySelector("#sprint-target");
 const sprintStage = document.querySelector("#sprint-stage");
 const patternStartButton = document.querySelector("#pattern-start");
 const patternPads = Array.from(document.querySelectorAll(".pattern-pad"));
+const gamesMissions = document.querySelector("#games-missions");
+const gamesRecommendations = document.querySelector("#games-recommendations");
+const gamesCommunityFeed = document.querySelector("#games-community-feed");
 
 initialize();
 
@@ -56,20 +65,106 @@ function bindEvents() {
 }
 
 async function hydrate() {
-	const payload = await apiRequest("/api/cq/leaderboard");
-	state.currentUserId = payload.currentUserId || "";
-	state.leaderboard = payload.leaderboard || [];
+	const [leaderboardPayload, pulsePayload] = await Promise.all([
+		apiRequest("/api/cq/leaderboard"),
+		apiRequest("/api/cq/pulse"),
+	]);
+	state.currentUserId = leaderboardPayload.currentUserId || "";
+	state.leaderboard = leaderboardPayload.leaderboard || [];
 	state.currentUser = state.leaderboard.find((entry) => entry.id === state.currentUserId) || null;
+	state.pulseData = pulsePayload || state.pulseData;
 }
 
 function renderAll() {
 	renderCurrentPlayer();
+	renderLoopPanels();
 	renderOpponents();
 	renderDuelNames();
 	renderSprintHud();
 	renderPatternHud();
 	renderFeed();
 	updateLockState();
+}
+
+function renderLoopPanels() {
+	const daily = state.pulseData?.missions || [];
+	const weekly = state.pulseData?.weeklyChallenges || [];
+	const recommendations = state.pulseData?.recommendations || [];
+	const activityFeed = state.pulseData?.activityFeed || [];
+
+	renderGameLoopList(gamesMissions, [
+		...daily.map((item) => ({ ...item, tag: "Today" })),
+		...weekly.slice(0, 2).map((item) => ({ ...item, tag: "Week" })),
+	], !state.currentUser, "Login erforderlich fuer taegliche und woechentliche Ziele.");
+
+	renderGameRecommendationList(recommendations);
+	renderGameCommunityFeed(activityFeed);
+}
+
+function renderGameLoopList(node, items, locked, emptyCopy) {
+	node.innerHTML = "";
+	node.classList.toggle("empty-state", locked || items.length === 0);
+	if (locked) {
+		node.textContent = emptyCopy;
+		return;
+	}
+	if (!items.length) {
+		node.textContent = "Noch keine Loop-Daten vorhanden.";
+		return;
+	}
+	items.forEach((item) => {
+		const article = document.createElement("article");
+		article.className = "loop-item";
+		article.innerHTML = `
+			<div class="loop-head">
+				<h3>${escapeHtml(item.title)}</h3>
+				<span class="loop-tag">${escapeHtml(item.tag || "Loop")}</span>
+			</div>
+			<p>${escapeHtml(item.description || "")}</p>
+			<div class="loop-progress" aria-hidden="true"><span style="width:${item.progressPercent || 0}%"></span></div>
+			<div class="loop-meta">${item.current || 0} / ${item.target || 0} • ${escapeHtml(item.rewardLabel || "")}</div>
+		`;
+		node.appendChild(article);
+	});
+}
+
+function renderGameRecommendationList(items) {
+	gamesRecommendations.innerHTML = "";
+	gamesRecommendations.classList.toggle("empty-state", items.length === 0);
+	if (!items.length) {
+		gamesRecommendations.textContent = "Noch keine Empfehlungen.";
+		return;
+	}
+	items.forEach((item) => {
+		const article = document.createElement("article");
+		article.className = "loop-item";
+		article.innerHTML = `
+			<div class="loop-head">
+				<h3>${escapeHtml(item.title)}</h3>
+				<span class="loop-tag">${escapeHtml(item.tag || "Hint")}</span>
+			</div>
+			<p>${escapeHtml(item.copy || "")}</p>
+		`;
+		gamesRecommendations.appendChild(article);
+	});
+}
+
+function renderGameCommunityFeed(items) {
+	gamesCommunityFeed.innerHTML = "";
+	gamesCommunityFeed.classList.toggle("empty-state", items.length === 0);
+	if (!items.length) {
+		gamesCommunityFeed.textContent = "Noch keine Activity sichtbar.";
+		return;
+	}
+	items.slice(0, 6).forEach((item) => {
+		const article = document.createElement("article");
+		article.className = "feed-item";
+		article.innerHTML = `
+			<h3>${escapeHtml(item.title)}</h3>
+			<p>${escapeHtml(item.detail || "")}</p>
+		`;
+		gamesCommunityFeed.appendChild(article);
+	});
 }
 
 function renderCurrentPlayer() {
