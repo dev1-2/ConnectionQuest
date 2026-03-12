@@ -294,9 +294,9 @@ function injectShellStyles() {
 	const style = document.createElement("style");
 	style.id = "cq-shell-styles";
 	style.textContent = `
-		.cq-shell-body { padding-top: 0; }
+		.cq-shell-body { padding-top: 0; scroll-behavior: smooth; }
 		.cq-shell-body.cq-shell-body-banner { padding-top: 0; }
-		.cq-shell { position: static; z-index: 10000; pointer-events: none; }
+		.cq-shell { position: sticky; top: 0; z-index: 10000; pointer-events: none; }
 		.cq-shell__bar, .cq-shell__drawer {
 			pointer-events: auto;
 			width: min(1240px, calc(100% - 1rem));
@@ -313,9 +313,7 @@ function injectShellStyles() {
 			gap: 0.9rem;
 			padding: 0.85rem 1rem;
 			border-radius: 18px;
-		}
-		.cq-shell__bar {
-			margin-top: 0;
+			margin-top: 0.5rem;
 		}
 		.cq-shell__brand, .cq-shell__quick-link, .cq-shell__drawer-link, .cq-shell__context-link {
 			text-decoration: none;
@@ -452,6 +450,7 @@ function injectShellStyles() {
 			justify-content: center;
 			text-decoration: none;
 		}
+		* { scroll-margin-top: 4.5rem; }
 		#cq-install-btn {
 			right: 14px !important;
 			bottom: 14px !important;
