@@ -56,8 +56,6 @@ select {
 .hero-card,
 .card,
 .mini-stat-pill,
-.duel-lane,
-.duel-signal,
 .feed-item {
 	background: var(--panel);
 	border: 1px solid rgba(255, 255, 255, 0.45);
@@ -114,8 +112,7 @@ h2 {
 .hero-copy,
 .section-copy,
 .empty-state,
-.feed-item p,
-.duel-lane p {
+.feed-item p {
 	color: var(--muted);
 }
 
@@ -185,7 +182,6 @@ h2 {
 		var(--panel-strong);
 }
 
-.duel-card { grid-column: span 12; }
 .loop-card { grid-column: span 12; }
 .game-card { grid-column: span 6; }
 .results-card { grid-column: span 12; }
@@ -234,31 +230,6 @@ select:disabled,
 	cursor: not-allowed;
 	transform: none;
 	box-shadow: none;
-}
-
-.duel-stage {
-	margin-top: 1.25rem;
-	display: grid;
-	grid-template-columns: 1fr 220px 1fr;
-	gap: 1rem;
-	align-items: center;
-}
-
-.duel-lane,
-.duel-signal {
-	padding: 1.3rem;
-	text-align: center;
-	min-height: 180px;
-	display: grid;
-	place-items: center;
-	align-content: center;
-}
-
-.duel-signal {
-	font-size: clamp(2.2rem, 5vw, 3.2rem);
-	font-family: "Bebas Neue", sans-serif;
-	letter-spacing: 0.06em;
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
 }
 
 .target-stage {
@@ -393,16 +364,14 @@ select:disabled,
 
 @media (max-width: 1024px) {
 	.games-hero,
-	.games-layout,
-	.duel-stage {
+	.games-layout {
 		grid-template-columns: 1fr;
 	}
 
 	.loop-card,
 	.game-card,
 	.results-card,
-	.community-game-card,
-	.duel-card {
+	.community-game-card {
 		grid-column: span 12;
 	}
 }
@@ -415,9 +384,7 @@ select:disabled,
 
 	.hero-card,
 	.card,
-	.feed-item,
-	.duel-lane,
-	.duel-signal {
+	.feed-item {
 		border-radius: 22px;
 	}
 

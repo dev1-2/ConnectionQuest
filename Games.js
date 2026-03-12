@@ -24,17 +24,8 @@ const state = {
 		round: 0,
 		locked: false,
 	},
-	duel: {
-		arming: false,
-		goLive: false,
-		timeoutId: null,
-	},
 };
 
-const opponentSelect = document.querySelector("#duel-opponent");
-const duelStartButton = document.querySelector("#duel-start");
-const duelStatus = document.querySelector("#duel-status");
-const duelSignal = document.querySelector("#duel-signal");
 const sprintStartButton = document.querySelector("#sprint-start");
 const sprintTarget = document.querySelector("#sprint-target");
 const sprintStage = document.querySelector("#sprint-stage");
@@ -53,15 +44,12 @@ async function initialize() {
 }
 
 function bindEvents() {
-	duelStartButton.addEventListener("click", startDuel);
 	sprintStartButton.addEventListener("click", startSprint);
 	sprintTarget.addEventListener("click", handleSprintHit);
 	patternStartButton.addEventListener("click", startPattern);
 	patternPads.forEach((pad) => {
 		pad.addEventListener("click", () => handlePatternInput(Number(pad.dataset.pad)));
 	});
-	document.addEventListener("keydown", handleDuelKeydown);
-	opponentSelect.addEventListener("change", renderDuelNames);
 }
 
 async function hydrate() {
@@ -78,8 +66,6 @@ async function hydrate() {
 function renderAll() {
 	renderCurrentPlayer();
 	renderLoopPanels();
-	renderOpponents();
-	renderDuelNames();
 	renderSprintHud();
 	renderPatternHud();
 	renderFeed();
@@ -178,31 +164,6 @@ function renderCurrentPlayer() {
 	document.querySelector("#current-player-placement").textContent = `#${state.currentUser?.placement || 0}`;
 }
 
-function renderOpponents() {
-	const options = state.leaderboard.filter((entry) => entry.id !== state.currentUserId);
-	opponentSelect.innerHTML = "";
-	if (!options.length) {
-		const option = document.createElement("option");
-		option.value = "";
-		option.textContent = "Kein Gegner verfügbar";
-		opponentSelect.appendChild(option);
-		return;
-	}
-
-	options.forEach((entry) => {
-		const option = document.createElement("option");
-		option.value = entry.id;
-		option.textContent = `${entry.handle} • Platz #${entry.placement}`;
-		opponentSelect.appendChild(option);
-	});
-}
-
-function renderDuelNames() {
-	document.querySelector("#duel-left-name").textContent = state.currentUser?.handle || "Du";
-	const opponent = getSelectedOpponent();
-	document.querySelector("#duel-right-name").textContent = opponent?.handle || "Gegner";
-}
-
 function renderSprintHud() {
 	document.querySelector("#sprint-hits").textContent = String(state.sprint.hits);
 	document.querySelector("#sprint-time").textContent = String(state.sprint.timeLeft);
@@ -238,96 +199,14 @@ function renderFeed() {
 
 function updateLockState() {
 	const locked = !state.currentUser;
-	duelStartButton.disabled = locked || !getSelectedOpponent();
 	sprintStartButton.disabled = locked || state.sprint.running;
 	patternStartButton.disabled = locked || state.pattern.running;
-	opponentSelect.disabled = locked || !getSelectedOpponent();
 	sprintTarget.hidden = !state.sprint.running;
 	if (!locked) {
 		return;
 	}
-	duelStatus.textContent = "Login erforderlich für Duel-Rewards.";
 	document.querySelector("#sprint-status").textContent = "Login erforderlich für Sprint-Rewards.";
 	document.querySelector("#pattern-status").textContent = "Login erforderlich für Pattern-Rewards.";
-}
-
-async function startDuel() {
-	if (!state.currentUser) {
-		return;
-	}
-	const opponent = getSelectedOpponent();
-	if (!opponent) {
-		duelStatus.textContent = "Erst einen Gegner wählen.";
-		return;
-	}
-	if (state.duel.arming || state.duel.goLive) {
-		return;
-	}
-
-	state.duel.arming = true;
-	state.duel.goLive = false;
-	duelSignal.textContent = "Warte...";
-	duelStatus.textContent = `Duel wird gegen ${opponent.handle} geladen.`;
-	state.duel.timeoutId = window.setTimeout(() => {
-		state.duel.goLive = true;
-		state.duel.arming = false;
-		duelSignal.textContent = "GO";
-		duelStatus.textContent = "Jetzt A oder L drücken.";
-	}, 1400 + Math.floor(Math.random() * 2200));
-	updateLockState();
-}
-
-async function handleDuelKeydown(event) {
-	if (!state.currentUser || (!state.duel.arming && !state.duel.goLive)) {
-		return;
-	}
-	const key = event.key.toLowerCase();
-	if (key !== "a" && key !== "l") {
-		return;
-	}
-
-	const opponent = getSelectedOpponent();
-	if (!opponent) {
-		return;
-	}
-
-	if (state.duel.arming && !state.duel.goLive) {
-		const winnerId = key === "a" ? opponent.id : state.currentUser.id;
-		await submitDuelResult(winnerId, `Fehlstart von ${key === "a" ? state.currentUser.handle : opponent.handle}`);
-		return;
-	}
-
-	if (state.duel.goLive) {
-		const winnerId = key === "a" ? state.currentUser.id : opponent.id;
-		await submitDuelResult(winnerId, `${key === "a" ? state.currentUser.handle : opponent.handle} war schneller.`);
-	}
-	}
-
-async function submitDuelResult(winnerPlayerId, summary) {
-	window.clearTimeout(state.duel.timeoutId);
-	state.duel.arming = false;
-	state.duel.goLive = false;
-	const opponent = getSelectedOpponent();
-	try {
-		const payload = await apiRequest("/api/cq/games/duel", {
-			method: "POST",
-			body: {
-				gameType: "reaction-duel",
-				opponentPlayerId: opponent.id,
-				winnerPlayerId,
-				summary,
-			},
-		});
-		await applyCurrentUser(payload.currentUser);
-		const winnerName = winnerPlayerId === state.currentUser.id ? state.currentUser.handle : opponent.handle;
-		duelSignal.textContent = winnerName;
-		duelStatus.textContent = `${winnerName} gewinnt das Duel.`;
-		pushFeed("Reaction Duel", `${summary} Reward gespeichert und ins Leaderboard übertragen.`);
-	} catch (error) {
-		duelSignal.textContent = "ERROR";
-		duelStatus.textContent = error.message;
-	}
-	updateLockState();
 }
 
 function startSprint() {
@@ -459,10 +338,6 @@ async function applyCurrentUser(currentUser) {
 	state.currentUser = currentUser;
 	await hydrate();
 	renderAll();
-}
-
-function getSelectedOpponent() {
-	return state.leaderboard.find((entry) => entry.id === opponentSelect.value) || null;
 }
 
 function setPadActive(index, isActive) {

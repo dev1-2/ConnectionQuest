@@ -23,7 +23,7 @@ const PAGE_META = {
 		quickLinks: ["Hub.html", "Guide.html", "Community.html", "Blog.html"],
 	},
 	"AdminChannel.html": {
-		title: "Admin Channel",
+		title: "Ankündigungen",
 		category: "News",
 		quickLinks: ["Hub.html", "Community.html", "Blog.html", "About.html"],
 	},
@@ -120,7 +120,7 @@ const NAV_GROUPS = [
 	},
 	{
 		label: "Kommunikation",
-		links: ["Community.html", "Blog.html", "Messenger.html", "AdminChannel.html", "Network.html", "SocialRank.html", "Notifications.html"],
+		links: ["AdminChannel.html", "Community.html", "Blog.html", "Messenger.html", "Network.html", "SocialRank.html", "Notifications.html"],
 	},
 	{
 		label: "System",
@@ -242,7 +242,7 @@ async function renderAnnouncementBanner() {
 		document.body.classList.add("cq-shell-body-banner");
 		node.innerHTML = `
 			<a class="cq-shell__announcement-copy" href="AdminChannel.html">
-				<strong>Neue Nachricht von ${escapeHtml(banner.authorName || "Admin")}</strong>
+				<strong>Neue Ankündigung von ${escapeHtml(banner.authorName || "Admin")}</strong>
 			</a>
 			<button type="button" class="cq-shell__announcement-close">Schliessen</button>
 		`;

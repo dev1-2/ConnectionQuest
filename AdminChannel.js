@@ -21,8 +21,8 @@ async function initialize() {
 		}
 		renderPage();
 	} catch (error) {
-		elements.status.textContent = error.message || "Nachrichten konnten nicht geladen werden.";
-		elements.highlight.textContent = "Der Admin Channel ist gerade nicht erreichbar.";
+		elements.status.textContent = error.message || "Mitteilungen konnten nicht geladen werden.";
+		elements.highlight.textContent = "Die Ankuendigungen sind gerade nicht erreichbar.";
 		elements.feed.textContent = "Bitte spaeter erneut versuchen.";
 	}
 }
@@ -30,7 +30,7 @@ async function initialize() {
 function renderPage() {
 	const total = adminChannelState.messages.length;
 	elements.status.textContent = total
-		? `${total} Admin-Nachricht${total === 1 ? "" : "en"} verfuegbar.`
+			? `${total} Mitteilung${total === 1 ? "" : "en"} verfuegbar.`
 		: "Noch keine Mitteilungen vorhanden.";
 		renderHighlight();
 		renderFeed();
@@ -40,13 +40,13 @@ function renderHighlight() {
 	const latest = adminChannelState.messages[0];
 	if (!latest) {
 		elements.highlight.classList.add("empty-state");
-		elements.highlight.textContent = "Noch keine Admin-Nachrichten vorhanden.";
+		elements.highlight.textContent = "Noch keine Mitteilungen vorhanden.";
 		return;
 	}
 	const preview = latest.body.length > 220 ? `${latest.body.slice(0, 220).trim()}...` : latest.body;
 	elements.highlight.classList.remove("empty-state");
 	elements.highlight.innerHTML = `
-		<p class="eyebrow">Neueste Nachricht</p>
+		<p class="eyebrow">Neueste Mitteilung</p>
 		<h3>${escapeHtml(latest.title)}</h3>
 		<div class="feed-meta">
 			<span class="meta-chip meta-chip-hero">${escapeHtml(latest.authorName)}</span>
@@ -60,7 +60,7 @@ function renderFeed() {
 	elements.feed.innerHTML = "";
 	elements.feed.classList.toggle("empty-state", adminChannelState.messages.length === 0);
 	if (!adminChannelState.messages.length) {
-		elements.feed.textContent = "Noch keine Admin-Nachrichten vorhanden.";
+		elements.feed.textContent = "Noch keine Mitteilungen vorhanden.";
 		return;
 	}
 	adminChannelState.messages.forEach((entry) => {
@@ -69,7 +69,7 @@ function renderFeed() {
 		item.innerHTML = `
 			<div class="feed-head">
 				<div>
-					<p class="eyebrow">Admin Nachricht</p>
+					<p class="eyebrow">Mitteilung</p>
 					<h3>${escapeHtml(entry.title)}</h3>
 				</div>
 				<div class="feed-meta">
