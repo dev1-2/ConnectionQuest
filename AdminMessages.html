@@ -2,11 +2,79 @@
 <html lang="de">
 <head>
 	<meta charset="UTF-8">
-	<meta http-equiv="refresh" content="0; url=Admin.html">
-	<title>Weiterleitung zum Admin Dashboard</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#0d1018">
+	<title>Connection Quest Admin Messages</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="AdminMessages.css">
 </head>
 <body>
-	<p style="font-family:sans-serif;padding:2rem;">Weiterleitung zum <a href="Admin.html">Admin Dashboard</a>...</p>
-	<script>window.location.replace("Admin.html");</script>
+	<div class="messages-shell">
+		<header class="hero-card">
+			<div>
+				<p class="eyebrow">Internal Channel</p>
+				<h1>Admin Messages</h1>
+				<p class="hero-copy">Interner Admin-Bereich zum Schreiben, Moderieren und Loeschen von serverseitigen Nachrichten.</p>
+			</div>
+			<div class="hero-actions">
+				<a class="hero-link" href="Admin.html">Zum Dashboard</a>
+				<a class="ghost-link" href="AdminChannel.html">Ankündigungen (Nutzer-Ansicht)</a>
+				<a class="ghost-link" href="Analytics.html">Analytics</a>
+				<button id="admin-messages-logout" type="button">Logout</button>
+			</div>
+		</header>
+
+		<main class="messages-layout">
+			<section class="card composer-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">New Post</p>
+						<h2>Nachricht verfassen</h2>
+					</div>
+					<p id="admin-messages-status" class="section-copy">Admin-Status wird geladen.</p>
+				</div>
+				<form id="admin-message-form" class="composer-form" hidden>
+					<label>
+						<span>Autor</span>
+						<input id="message-author" type="text" maxlength="40" value="System Admin" required>
+					</label>
+					<label>
+						<span>Kategorie</span>
+						<input id="message-category" type="text" maxlength="32" placeholder="z. B. Moderation" required>
+					</label>
+					<label class="full-width">
+						<span>Titel</span>
+						<input id="message-title" type="text" maxlength="80" placeholder="Kurze Betreffzeile" required>
+					</label>
+					<label class="full-width">
+						<span>Nachricht</span>
+						<textarea id="message-body" rows="8" maxlength="1500" placeholder="Was soll im Admin-Bereich festgehalten oder angekuendigt werden?" required></textarea>
+					</label>
+					<div class="form-footer">
+						<p id="admin-message-feedback" class="feedback"></p>
+						<button type="submit">Nachricht speichern</button>
+					</div>
+				</form>
+				<div id="admin-message-readonly" class="readonly-box" hidden>Nur Admins koennen diesen Bereich sehen.</div>
+			</section>
+
+			<section class="card feed-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Timeline</p>
+						<h2>Admin Verlauf</h2>
+					</div>
+					<p class="section-copy">Neueste interne Servereintraege zuerst.</p>
+				</div>
+				<div id="admin-message-feed" class="feed-list empty-state">Noch keine Admin-Nachrichten vorhanden.</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="AdminMessages.js"></script>
+	<script src="app-shell.js"></script>
 </body>
 </html>

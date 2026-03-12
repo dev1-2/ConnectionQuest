@@ -29,15 +29,10 @@ h3 { font-size: 1.45rem; line-height: 0.95; }
 .ghost-button, .primary-button, .danger-button { cursor: pointer; }
 .danger-button { background: rgba(239,71,111,0.16); border-color: rgba(239,71,111,0.4); color: #ffd5de; }
 .auth-card, .overview-card { grid-column: span 6; }
-.activity-card, .leaderboard-card, .inner-circle-card, .control-card, .moderation-card, .routes-card { grid-column: span 6; }
-.messages-card { grid-column: span 12; }
+.activity-card, .leaderboard-card, .inner-circle-card, .messages-card, .control-card, .moderation-card, .routes-card { grid-column: span 6; }
 .section-head { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1rem; }
 .invite-form, .inline-actions { display: grid; gap: 1rem; }
-input, textarea { width: 100%; padding: 0.85rem 1rem; border-radius: 18px; border: 1px solid var(--line); background: rgba(255,255,255,0.06); color: var(--text); font: inherit; }
-textarea { resize: vertical; min-height: 7rem; }
-.compose-form { display: grid; gap: 1rem; }
-.compose-form label { display: grid; gap: 0.4rem; font-size: 0.9rem; color: var(--muted); }
-.compose-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+input { width: 100%; padding: 0.85rem 1rem; border-radius: 18px; border: 1px solid var(--line); background: rgba(255,255,255,0.06); color: var(--text); font: inherit; }
 .overview-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .overview-grid > article, .stack-item, .route-card { padding: 1rem; border-radius: 20px; border: 1px solid var(--line); background: rgba(255,255,255,0.06); }
 .stack-item, .route-card { display: grid; gap: 0.55rem; }
@@ -55,6 +50,6 @@ textarea { resize: vertical; min-height: 7rem; }
 }
 @media (max-width: 720px) {
 	.admin-shell { width: min(100% - 1rem, 100%); padding-top: 1rem; }
-	.admin-layout, .overview-grid, .panel-columns, .route-grid, .action-cluster, .compose-row { grid-template-columns: 1fr; }
+	.admin-layout, .overview-grid, .panel-columns, .route-grid, .action-cluster { grid-template-columns: 1fr; }
 	.hero-actions, .hero-link, .ghost-button, .primary-button { width: 100%; }
 }
