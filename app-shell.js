@@ -455,6 +455,35 @@ function injectShellStyles() {
 			padding: 0.72rem 0.95rem !important;
 			font-size: 0.9rem !important;
 		}
+		@media (min-width: 721px) and (max-width: 1180px) {
+			.cq-shell-body { padding-top: 104px; }
+			.cq-shell-body.cq-shell-body-banner { padding-top: 184px; }
+			.cq-shell__bar {
+				grid-template-columns: minmax(0, 1fr) auto;
+				grid-template-areas:
+					"brand menu"
+					"meta meta"
+					"quick quick";
+				align-items: start;
+			}
+			.cq-shell__brand { grid-area: brand; }
+			.cq-shell__menu-btn { grid-area: menu; justify-self: end; }
+			.cq-shell__meta { grid-area: meta; }
+			.cq-shell__quick { grid-area: quick; justify-content: flex-start; }
+			.cq-shell__groups {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+			.cq-shell__announcement {
+				padding: 1rem 1.1rem;
+			}
+			.hero-actions {
+				grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+				align-items: stretch;
+			}
+			.cq-shell__context-link, .cq-shell__context-more {
+				min-height: 48px;
+			}
+		}
 		@media (max-width: 1024px) {
 			.cq-shell__bar {
 				grid-template-columns: 1fr;
