@@ -17,10 +17,10 @@ async function initialize() {
 
 function renderHub(currentUser, pulse) {
 	const stats = pulse.communityStats || {};
-	document.querySelector("#hub-title").textContent = currentUser ? `${currentUser.handle} kann direkt weitermachen` : "Klarer Einstieg";
+	document.querySelector("#hub-title").textContent = currentUser ? `${currentUser.handle} hat einen klaren naechsten Schritt` : "Weniger Chaos, klarere Wege";
 	document.querySelector("#hub-copy").textContent = currentUser
-		? `Score ${currentUser.stats.score}, Platz #${currentUser.placement} und offene Loops koennen jetzt ohne Navigationschaos erreicht werden.`
-		: "Der Hub gruppiert jetzt alle Bereiche nach Funktion statt sie ungefiltert nebeneinander zu zeigen.";
+		? `Score ${currentUser.stats.score}, Platz #${currentUser.placement} und offene Aufgaben werden jetzt ueber wenige Hauptwege statt ueber doppelte Menues erreicht.`
+		: "Der Hub zeigt zuerst nur die wirklich wichtigen Einstiege. Alles andere bleibt erreichbar, steht aber nicht mehr dauernd im Weg.";
 	renderTopline(currentUser, stats);
 	renderFocus(currentUser, pulse);
 }
@@ -44,14 +44,16 @@ function renderFocus(currentUser, pulse) {
 	const node = document.querySelector("#hub-focus");
 	const items = [];
 	if (!currentUser) {
-		items.push({ title: "1. Spieler aktivieren", copy: "Starte in Connection Quest mit Login oder Registrierung. Danach werden Profil, Inbox, Rewards und Events persoenlich relevant." });
-		items.push({ title: "2. Erstes Cluster waehlen", copy: "Wenn du lieber direkt spielst, gehe in Games. Wenn du zuerst Struktur willst, gehe in Profil oder Community." });
+		items.push({ title: "1. Im Journal einloggen", copy: "Connection Quest ist weiterhin der zentrale Start fuer Login, Registrierung und persoenlichen Fortschritt." });
+		items.push({ title: "2. Danach einen Hauptweg nehmen", copy: "Fuer Kontakte und Nachrichten gehe in Messenger oder Community. Fuer Tempo und Score direkt in Games." });
+		items.push({ title: "3. Nur bei Bedarf tiefer gehen", copy: "Seltener genutzte Seiten wie Events, Network oder Intro stehen unten kompakt bereit statt den Hub zu ueberladen." });
 	} else {
 		if ((pulse.missions || []).some((item) => !item.completed)) {
-			items.push({ title: "Tagesloop offen", copy: "Connection Quest oder Games sind heute die schnellsten Wege, um offene Daily-Loops zu schliessen." });
+			items.push({ title: "Offene Tagesaufgabe", copy: "Journal oder Games sind heute die schnellsten Wege, um offene Daily-Loops wirklich abzuschliessen." });
 		}
-		items.push({ title: "Soziale Lage pruefen", copy: "Community, Network und Inbox zeigen dir Rangdruck, Rivalen und Live-Signale ohne Sucherei." });
-		items.push({ title: "Meta-Ebene nutzen", copy: "Rewards, Events und Analytics sind jetzt bewusst als eigene Meta-Ebene vom Kern getrennt." });
+		items.push({ title: "Direkt schreiben statt suchen", copy: "Messenger ist jetzt der klare Ort fuer Nutzer-zu-Nutzer-Nachrichten. Community und Blog bleiben fuer oeffentliche Inhalte." });
+		items.push({ title: "Status an einer Stelle pruefen", copy: "Profil und Leaderboard decken persoenlichen Stand und Vergleich ab, ohne dass derselbe Zweck mehrfach im Hub auftaucht." });
+		items.push({ title: "Nur Admin-Sachen getrennt oeffnen", copy: "Admin Channel ist oeffentlich fuer News. Admin und Admin Messages bleiben nur fuer Verwaltung und interne Posts." });
 	}
 	if (!items.length) {
 		node.classList.add("empty-state");

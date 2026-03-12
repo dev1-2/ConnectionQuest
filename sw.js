@@ -1,4 +1,4 @@
-const CACHE_NAME = "connection-quest-v10";
+const CACHE_NAME = "connection-quest-v12";
 const APP_SHELL = [
 	"/",
 	"/index.html",
@@ -6,6 +6,7 @@ const APP_SHELL = [
 	"/Guide.html",
 	"/SocialRank.html",
 	"/Blog.html",
+	"/Messenger.html",
 	"/AdminChannel.html",
 	"/About.html",
 	"/ConnectionQuest.html",
@@ -41,6 +42,8 @@ const APP_SHELL = [
 	"/Community.js",
 	"/Blog.css",
 	"/Blog.js",
+	"/Messenger.css",
+	"/Messenger.js",
 	"/Notifications.html",
 	"/Notifications.css",
 	"/Notifications.js",

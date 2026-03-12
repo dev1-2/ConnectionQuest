@@ -479,6 +479,98 @@ app.post("/api/cq/blog-posts", async (request, response) => {
 	}
 });
 
+app.get("/api/cq/messages/contacts", async (request, response) => {
+	try {
+		const session = await requireCqPlayer(request, response);
+		if (!session) {
+			return;
+		}
+
+		const [currentUser, contacts] = await Promise.all([
+			loadCqPlayerProfile(session.playerId),
+			loadCqMessageContacts(session.playerId),
+		]);
+
+		response.json({ currentUser, contacts });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.get("/api/cq/messages/threads/:playerId", async (request, response) => {
+	try {
+		const session = await requireCqPlayer(request, response);
+		if (!session) {
+			return;
+		}
+
+		const otherPlayerId = String(request.params.playerId || "").trim();
+		if (!otherPlayerId || otherPlayerId === session.playerId) {
+			response.status(400).json({ error: "Bitte einen anderen Nutzer auswaehlen." });
+			return;
+		}
+
+		const contact = await loadCqMessageContact(otherPlayerId);
+		if (!contact) {
+			response.status(404).json({ error: "Nutzer wurde nicht gefunden." });
+			return;
+		}
+
+		await markCqMessagesAsRead(session.playerId, otherPlayerId);
+		const [contacts, messages] = await Promise.all([
+			loadCqMessageContacts(session.playerId),
+			loadCqMessageThread(session.playerId, otherPlayerId),
+		]);
+
+		response.json({ contact, contacts, messages });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.post("/api/cq/messages/threads/:playerId", async (request, response) => {
+	try {
+		const session = await requireCqPlayer(request, response);
+		if (!session) {
+			return;
+		}
+
+		const otherPlayerId = String(request.params.playerId || "").trim();
+		if (!otherPlayerId || otherPlayerId === session.playerId) {
+			response.status(400).json({ error: "Bitte einen anderen Nutzer auswaehlen." });
+			return;
+		}
+
+		const payload = normalizeDirectMessageInput(request.body);
+		if (!payload) {
+			response.status(400).json({ error: "Bitte eine Nachricht mit Inhalt senden." });
+			return;
+		}
+
+		const contact = await loadCqMessageContact(otherPlayerId);
+		if (!contact) {
+			response.status(404).json({ error: "Empfaenger wurde nicht gefunden." });
+			return;
+		}
+
+		const entry = await createCqDirectMessage(session.playerId, otherPlayerId, payload);
+		const [contacts, messages] = await Promise.all([
+			loadCqMessageContacts(session.playerId),
+			loadCqMessageThread(session.playerId, otherPlayerId),
+		]);
+
+		response.status(201).json({
+			message: "Nachricht wurde serverseitig zugestellt.",
+			entry,
+			contact,
+			contacts,
+			messages,
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
 app.post("/api/cq/social-rank/ratings", async (request, response) => {
 	try {
 		const session = await requireCqPlayer(request, response);
@@ -1208,10 +1300,22 @@ async function initializeDatabase() {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		);
+
+		CREATE TABLE IF NOT EXISTS cq_direct_messages (
+			id TEXT PRIMARY KEY,
+			sender_player_id TEXT NOT NULL REFERENCES cq_players(id) ON DELETE CASCADE,
+			recipient_player_id TEXT NOT NULL REFERENCES cq_players(id) ON DELETE CASCADE,
+			body VARCHAR(1500) NOT NULL,
+			read_at TIMESTAMPTZ,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			CHECK (sender_player_id <> recipient_player_id)
+		);
 	`);
 
 	await pool.query("ALTER TABLE cq_admin_messages ADD COLUMN IF NOT EXISTS is_banner BOOLEAN NOT NULL DEFAULT FALSE");
 	await pool.query("ALTER TABLE cq_admin_messages ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ");
+	await pool.query("CREATE INDEX IF NOT EXISTS idx_cq_direct_messages_thread ON cq_direct_messages (sender_player_id, recipient_player_id, created_at DESC)");
+	await pool.query("CREATE INDEX IF NOT EXISTS idx_cq_direct_messages_unread ON cq_direct_messages (recipient_player_id, sender_player_id, read_at)");
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_sessions INTEGER NOT NULL DEFAULT 0");
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_wins INTEGER NOT NULL DEFAULT 0");
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_score INTEGER NOT NULL DEFAULT 0");
@@ -1622,6 +1726,16 @@ function normalizeAdminMessageInput(body) {
 	};
 }
 
+function normalizeDirectMessageInput(body) {
+	const messageBody = normalizeBlogLongText(body?.body, 1500);
+	if (!messageBody) {
+		return null;
+	}
+	return {
+		body: messageBody,
+	};
+}
+
 function normalizeBlogShortText(value, maxLength) {
 	const normalized = String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 	return normalized;
@@ -1901,6 +2015,88 @@ async function loadInnerCircleMembers() {
 	}));
 }
 
+async function loadCqMessageContact(playerId) {
+	const result = await pool.query(
+		`SELECT id, handle, placement, score, level, last_login_at
+		 FROM cq_players
+		 WHERE id = $1`,
+		[playerId],
+	);
+	return result.rows[0] ? serializeCqMessageContact(result.rows[0]) : null;
+}
+
+async function loadCqMessageContacts(currentPlayerId, limit = 48) {
+	const result = await pool.query(
+		`SELECT p.id, p.handle, p.placement, p.score, p.level, p.last_login_at,
+		        latest.body AS latest_body,
+		        latest.created_at AS latest_created_at,
+		        latest.sender_player_id AS latest_sender_player_id,
+		        latest.recipient_player_id AS latest_recipient_player_id,
+		        COALESCE(unread.unread_count, 0) AS unread_count
+		 FROM cq_players p
+		 LEFT JOIN LATERAL (
+		 	SELECT body, created_at, sender_player_id, recipient_player_id
+		 	FROM cq_direct_messages
+		 	WHERE (sender_player_id = $1 AND recipient_player_id = p.id)
+		 	   OR (sender_player_id = p.id AND recipient_player_id = $1)
+		 	ORDER BY created_at DESC
+		 	LIMIT 1
+		 ) latest ON TRUE
+		 LEFT JOIN LATERAL (
+		 	SELECT COUNT(*)::int AS unread_count
+		 	FROM cq_direct_messages
+		 	WHERE sender_player_id = p.id
+		 	  AND recipient_player_id = $1
+		 	  AND read_at IS NULL
+		 ) unread ON TRUE
+		 WHERE p.id <> $1
+		 ORDER BY CASE WHEN latest.created_at IS NULL THEN 1 ELSE 0 END ASC,
+		          latest.created_at DESC NULLS LAST,
+		          p.handle ASC
+		 LIMIT $2`,
+		[currentPlayerId, Math.max(1, Math.min(100, Number(limit) || 48))],
+	);
+	return result.rows.map((row) => serializeCqMessageContact(row));
+}
+
+async function loadCqMessageThread(currentPlayerId, otherPlayerId, limit = 80) {
+	const result = await pool.query(
+		`SELECT m.id, m.sender_player_id, m.recipient_player_id, m.body, m.read_at, m.created_at,
+		        sender.handle AS sender_handle,
+		        recipient.handle AS recipient_handle
+		 FROM cq_direct_messages m
+		 JOIN cq_players sender ON sender.id = m.sender_player_id
+		 JOIN cq_players recipient ON recipient.id = m.recipient_player_id
+		 WHERE (m.sender_player_id = $1 AND m.recipient_player_id = $2)
+		    OR (m.sender_player_id = $2 AND m.recipient_player_id = $1)
+		 ORDER BY m.created_at ASC
+		 LIMIT $3`,
+		[currentPlayerId, otherPlayerId, Math.max(1, Math.min(200, Number(limit) || 80))],
+	);
+	return result.rows.map((row) => serializeCqDirectMessage(row, currentPlayerId));
+}
+
+async function markCqMessagesAsRead(currentPlayerId, otherPlayerId) {
+	await pool.query(
+		`UPDATE cq_direct_messages
+		 SET read_at = NOW()
+		 WHERE sender_player_id = $1
+		   AND recipient_player_id = $2
+		   AND read_at IS NULL`,
+		[otherPlayerId, currentPlayerId],
+	);
+}
+
+async function createCqDirectMessage(senderPlayerId, recipientPlayerId, payload) {
+	const result = await pool.query(
+		`INSERT INTO cq_direct_messages (id, sender_player_id, recipient_player_id, body)
+		 VALUES ($1, $2, $3, $4)
+		 RETURNING id, sender_player_id, recipient_player_id, body, read_at, created_at`,
+		[crypto.randomUUID(), senderPlayerId, recipientPlayerId, payload.body],
+	);
+	return serializeCqDirectMessage(result.rows[0], senderPlayerId);
+}
+
 async function loadAdminMessages(limit = 24) {
 	const result = await pool.query(
 		`SELECT id, author_name, title, category, body, is_banner, expires_at, created_at, updated_at
@@ -2006,6 +2202,39 @@ function serializeAdminMessage(row) {
 		expiresAt: row.expires_at instanceof Date ? row.expires_at.toISOString() : row.expires_at,
 		createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
 		updatedAt: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
+	};
+}
+
+function serializeCqMessageContact(row) {
+	return {
+		id: row.id,
+		handle: row.handle,
+		placement: Number(row.placement) || 0,
+		score: Number(row.score) || 0,
+		level: Number(row.level) || 1,
+		lastLoginAt: row.last_login_at || null,
+		latestMessage: row.latest_body
+			? {
+				body: row.latest_body,
+				createdAt: row.latest_created_at instanceof Date ? row.latest_created_at.toISOString() : row.latest_created_at,
+				isFromCurrentUser: row.latest_sender_player_id ? String(row.latest_sender_player_id) !== String(row.id) : false,
+			}
+			: null,
+		unreadCount: Number(row.unread_count) || 0,
+	};
+}
+
+function serializeCqDirectMessage(row, currentPlayerId) {
+	return {
+		id: row.id,
+		senderPlayerId: row.sender_player_id,
+		recipientPlayerId: row.recipient_player_id,
+		senderHandle: row.sender_handle || null,
+		recipientHandle: row.recipient_handle || null,
+		body: row.body,
+		readAt: row.read_at instanceof Date ? row.read_at.toISOString() : row.read_at,
+		createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+		isOwn: String(row.sender_player_id) === String(currentPlayerId),
 	};
 }
 

@@ -10,7 +10,7 @@ const PAGE_META = {
 	"Hub.html": {
 		title: "Hub",
 		category: "Start",
-		quickLinks: ["ConnectionQuest.html", "Games.html", "Leaderboard.html", "Guide.html"],
+		quickLinks: ["ConnectionQuest.html", "Messenger.html", "Community.html", "Games.html"],
 	},
 	"Guide.html": {
 		title: "Guide",
@@ -65,22 +65,27 @@ const PAGE_META = {
 	"Community.html": {
 		title: "Community",
 		category: "Social",
-		quickLinks: ["Hub.html", "Blog.html", "Network.html", "Notifications.html"],
+		quickLinks: ["Hub.html", "Blog.html", "Messenger.html", "Notifications.html"],
 	},
 	"Blog.html": {
 		title: "Blog",
 		category: "Social",
-		quickLinks: ["Hub.html", "Community.html", "Network.html", "Notifications.html"],
+		quickLinks: ["Hub.html", "Community.html", "Messenger.html", "Notifications.html"],
+	},
+	"Messenger.html": {
+		title: "Messenger",
+		category: "Social",
+		quickLinks: ["Hub.html", "Community.html", "Notifications.html", "Profile.html"],
 	},
 	"Notifications.html": {
 		title: "Inbox",
 		category: "Social",
-		quickLinks: ["Hub.html", "Blog.html", "ConnectionQuest.html", "Games.html"],
+		quickLinks: ["Hub.html", "Blog.html", "Messenger.html", "Games.html"],
 	},
 	"Network.html": {
 		title: "Network",
 		category: "Social",
-		quickLinks: ["Hub.html", "Community.html", "Blog.html", "Games.html"],
+		quickLinks: ["Hub.html", "Community.html", "Messenger.html", "Games.html"],
 	},
 	"Rewards.html": {
 		title: "Rewards",
@@ -110,19 +115,19 @@ const NAV_GROUPS = [
 		links: ["Hub.html", "Guide.html", "About.html", "index.html"],
 	},
 	{
-		label: "Use",
+		label: "Kern",
 		links: ["ConnectionQuest.html", "Games.html", "Leaderboard.html", "Profile.html"],
 	},
 	{
-		label: "Network",
-		links: ["Community.html", "Blog.html", "AdminChannel.html", "Network.html", "SocialRank.html", "Notifications.html"],
+		label: "Kommunikation",
+		links: ["Community.html", "Blog.html", "Messenger.html", "AdminChannel.html", "Network.html", "SocialRank.html", "Notifications.html"],
 	},
 	{
 		label: "System",
 		links: ["Rewards.html", "Events.html", "Analytics.html"],
 	},
 	{
-		label: "Operations",
+		label: "Admin",
 		links: ["Admin.html", "AdminMessages.html", "LehrerRanking.html"],
 	},
 ];

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#0f1722">
+	<title>Connection Quest Messenger</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Messenger.css">
+</head>
+<body>
+	<div class="messenger-shell">
+		<header class="hero-card">
+			<div>
+				<p class="eyebrow">Direct Messaging</p>
+				<h1>Messenger</h1>
+				<p id="messenger-hero-copy" class="hero-copy">Waehle einen Nutzer aus, oeffne den Thread und sende Nachrichten, die serverseitig gespeichert und auf beiden Seiten sichtbar werden.</p>
+			</div>
+			<div class="hero-actions">
+				<a class="hero-link" href="Hub.html">Zum Hub</a>
+				<a class="ghost-link" href="Community.html">Community</a>
+				<a class="ghost-link" href="Notifications.html">Inbox</a>
+			</div>
+		</header>
+
+		<main class="messenger-layout">
+			<section class="card contacts-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Contacts</p>
+						<h2>Nutzer waehlen</h2>
+					</div>
+					<p id="messenger-status" class="section-copy">Session wird geladen.</p>
+				</div>
+				<div id="messenger-current-user" class="current-user-card empty-state">Kein Nutzer aktiv.</div>
+				<div id="messenger-contacts" class="contacts-list empty-state">Noch keine Kontakte verfuegbar.</div>
+			</section>
+
+			<section class="card thread-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Thread</p>
+						<h2 id="messenger-thread-title">Kein Nutzer ausgewaehlt</h2>
+					</div>
+					<p id="messenger-thread-meta" class="section-copy">Logge dich ein und waehle dann einen Kontakt aus.</p>
+				</div>
+				<div id="messenger-thread" class="thread-list empty-state">Sobald ein Kontakt ausgewaehlt ist, erscheint der Verlauf hier.</div>
+				<form id="messenger-form" class="composer-form" hidden>
+					<label class="full-width">
+						<span>Nachricht</span>
+						<textarea id="messenger-body" rows="5" maxlength="1500" placeholder="Deine Nachricht an den ausgewaehlten Nutzer" required></textarea>
+					</label>
+					<div class="form-footer">
+						<p id="messenger-feedback" class="feedback"></p>
+						<button id="messenger-submit" type="submit">Nachricht senden</button>
+					</div>
+				</form>
+			</section>
+		</main>
+	</div>
+
+	<script src="Messenger.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

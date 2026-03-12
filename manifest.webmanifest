@@ -45,6 +45,10 @@
 			"url": "/Blog.html"
 		},
 		{
+			"name": "Messenger",
+			"url": "/Messenger.html"
+		},
+		{
 			"name": "Admin Channel",
 			"url": "/AdminChannel.html"
 		},
