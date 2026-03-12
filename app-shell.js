@@ -22,6 +22,11 @@ const PAGE_META = {
 		category: "Start",
 		quickLinks: ["Hub.html", "Guide.html", "Community.html", "Blog.html"],
 	},
+	"AdminChannel.html": {
+		title: "Admin Channel",
+		category: "News",
+		quickLinks: ["Hub.html", "Community.html", "Blog.html", "About.html"],
+	},
 	"Admin.html": {
 		title: "Admin",
 		category: "Operations",
@@ -110,7 +115,7 @@ const NAV_GROUPS = [
 	},
 	{
 		label: "Network",
-		links: ["Community.html", "Blog.html", "Network.html", "SocialRank.html", "Notifications.html"],
+		links: ["Community.html", "Blog.html", "AdminChannel.html", "Network.html", "SocialRank.html", "Notifications.html"],
 	},
 	{
 		label: "System",
@@ -231,10 +236,8 @@ async function renderAnnouncementBanner() {
 		node.hidden = false;
 		document.body.classList.add("cq-shell-body-banner");
 		node.innerHTML = `
-			<a class="cq-shell__announcement-copy" href="AdminMessages.html">
-				<span class="cq-shell__announcement-tag">News aus dem Admin Channel</span>
+			<a class="cq-shell__announcement-copy" href="AdminChannel.html">
 				<strong>Neue Nachricht von ${escapeHtml(banner.authorName || "Admin")}</strong>
-				<p>${escapeHtml(banner.title)}${banner.body ? ` • ${escapeHtml(banner.body)}` : ""}</p>
 			</a>
 			<button type="button" class="cq-shell__announcement-close">Schliessen</button>
 		`;
@@ -242,7 +245,7 @@ async function renderAnnouncementBanner() {
 		node.querySelector(".cq-shell__announcement-copy")?.addEventListener("click", (event) => {
 			event.preventDefault();
 			window.localStorage.setItem(BANNER_DISMISS_KEY, String(banner.id));
-			window.location.href = "AdminMessages.html";
+			window.location.href = "AdminChannel.html";
 		});
 		node.querySelector(".cq-shell__announcement-close")?.addEventListener("click", () => {
 			window.localStorage.setItem(BANNER_DISMISS_KEY, String(banner.id));
@@ -371,10 +374,14 @@ function injectShellStyles() {
 		}
 		.cq-shell__announcement-copy {
 			display: grid;
-			gap: 0.2rem;
+			gap: 0;
 			text-decoration: none;
 			color: inherit;
 			cursor: pointer;
+		}
+		.cq-shell__announcement-copy strong {
+			font-size: 1rem;
+			line-height: 1.35;
 		}
 		.cq-shell__announcement-copy p {
 			margin: 0;

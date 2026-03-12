@@ -27,6 +27,10 @@ initialize();
 async function initialize() {
 	try {
 		await hydrateStatus();
+		if (!adminMessagesState.auth.isAdmin) {
+			window.location.replace("Admin.html");
+			return;
+		}
 		await hydrateMessages();
 		renderPage();
 	} catch (error) {
@@ -77,15 +81,10 @@ async function handleLogout() {
 }
 
 function renderPage() {
-	elements.status.textContent = adminMessagesState.auth.isAdmin
-		? "Admin aktiv. Neue Nachrichten werden direkt serverseitig gespeichert."
-		: "Oeffentliche Lesesicht. Neue Nachrichten stammen aus dem Admin-Bereich.";
-	elements.form.hidden = !adminMessagesState.auth.isAdmin;
-	elements.readonly.hidden = adminMessagesState.auth.isAdmin;
-	elements.logout.hidden = !adminMessagesState.auth.isAdmin;
-	if (adminMessagesState.messages[0]?.id) {
-		window.localStorage.setItem(BANNER_DISMISS_KEY, String(adminMessagesState.messages[0].id));
-	}
+	elements.status.textContent = "Admin aktiv. Neue Nachrichten werden direkt serverseitig gespeichert.";
+	elements.form.hidden = false;
+	elements.readonly.hidden = true;
+	elements.logout.hidden = false;
 	renderFeed();
 }
 
@@ -102,7 +101,7 @@ function renderFeed() {
 		item.innerHTML = `
 			<div class="feed-head">
 				<div>
-					<p class="eyebrow">News aus dem Admin Channel</p>
+					<p class="eyebrow">Admin Channel Post</p>
 					<h3>${escapeHtml(entry.title)}</h3>
 				</div>
 				<div class="feed-meta">
@@ -119,9 +118,6 @@ function renderFeed() {
 }
 
 async function handleFeedClick(event) {
-	if (!adminMessagesState.auth.isAdmin) {
-		return;
-	}
 	const button = event.target.closest("button[data-message-id]");
 	if (!button) {
 		return;
@@ -148,7 +144,7 @@ async function fetchJson(url, options = {}) {
 	});
 	const payload = await response.json().catch(() => ({}));
 	if (!response.ok) {
-		if (response.status === 401 && adminMessagesState.auth.isAdmin) {
+		if (response.status === 401) {
 			window.location.replace("Admin.html");
 		}
 		throw new Error(payload.error || "Anfrage fehlgeschlagen.");

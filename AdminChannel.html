@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#10161f">
+	<title>Connection Quest Admin Channel</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="AdminChannel.css">
+</head>
+<body>
+	<div class="channel-shell">
+		<header class="hero-card">
+			<div>
+				<p class="eyebrow">Public News Feed</p>
+				<h1>Admin Channel</h1>
+				<p class="hero-copy">Hier sehen alle Nutzer die neuesten Mitteilungen aus dem Admin-Bereich. Neue Nachrichten tauchen automatisch im Banner auf und koennen hier komplett gelesen werden.</p>
+			</div>
+			<div class="hero-actions">
+				<a class="hero-link" href="Hub.html">Zum Hub</a>
+				<a class="ghost-link" href="Community.html">Community</a>
+				<a class="ghost-link" href="Blog.html">Blog</a>
+			</div>
+		</header>
+
+		<main class="channel-layout">
+			<section class="card spotlight-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Live</p>
+						<h2>Aktuelle Lage</h2>
+					</div>
+					<p id="admin-channel-status" class="section-copy">Nachrichten werden geladen.</p>
+				</div>
+				<div id="admin-channel-highlight" class="highlight-box empty-state">Noch keine Admin-Nachrichten vorhanden.</div>
+			</section>
+
+			<section class="card feed-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Timeline</p>
+						<h2>Alle Admin Nachrichten</h2>
+					</div>
+					<p class="section-copy">Neueste Mitteilungen zuerst.</p>
+				</div>
+				<div id="admin-channel-feed" class="feed-list empty-state">Noch keine Admin-Nachrichten vorhanden.</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="AdminChannel.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

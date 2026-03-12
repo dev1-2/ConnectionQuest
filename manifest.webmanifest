@@ -45,6 +45,10 @@
 			"url": "/Blog.html"
 		},
 		{
+			"name": "Admin Channel",
+			"url": "/AdminChannel.html"
+		},
+		{
 			"name": "Inbox",
 			"url": "/Notifications.html"
 		}

@@ -17,10 +17,11 @@
 			<div>
 				<p class="eyebrow">Internal Channel</p>
 				<h1>Admin Messages</h1>
-				<p class="hero-copy">Hier landen News aus dem Admin Channel. Alle koennen sie lesen, und jede neue Nachricht taucht automatisch als globaler Hinweis auf.</p>
+				<p class="hero-copy">Interner Admin-Bereich zum Schreiben, Moderieren und Loeschen von serverseitigen Nachrichten.</p>
 			</div>
 			<div class="hero-actions">
 				<a class="hero-link" href="Admin.html">Zum Dashboard</a>
+				<a class="ghost-link" href="AdminChannel.html">Oeffentlicher Channel</a>
 				<a class="ghost-link" href="Analytics.html">Analytics</a>
 				<button id="admin-messages-logout" type="button">Logout</button>
 			</div>
@@ -57,16 +58,16 @@
 						<button type="submit">Nachricht speichern</button>
 					</div>
 				</form>
-				<div id="admin-message-readonly" class="readonly-box" hidden>Diese Seite ist oeffentlich lesbar. Nur Admins koennen neue Nachrichten verfassen.</div>
+				<div id="admin-message-readonly" class="readonly-box" hidden>Nur Admins koennen diesen Bereich sehen.</div>
 			</section>
 
 			<section class="card feed-card">
 				<div class="section-head">
 					<div>
 						<p class="eyebrow">Timeline</p>
-						<h2>Interner Verlauf</h2>
+						<h2>Admin Verlauf</h2>
 					</div>
-					<p class="section-copy">Neueste Servereintraege zuerst.</p>
+					<p class="section-copy">Neueste interne Servereintraege zuerst.</p>
 				</div>
 				<div id="admin-message-feed" class="feed-list empty-state">Noch keine Admin-Nachrichten vorhanden.</div>
 			</section>

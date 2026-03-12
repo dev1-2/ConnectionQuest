@@ -154,7 +154,8 @@ app.get("/Admin.html", (request, response) => {
 	response.sendFile(path.join(publicDir, target));
 });
 app.get("/AdminMessages.html", (request, response) => {
-	response.sendFile(path.join(publicDir, "AdminMessages.html"));
+	const target = isAuthenticated(request) ? "AdminMessages.html" : "AdminAccess.html";
+	response.sendFile(path.join(publicDir, target));
 });
 app.use("/api/", rateLimit({
 	windowMs: 15 * 60 * 1000,
