@@ -21,7 +21,7 @@
 			</div>
 			<div class="hero-actions">
 				<a class="hero-link" href="Hub.html">Hub</a>
-				<a class="hero-link" href="AdminMessages.html">Admin Messages</a>
+				<a class="hero-link" href="AdminChannel.html">Ankuendigungen</a>
 				<a class="ghost-link" href="LehrerRanking.html">Teacher Ranking Admin</a>
 			</div>
 		</header>
@@ -36,7 +36,7 @@
 					<p id="admin-status" class="section-copy">Admin-Status wird geladen.</p>
 				</div>
 				<div class="action-cluster">
-					<a class="route-card" href="AdminMessages.html"><strong>Admin Messages</strong><span>Interne Updates schreiben und Verlauf sehen.</span></a>
+						<a class="route-card" href="AdminChannel.html"><strong>Ankuendigungen</strong><span>Nutzeransicht – so sehen alle die Mitteilungen.</span></a>
 					<a class="route-card" href="About.html"><strong>Ueber uns</strong><span>Oeffentliche Kontextseite der Plattform.</span></a>
 				</div>
 				<div class="inline-actions">
@@ -103,12 +103,39 @@
 			<section class="card messages-card">
 				<div class="section-head">
 					<div>
-						<p class="eyebrow">Admin Notes</p>
-						<h2>Neueste Nachrichten</h2>
+						<p class="eyebrow">Ankuendigungen</p>
+						<h2>Mitteilung verfassen</h2>
 					</div>
-					<p class="section-copy">Die letzten internen Posts der Admin-Seite.</p>
+					<p id="compose-feedback" class="feedback"></p>
 				</div>
-				<div id="admin-messages" class="stack-list"></div>
+				<form id="compose-form" class="compose-form">
+					<div class="compose-row">
+						<label>
+							<span>Autor</span>
+							<input id="compose-author" type="text" maxlength="40" value="System Admin" required>
+						</label>
+						<label>
+							<span>Kategorie</span>
+							<input id="compose-category" type="text" maxlength="32" placeholder="z. B. Update" required>
+						</label>
+					</div>
+					<label>
+						<span>Titel</span>
+						<input id="compose-title" type="text" maxlength="80" placeholder="Kurze Betreffzeile" required>
+					</label>
+					<label>
+						<span>Mitteilung</span>
+						<textarea id="compose-body" rows="5" maxlength="1500" placeholder="Was soll an alle Nutzer mitgeteilt werden?" required></textarea>
+					</label>
+					<button type="submit" class="primary-button">Mitteilung veroeffentlichen</button>
+				</form>
+				<div class="section-head" style="margin-top: 1.4rem; margin-bottom: 0;">
+					<div>
+						<p class="eyebrow">Verlauf</p>
+						<h3>Veroeffentlichte Mitteilungen</h3>
+					</div>
+				</div>
+				<div id="admin-message-list" class="stack-list"></div>
 			</section>
 
 			<section class="card control-card">
@@ -137,7 +164,7 @@
 				<p class="eyebrow">Struktur</p>
 				<h2>Verwaltungspfade</h2>
 				<div class="route-grid">
-					<a class="route-card" href="AdminMessages.html"><strong>Admin Messages</strong><span>Serverseitige Notizen, Ansagen und interne Abstimmung.</span></a>
+					<a class="route-card" href="AdminChannel.html"><strong>Ankuendigungen-Feed</strong><span>So sehen alle Nutzer die veroeffentlichten Mitteilungen.</span></a>
 					<a class="route-card" href="SocialRank.html"><strong>Social Rank</strong><span>Oeffentliche Bewertungsseite ohne Admin-Unordnung.</span></a>
 					<a class="route-card" href="LehrerRanking.html"><strong>Teacher Ranking</strong><span>Separates Spezial-Backoffice fuer Lehrerprofile.</span></a>
 					<a class="route-card" href="Hub.html"><strong>Hub</strong><span>Sauberer Einstieg fuer Nutzer ohne Verwaltungsballast.</span></a>

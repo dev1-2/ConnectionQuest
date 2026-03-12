@@ -30,12 +30,7 @@ const PAGE_META = {
 	"Admin.html": {
 		title: "Admin",
 		category: "Operations",
-		quickLinks: ["Hub.html", "AdminMessages.html", "LehrerRanking.html", "Analytics.html"],
-	},
-	"AdminMessages.html": {
-		title: "Admin Messages",
-		category: "Operations",
-		quickLinks: ["Admin.html", "Hub.html", "Analytics.html", "LehrerRanking.html"],
+		quickLinks: ["Hub.html", "AdminChannel.html", "LehrerRanking.html", "Analytics.html"],
 	},
 	"SocialRank.html": {
 		title: "Social Rank",
@@ -128,7 +123,7 @@ const NAV_GROUPS = [
 	},
 	{
 		label: "Admin",
-		links: ["Admin.html", "AdminMessages.html", "LehrerRanking.html"],
+		links: ["Admin.html", "LehrerRanking.html"],
 	},
 ];
 

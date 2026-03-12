@@ -5,6 +5,7 @@ const adminState = {
 	members: [],
 	players: [],
 	blogPosts: [],
+	messages: [],
 };
 
 const adminElements = {
@@ -21,13 +22,20 @@ const adminElements = {
 	inviteFeedback: document.querySelector("#invite-feedback"),
 	inviteList: document.querySelector("#invite-list"),
 	memberList: document.querySelector("#member-list"),
-	messages: document.querySelector("#admin-messages"),
+	messages: document.querySelector("#admin-message-list"),
+	composeForm: document.querySelector("#compose-form"),
+	composeAuthor: document.querySelector("#compose-author"),
+	composeCategory: document.querySelector("#compose-category"),
+	composeTitle: document.querySelector("#compose-title"),
+	composeBody: document.querySelector("#compose-body"),
+	composeFeedback: document.querySelector("#compose-feedback"),
 	playerList: document.querySelector("#admin-player-list"),
 	blogList: document.querySelector("#admin-blog-list"),
 };
 
 adminElements.logout.addEventListener("click", handleAdminLogout);
 adminElements.inviteForm.addEventListener("submit", handleInviteCreate);
+adminElements.composeForm.addEventListener("submit", handleComposeSubmit);
 adminElements.messages.addEventListener("click", handleAdminActionClick);
 adminElements.playerList.addEventListener("click", handleAdminActionClick);
 adminElements.blogList.addEventListener("click", handleAdminActionClick);
@@ -54,16 +62,18 @@ async function hydrateAdminStatus() {
 }
 
 async function hydrateAdminData() {
-	const [overviewPayload, innerCirclePayload, moderationPayload] = await Promise.all([
+	const [overviewPayload, innerCirclePayload, moderationPayload, messagesPayload] = await Promise.all([
 		fetchJson("/api/admin/overview"),
 		fetchJson("/api/admin/inner-circle"),
 		fetchJson("/api/admin/moderation"),
+		fetchJson("/api/admin/messages"),
 	]);
 	adminState.overview = overviewPayload.overview || null;
 	adminState.invites = innerCirclePayload.invites || [];
 	adminState.members = innerCirclePayload.members || [];
 	adminState.players = moderationPayload.players || [];
 	adminState.blogPosts = moderationPayload.blogPosts || [];
+	adminState.messages = messagesPayload.messages || [];
 }
 
 async function handleAdminLogout() {
@@ -94,6 +104,33 @@ async function handleInviteCreate(event) {
 		renderAdminPage();
 	} catch (error) {
 		setFeedback(adminElements.inviteFeedback, error.message, true);
+	}
+}
+
+async function handleComposeSubmit(event) {
+	event.preventDefault();
+	try {
+		setFeedback(adminElements.composeFeedback, "Mitteilung wird gespeichert ...", false);
+		const payload = await fetchJson("/api/admin/messages", {
+			method: "POST",
+			body: {
+				authorName: adminElements.composeAuthor.value.trim(),
+				category: adminElements.composeCategory.value.trim(),
+				title: adminElements.composeTitle.value.trim(),
+				body: adminElements.composeBody.value.trim(),
+			},
+		});
+		adminState.messages = payload.messages || [];
+		adminElements.composeTitle.value = "";
+		adminElements.composeBody.value = "";
+		if (adminState.overview?.stats) {
+			adminState.overview.stats.adminMessages = adminState.messages.length;
+		}
+		setFeedback(adminElements.composeFeedback, payload.message || "Mitteilung veroeffentlicht.", false);
+		renderMessages();
+		renderOverview();
+	} catch (error) {
+		setFeedback(adminElements.composeFeedback, error.message, true);
 	}
 }
 
@@ -196,15 +233,14 @@ function renderInnerCircle() {
 
 function renderMessages() {
 	adminElements.messages.innerHTML = "";
-	const messages = adminState.overview?.recentAdminMessages || [];
-	if (!messages.length) {
-		adminElements.messages.innerHTML = '<article class="stack-item"><strong>Keine Nachrichten</strong><p>Neue Admin-Posts erscheinen hier nach dem ersten Eintrag.</p></article>';
+	if (!adminState.messages.length) {
+		adminElements.messages.innerHTML = '<article class="stack-item"><strong>Keine Mitteilungen</strong><p>Veroeffentlichte Ankuendigungen erscheinen hier.</p></article>';
 		return;
 	}
-	messages.forEach((entry) => {
+	adminState.messages.forEach((entry) => {
 		const item = document.createElement("article");
 		item.className = "stack-item";
-		item.innerHTML = `<strong>${escapeHtml(entry.title)}</strong><p>${escapeHtml(entry.category)} • ${escapeHtml(entry.authorName)} • ${formatRelativeTime(entry.createdAt)}</p><button class="danger-button" data-action="delete-message" data-id="${escapeHtml(entry.id)}">Nachricht loeschen</button>`;
+		item.innerHTML = `<strong>${escapeHtml(entry.title)}</strong><p>${escapeHtml(entry.category)} • ${escapeHtml(entry.authorName)} • ${formatRelativeTime(entry.createdAt)}</p><button class="danger-button" data-action="delete-message" data-id="${escapeHtml(entry.id)}">Loeschen</button>`;
 		adminElements.messages.appendChild(item);
 	});
 }
@@ -247,15 +283,13 @@ async function handleAdminActionClick(event) {
 	const label = button.dataset.label || "diesen Eintrag";
 	try {
 		if (action === "delete-message") {
-			if (!window.confirm("Diese Admin-Nachricht wirklich loeschen?")) {
+			if (!window.confirm("Diese Mitteilung wirklich loeschen?")) {
 				return;
 			}
 			const payload = await fetchJson(`/api/admin/messages/${encodeURIComponent(id)}`, { method: "DELETE" });
-			if (adminState.overview) {
-				adminState.overview.recentAdminMessages = payload.messages || [];
-				if (adminState.overview.stats) {
-					adminState.overview.stats.adminMessages = Math.max(0, Number(adminState.overview.stats.adminMessages || 0) - 1);
-				}
+			adminState.messages = payload.messages || [];
+			if (adminState.overview?.stats) {
+				adminState.overview.stats.adminMessages = adminState.messages.length;
 			}
 			setFeedback(adminElements.feedback, payload.message, false);
 			renderMessages();
