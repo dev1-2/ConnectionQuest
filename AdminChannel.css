@@ -66,7 +66,7 @@ a.ghost-link {
 }
 
 .hero-actions { min-width: 260px; }
-.channel-layout { margin-top: 1.5rem; grid-template-columns: 0.9fr 1.1fr; }
+.channel-layout { margin-top: 1.5rem; grid-template-columns: 1fr; }
 
 .eyebrow {
 	margin: 0 0 0.35rem;
@@ -128,7 +128,14 @@ h3 { font-size: 1.55rem; line-height: 0.98; }
 .highlight-box {
 	display: grid;
 	gap: 0.8rem;
-	background: linear-gradient(145deg, rgba(143, 211, 255, 0.12), rgba(255, 210, 127, 0.08));
+	background: linear-gradient(145deg, rgba(143, 211, 255, 0.14), rgba(255, 210, 127, 0.10));
+	border: 1px solid rgba(143, 211, 255, 0.28);
+}
+
+.highlight-body {
+	margin: 0;
+	white-space: pre-wrap;
+	word-break: break-word;
 }
 
 .highlight-box h3,
@@ -141,6 +148,24 @@ h3 { font-size: 1.55rem; line-height: 0.98; }
 	gap: 0.8rem;
 	padding: 1rem;
 	background: rgba(255, 255, 255, 0.05);
+	transition: transform 130ms ease, box-shadow 130ms ease;
+}
+
+.feed-item:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 14px 36px rgba(0, 0, 0, 0.3);
+}
+
+.feed-title-block {
+	display: grid;
+	gap: 0.2rem;
+}
+
+.feed-body {
+	margin: 0;
+	white-space: pre-wrap;
+	word-break: break-word;
+	line-height: 1.7;
 }
 
 .feed-meta {
@@ -161,6 +186,53 @@ h3 { font-size: 1.55rem; line-height: 0.98; }
 	background: rgba(255, 210, 127, 0.16);
 	border-color: rgba(255, 210, 127, 0.28);
 	color: #ffe2a7;
+}
+
+.meta-chip-author {
+	background: rgba(143, 211, 255, 0.12);
+	border-color: rgba(143, 211, 255, 0.26);
+	color: var(--accent);
+}
+
+.badge-new {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.2rem 0.6rem;
+	border-radius: 999px;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	background: rgba(143, 211, 255, 0.18);
+	border: 1px solid rgba(143, 211, 255, 0.38);
+	color: var(--accent);
+	width: fit-content;
+}
+
+.status-bar {
+	margin: 0.6rem 0 0;
+	font-size: 0.85rem;
+	color: var(--muted);
+	text-align: right;
+}
+
+.loading-bar {
+	height: 3px;
+	margin: 1rem 0 0;
+	border-radius: 999px;
+	background: linear-gradient(90deg, var(--accent), var(--accent-2));
+	animation: pulse-load 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-load {
+	0%, 100% { opacity: 0.35; }
+	50% { opacity: 1; }
+}
+
+a:focus-visible,
+button:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
 }
 
 .empty-state {

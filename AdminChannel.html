@@ -26,27 +26,29 @@
 			</div>
 		</header>
 
-		<main class="channel-layout">
-			<section class="card spotlight-card">
+		<div id="channel-loading" class="loading-bar" aria-hidden="true" hidden></div>
+		<p id="admin-channel-status" class="status-bar" role="status" aria-live="polite" aria-atomic="true">Mitteilungen werden geladen.</p>
+
+		<main class="channel-layout" aria-label="Ankündigungen">
+			<section class="card spotlight-card" aria-label="Neueste Mitteilung">
 				<div class="section-head">
 					<div>
-						<p class="eyebrow">Live</p>
-						<h2>Neue Mitteilungen</h2>
+						<p class="eyebrow">Aktuell</p>
+						<h2>Neueste Mitteilung</h2>
 					</div>
-					<p id="admin-channel-status" class="section-copy">Mitteilungen werden geladen.</p>
 				</div>
-				<div id="admin-channel-highlight" class="highlight-box empty-state">Noch keine Mitteilungen vorhanden.</div>
+				<div id="admin-channel-highlight" class="highlight-box empty-state" role="region" aria-label="Aktuelle Mitteilung">Noch keine Mitteilungen vorhanden.</div>
 			</section>
 
-			<section class="card feed-card">
+			<section class="card feed-card" aria-label="Alle Mitteilungen">
 				<div class="section-head">
 					<div>
 						<p class="eyebrow">Timeline</p>
-						<h2>Alle Admin Nachrichten</h2>
+						<h2>Alle Mitteilungen</h2>
 					</div>
-					<p class="section-copy">Neueste Mitteilungen zuerst.</p>
+					<p class="section-copy">Neueste zuerst. Automatische Aktualisierung alle 60 Sekunden.</p>
 				</div>
-				<div id="admin-channel-feed" class="feed-list empty-state">Noch keine Mitteilungen vorhanden.</div>
+				<div id="admin-channel-feed" class="feed-list empty-state" role="feed" aria-label="Mitteilungs-Feed" aria-busy="true">Noch keine Mitteilungen vorhanden.</div>
 			</section>
 		</main>
 	</div>
