@@ -294,9 +294,9 @@ function injectShellStyles() {
 	const style = document.createElement("style");
 	style.id = "cq-shell-styles";
 	style.textContent = `
-		.cq-shell-body { padding-top: 0; scroll-behavior: smooth; }
-		.cq-shell-body.cq-shell-body-banner { padding-top: 0; }
-		.cq-shell { position: sticky; top: 0; z-index: 10000; pointer-events: none; }
+		.cq-shell-body { padding-top: 90px; scroll-behavior: smooth; }
+		.cq-shell-body.cq-shell-body-banner { padding-top: 168px; }
+		.cq-shell { position: fixed; top: 0; left: 0; right: 0; z-index: 10000; pointer-events: none; }
 		.cq-shell__bar, .cq-shell__drawer {
 			pointer-events: auto;
 			width: min(1240px, calc(100% - 1rem));
@@ -458,6 +458,8 @@ function injectShellStyles() {
 			font-size: 0.9rem !important;
 		}
 		@media (min-width: 721px) and (max-width: 1180px) {
+			.cq-shell-body { padding-top: 120px; }
+			.cq-shell-body.cq-shell-body-banner { padding-top: 196px; }
 			.cq-shell__bar {
 				grid-template-columns: minmax(0, 1fr) auto;
 				grid-template-areas:
@@ -494,6 +496,8 @@ function injectShellStyles() {
 			}
 		}
 		@media (max-width: 720px) {
+			.cq-shell-body { padding-top: 130px; }
+			.cq-shell-body.cq-shell-body-banner { padding-top: 228px; }
 			.cq-shell__groups {
 				grid-template-columns: 1fr;
 			}
