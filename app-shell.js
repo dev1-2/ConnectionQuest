@@ -232,9 +232,9 @@ async function renderAnnouncementBanner() {
 		document.body.classList.add("cq-shell-body-banner");
 		node.innerHTML = `
 			<a class="cq-shell__announcement-copy" href="AdminMessages.html">
-				<span class="cq-shell__announcement-tag">Neue Nachricht von ${escapeHtml(banner.authorName || "Admin")}</span>
-				<strong>${escapeHtml(banner.title)}</strong>
-				<p>${escapeHtml(banner.body)}</p>
+				<span class="cq-shell__announcement-tag">News aus dem Admin Channel</span>
+				<strong>Neue Nachricht von ${escapeHtml(banner.authorName || "Admin")}</strong>
+				<p>${escapeHtml(banner.title)}${banner.body ? ` • ${escapeHtml(banner.body)}` : ""}</p>
 			</a>
 			<button type="button" class="cq-shell__announcement-close">Schliessen</button>
 		`;

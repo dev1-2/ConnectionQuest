@@ -141,37 +141,6 @@ button {
 
 label { display: grid; gap: 0.55rem; }
 .full-width { grid-column: 1 / -1; }
-.toggle-row {
-	grid-template-columns: auto 1fr;
-	align-items: center;
-	gap: 0.75rem;
-	padding: 0.9rem 1rem;
-	border: 1px solid var(--line);
-	border-radius: 20px;
-	background: rgba(255,255,255,0.04);
-}
-.toggle-row input {
-	width: 1.1rem;
-	height: 1.1rem;
-	margin: 0;
-}
-.toggle-row span {
-	margin: 0;
-	text-transform: none;
-	letter-spacing: normal;
-	font-size: 0.98rem;
-	color: var(--text);
-}
-
-.banner-duration-row select {
-	width: 100%;
-	padding: 0.95rem 1rem;
-	border: 1px solid var(--line);
-	border-radius: 18px;
-	background: rgba(255,255,255,0.05);
-	color: var(--text);
-	font: inherit;
-}
 
 input,
 textarea {

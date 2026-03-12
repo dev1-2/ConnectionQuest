@@ -3,6 +3,8 @@ const adminMessagesState = {
 	messages: [],
 };
 
+const BANNER_DISMISS_KEY = "cq-dismissed-banner-v1";
+
 const elements = {
 	status: document.querySelector("#admin-messages-status"),
 	logout: document.querySelector("#admin-messages-logout"),
@@ -12,8 +14,6 @@ const elements = {
 	category: document.querySelector("#message-category"),
 	title: document.querySelector("#message-title"),
 	body: document.querySelector("#message-body"),
-	banner: document.querySelector("#message-banner"),
-	bannerDuration: document.querySelector("#message-banner-duration"),
 	feedback: document.querySelector("#admin-message-feedback"),
 	feed: document.querySelector("#admin-message-feed"),
 };
@@ -55,15 +55,11 @@ async function handleSubmit(event) {
 				category: elements.category.value.trim(),
 				title: elements.title.value.trim(),
 				body: elements.body.value.trim(),
-				isBanner: elements.banner.checked,
-				bannerDurationHours: Number(elements.bannerDuration.value),
 			},
 		});
 		adminMessagesState.messages = payload.messages || [];
 		elements.title.value = "";
 		elements.body.value = "";
-		elements.banner.checked = true;
-		elements.bannerDuration.value = "24";
 		setFeedback(payload.message || "Gespeichert.", false);
 		renderPage();
 	} catch (error) {
@@ -87,6 +83,9 @@ function renderPage() {
 	elements.form.hidden = !adminMessagesState.auth.isAdmin;
 	elements.readonly.hidden = adminMessagesState.auth.isAdmin;
 	elements.logout.hidden = !adminMessagesState.auth.isAdmin;
+	if (adminMessagesState.messages[0]?.id) {
+		window.localStorage.setItem(BANNER_DISMISS_KEY, String(adminMessagesState.messages[0].id));
+	}
 	renderFeed();
 }
 
@@ -103,12 +102,11 @@ function renderFeed() {
 		item.innerHTML = `
 			<div class="feed-head">
 				<div>
-					<p class="eyebrow">${escapeHtml(entry.category)}</p>
+					<p class="eyebrow">News aus dem Admin Channel</p>
 					<h3>${escapeHtml(entry.title)}</h3>
 				</div>
 				<div class="feed-meta">
-					${entry.isBanner ? '<span class="meta-chip meta-chip-banner">Banner live</span>' : ""}
-					${entry.isBanner && entry.expiresAt ? `<span class="meta-chip">bis ${escapeHtml(formatDate(entry.expiresAt))}</span>` : ""}
+					${entry.isBanner ? '<span class="meta-chip meta-chip-banner">Neue News</span>' : ""}
 					<span class="meta-chip">${escapeHtml(entry.authorName)}</span>
 					<span class="meta-chip">${escapeHtml(formatDate(entry.createdAt))}</span>
 				</div>

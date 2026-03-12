@@ -1609,7 +1609,6 @@ function normalizeAdminMessageInput(body) {
 	const title = normalizeBlogShortText(body?.title, 80);
 	const category = normalizeBlogShortText(body?.category, 32);
 	const messageBody = normalizeBlogLongText(body?.body, 1500);
-	const bannerDurationHours = Math.max(1, Math.min(168, Math.round(Number(body?.bannerDurationHours) || 24)));
 	if (!authorName || !title || !category || !messageBody) {
 		return null;
 	}
@@ -1617,8 +1616,7 @@ function normalizeAdminMessageInput(body) {
 		authorName,
 		title,
 		category,
-		isBanner: Boolean(body?.isBanner),
-		bannerDurationHours,
+		isBanner: true,
 		body: messageBody,
 	};
 }
@@ -1922,8 +1920,6 @@ async function loadActiveAdminBanner() {
 	const result = await pool.query(
 		`SELECT id, author_name, title, category, body, is_banner, expires_at, created_at, updated_at
 		 FROM cq_admin_messages
-		 WHERE is_banner = TRUE
-		   AND (expires_at IS NULL OR expires_at > NOW())
 		 ORDER BY updated_at DESC, created_at DESC
 		 LIMIT 1`,
 	);
@@ -1991,9 +1987,9 @@ async function deleteCqPlayerAccount(playerId) {
 async function createAdminMessage(payload) {
 	const result = await pool.query(
 		`INSERT INTO cq_admin_messages (id, author_name, title, category, body, is_banner, expires_at, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, CASE WHEN $6 THEN NOW() + ($7 || ' hours')::interval ELSE NULL END, NOW(), NOW())
+		 VALUES ($1, $2, $3, $4, $5, TRUE, NULL, NOW(), NOW())
 		 RETURNING id, author_name, title, category, body, is_banner, expires_at, created_at, updated_at`,
-		[crypto.randomUUID(), payload.authorName, payload.title, payload.category, payload.body, payload.isBanner, String(payload.bannerDurationHours)],
+		[crypto.randomUUID(), payload.authorName, payload.title, payload.category, payload.body],
 	);
 	return serializeAdminMessage(result.rows[0]);
 }
