@@ -571,6 +571,35 @@ app.post("/api/cq/messages/threads/:playerId", async (request, response) => {
 	}
 });
 
+app.delete("/api/cq/messages/:messageId", async (request, response) => {
+	try {
+		const session = await requireCqPlayer(request, response);
+		if (!session) {
+			return;
+		}
+
+		const messageId = String(request.params.messageId || "").trim();
+		if (!messageId) {
+			response.status(400).json({ error: "Keine Nachrichten-ID angegeben." });
+			return;
+		}
+
+		const result = await pool.query(
+			"DELETE FROM cq_direct_messages WHERE id = $1 AND sender_player_id = $2 RETURNING id",
+			[messageId, session.playerId]
+		);
+
+		if (result.rowCount === 0) {
+			response.status(404).json({ error: "Nachricht nicht gefunden oder keine Berechtigung." });
+			return;
+		}
+
+		response.json({ message: "Nachricht wurde geloescht." });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
 app.post("/api/cq/social-rank/ratings", async (request, response) => {
 	try {
 		const session = await requireCqPlayer(request, response);

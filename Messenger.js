@@ -31,6 +31,7 @@ const elements = {
 elements.contacts.addEventListener("click", handleContactClick);
 elements.form.addEventListener("submit", handleSubmit);
 elements.backToContacts.addEventListener("click", handleBackToContacts);
+elements.thread.addEventListener("click", handleThreadClick);
 window.addEventListener("resize", handleViewportResize, { passive: true });
 
 initialize();
@@ -132,6 +133,27 @@ function handleBackToContacts() {
 	messengerState.isCompactThreadView = false;
 	syncResponsiveView();
 	scrollCardIntoView(elements.contactsCard);
+}
+
+function handleThreadClick(event) {
+	const button = event.target.closest("button[data-delete-id]");
+	if (!button) {
+		return;
+	}
+	deleteMessage(button.dataset.deleteId);
+}
+
+async function deleteMessage(messageId) {
+	if (!messageId) {
+		return;
+	}
+	try {
+		await apiRequest(`/api/cq/messages/${encodeURIComponent(messageId)}`, { method: "DELETE" });
+		messengerState.messages = messengerState.messages.filter((m) => m.id !== messageId);
+		renderThread();
+	} catch (error) {
+		setFeedback(error.message, true);
+	}
 }
 
 function handleViewportResize() {
@@ -272,6 +294,7 @@ function renderThread() {
 				<div class="message-meta">
 					${message.isOwn ? `<span class="meta-chip">Gesendet</span>` : `<span class="meta-chip">Empfangen</span>`}
 					${message.readAt && message.isOwn ? `<span class="meta-chip">Gelesen</span>` : ""}
+					${message.isOwn ? `<button class="msg-delete-btn" type="button" data-delete-id="${escapeHtml(message.id)}" title="Nachricht loeschen">&#x2715;</button>` : ""}
 				</div>
 			</div>
 			<p class="message-body">${escapeHtml(message.body)}</p>
