@@ -1,4 +1,5 @@
 let deferredInstallPrompt = null;
+const BANNER_DISMISS_KEY = "cq-dismissed-banner-v1";
 
 const PAGE_META = {
 	"index.html": {
@@ -14,12 +15,22 @@ const PAGE_META = {
 	"Guide.html": {
 		title: "Guide",
 		category: "Start",
-		quickLinks: ["Hub.html", "ConnectionQuest.html", "Games.html", "Leaderboard.html"],
+		quickLinks: ["Hub.html", "About.html", "ConnectionQuest.html", "Games.html"],
+	},
+	"About.html": {
+		title: "Ueber uns",
+		category: "Start",
+		quickLinks: ["Hub.html", "Guide.html", "Community.html", "Blog.html"],
 	},
 	"Admin.html": {
 		title: "Admin",
 		category: "Operations",
-		quickLinks: ["Hub.html", "LehrerRanking.html", "SocialRank.html", "Analytics.html"],
+		quickLinks: ["Hub.html", "AdminMessages.html", "LehrerRanking.html", "Analytics.html"],
+	},
+	"AdminMessages.html": {
+		title: "Admin Messages",
+		category: "Operations",
+		quickLinks: ["Admin.html", "Hub.html", "Analytics.html", "LehrerRanking.html"],
 	},
 	"SocialRank.html": {
 		title: "Social Rank",
@@ -49,17 +60,22 @@ const PAGE_META = {
 	"Community.html": {
 		title: "Community",
 		category: "Social",
-		quickLinks: ["Hub.html", "Network.html", "Notifications.html", "Leaderboard.html"],
+		quickLinks: ["Hub.html", "Blog.html", "Network.html", "Notifications.html"],
+	},
+	"Blog.html": {
+		title: "Blog",
+		category: "Social",
+		quickLinks: ["Hub.html", "Community.html", "Network.html", "Notifications.html"],
 	},
 	"Notifications.html": {
 		title: "Inbox",
 		category: "Social",
-		quickLinks: ["Hub.html", "ConnectionQuest.html", "Games.html", "Network.html"],
+		quickLinks: ["Hub.html", "Blog.html", "ConnectionQuest.html", "Games.html"],
 	},
 	"Network.html": {
 		title: "Network",
 		category: "Social",
-		quickLinks: ["Hub.html", "Community.html", "Notifications.html", "Games.html"],
+		quickLinks: ["Hub.html", "Community.html", "Blog.html", "Games.html"],
 	},
 	"Rewards.html": {
 		title: "Rewards",
@@ -86,7 +102,7 @@ const PAGE_META = {
 const NAV_GROUPS = [
 	{
 		label: "Start",
-		links: ["Hub.html", "Guide.html", "index.html"],
+		links: ["Hub.html", "Guide.html", "About.html", "index.html"],
 	},
 	{
 		label: "Use",
@@ -94,7 +110,7 @@ const NAV_GROUPS = [
 	},
 	{
 		label: "Network",
-		links: ["Community.html", "Network.html", "SocialRank.html", "Notifications.html"],
+		links: ["Community.html", "Blog.html", "Network.html", "SocialRank.html", "Notifications.html"],
 	},
 	{
 		label: "System",
@@ -102,7 +118,7 @@ const NAV_GROUPS = [
 	},
 	{
 		label: "Operations",
-		links: ["Admin.html", "LehrerRanking.html"],
+		links: ["Admin.html", "AdminMessages.html", "LehrerRanking.html"],
 	},
 ];
 
@@ -111,6 +127,7 @@ initializeAppShell();
 async function initializeAppShell() {
 	injectShellStyles();
 	renderGlobalShell();
+	await renderAnnouncementBanner();
 	simplifyHeroActions();
 	registerServiceWorker();
 	setupInstallPrompt();
@@ -144,6 +161,7 @@ function renderGlobalShell() {
 			<nav class="cq-shell__quick" aria-label="Schnellnavigation"></nav>
 			<button type="button" class="cq-shell__menu-btn">Alle Bereiche</button>
 		</div>
+		<div class="cq-shell__announcement" hidden></div>
 		<div class="cq-shell__drawer" hidden>
 			<div class="cq-shell__drawer-head">
 				<strong>Seitenstruktur</strong>
@@ -194,6 +212,44 @@ function buildShellLink(target, currentPageName, className) {
 	return link;
 }
 
+async function renderAnnouncementBanner() {
+	const node = document.querySelector(".cq-shell__announcement");
+	if (!node) {
+		return;
+	}
+	try {
+		const response = await fetch("/api/banner");
+		const payload = await response.json().catch(() => ({}));
+		const banner = response.ok ? payload.banner : null;
+		const dismissedBannerId = String(window.localStorage.getItem(BANNER_DISMISS_KEY) || "");
+		if (!banner || dismissedBannerId === String(banner.id)) {
+			node.hidden = true;
+			document.body.classList.remove("cq-shell-body-banner");
+			return;
+		}
+
+		node.hidden = false;
+		document.body.classList.add("cq-shell-body-banner");
+		node.innerHTML = `
+			<div class="cq-shell__announcement-copy">
+				<span class="cq-shell__announcement-tag">Admin Banner</span>
+				<strong>${escapeHtml(banner.title)}</strong>
+				<p>${escapeHtml(banner.body)}</p>
+			</div>
+			<button type="button" class="cq-shell__announcement-close">Schliessen</button>
+		`;
+
+		node.querySelector(".cq-shell__announcement-close")?.addEventListener("click", () => {
+			window.localStorage.setItem(BANNER_DISMISS_KEY, String(banner.id));
+			node.hidden = true;
+			document.body.classList.remove("cq-shell-body-banner");
+		});
+	} catch {
+		node.hidden = true;
+		document.body.classList.remove("cq-shell-body-banner");
+	}
+}
+
 function simplifyHeroActions() {
 	const pageName = getCurrentPageName();
 	const pageMeta = getPageMeta(pageName);
@@ -226,6 +282,7 @@ function injectShellStyles() {
 	style.id = "cq-shell-styles";
 	style.textContent = `
 		.cq-shell-body { padding-top: 86px; }
+		.cq-shell-body.cq-shell-body-banner { padding-top: 172px; }
 		.cq-shell { position: fixed; top: 0; left: 0; right: 0; z-index: 10000; pointer-events: none; }
 		.cq-shell__bar, .cq-shell__drawer {
 			pointer-events: auto;
@@ -293,6 +350,43 @@ function injectShellStyles() {
 			padding: 1rem;
 			border-radius: 22px;
 		}
+		.cq-shell__announcement {
+			pointer-events: auto;
+			width: min(1240px, calc(100% - 1rem));
+			margin: 0.65rem auto 0;
+			padding: 0.95rem 1rem;
+			border-radius: 18px;
+			background: linear-gradient(135deg, rgba(255, 107, 107, 0.94), rgba(255, 215, 0, 0.92));
+			color: #111;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 1rem;
+			box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+		}
+		.cq-shell__announcement-copy {
+			display: grid;
+			gap: 0.2rem;
+		}
+		.cq-shell__announcement-copy p {
+			margin: 0;
+			font-size: 0.95rem;
+			line-height: 1.45;
+		}
+		.cq-shell__announcement-tag {
+			font-size: 0.72rem;
+			text-transform: uppercase;
+			letter-spacing: 0.16em;
+			font-weight: 700;
+		}
+		.cq-shell__announcement-close {
+			padding: 0.6rem 0.85rem;
+			border-radius: 999px;
+			border: 1px solid rgba(17, 17, 17, 0.18);
+			background: rgba(255, 255, 255, 0.28);
+			font: inherit;
+			cursor: pointer;
+		}
 		.cq-shell__drawer-head {
 			display: flex;
 			justify-content: space-between;
@@ -352,11 +446,16 @@ function injectShellStyles() {
 		}
 		@media (max-width: 720px) {
 			.cq-shell-body { padding-top: 112px; }
+			.cq-shell-body.cq-shell-body-banner { padding-top: 220px; }
 			.cq-shell__groups {
 				grid-template-columns: 1fr;
 			}
 			.cq-shell__quick {
 				justify-content: flex-start;
+			}
+			.cq-shell__announcement {
+				flex-direction: column;
+				align-items: stretch;
 			}
 			.cq-shell__quick-link, .cq-shell__context-link, .cq-shell__context-more {
 				width: 100%;
@@ -364,6 +463,15 @@ function injectShellStyles() {
 		}
 	`;
 	document.head.appendChild(style);
+}
+
+function escapeHtml(value) {
+	return String(value)
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#39;");
 }
 
 function registerServiceWorker() {

@@ -17,6 +17,10 @@
 			"url": "/Guide.html"
 		},
 		{
+			"name": "Ueber uns",
+			"url": "/About.html"
+		},
+		{
 			"name": "Social Rank",
 			"url": "/SocialRank.html"
 		},
@@ -35,6 +39,10 @@
 		{
 			"name": "Community",
 			"url": "/Community.html"
+		},
+		{
+			"name": "Blog",
+			"url": "/Blog.html"
 		},
 		{
 			"name": "Inbox",

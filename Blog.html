@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#08131f">
+	<title>Connection Quest Blog</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="Blog.css">
+</head>
+<body>
+	<div class="page-shell">
+		<header class="blog-hero">
+			<section class="hero-card spotlight">
+				<p class="eyebrow">OPEN THOUGHTS</p>
+				<h1>Community Blog</h1>
+				<p class="hero-copy">Ein offener Raum fuer Gedanken, Mini-Essays und spontane Beobachtungen. Jeder Beitrag landet serverseitig im Feed und ist direkt fuer alle sichtbar.</p>
+				<div class="hero-actions">
+					<a class="hero-link" href="#blog-form">Jetzt schreiben</a>
+					<a class="ghost-link" href="Community.html">Zur Community</a>
+					<a class="ghost-link" href="Network.html">Zum Network</a>
+					<a class="ghost-link" href="Hub.html">Zum Hub</a>
+				</div>
+			</section>
+
+			<section class="hero-card status-card" aria-live="polite">
+				<p class="mini-label">Live Feed</p>
+				<h2 id="blog-title">Feed wird geladen</h2>
+				<p id="blog-copy" class="section-copy">Sobald die Beitraege geladen sind, siehst du hier das aktuelle Stimmungsbild.</p>
+				<div id="blog-topline" class="topline-grid"></div>
+			</section>
+		</header>
+
+		<main class="blog-layout">
+			<section class="card composer-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Publish</p>
+						<h2>Teile einen Gedanken</h2>
+					</div>
+					<p class="section-copy">Kurz, direkt und ohne Umwege. Die Eingaben werden serverseitig gespeichert und sofort vorne im Feed einsortiert.</p>
+				</div>
+
+				<form id="blog-form" class="composer-form">
+					<label>
+						<span>Autor</span>
+						<input id="author-input" name="authorName" type="text" maxlength="40" placeholder="z. B. Nova" required>
+					</label>
+					<label>
+						<span>Titel</span>
+						<input id="title-input" name="title" type="text" maxlength="80" placeholder="Worum geht es?" required>
+					</label>
+					<label class="full-width">
+						<span>Gedanke</span>
+						<textarea id="body-input" name="body" rows="7" maxlength="1200" placeholder="Schreibe hier deinen Gedanken, deine Beobachtung oder eine kurze Story." required></textarea>
+					</label>
+					<div class="form-footer">
+						<p id="blog-form-status" class="form-status">Der Feed ist offen. Bitte sachlich bleiben.</p>
+						<button id="publish-button" type="submit">Beitrag veroeffentlichen</button>
+					</div>
+				</form>
+			</section>
+
+			<section class="card feed-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Timeline</p>
+						<h2>Neueste Stimmen</h2>
+					</div>
+					<p class="section-copy">Die letzten 50 Beitraege werden absteigend nach Zeit angezeigt.</p>
+				</div>
+				<div id="blog-feed" class="feed-list empty-state">Noch keine Beitraege sichtbar.</div>
+			</section>
+
+			<section class="card notes-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Format</p>
+						<h2>Was hier gut funktioniert</h2>
+					</div>
+					<p class="section-copy">Der Feed ist auf kurze, lesbare Formate optimiert.</p>
+				</div>
+				<div class="tips-grid">
+					<article class="tip-item">
+						<h3>Mini-Essays</h3>
+						<p>Ein kompakter Standpunkt zu Schule, Alltag, Internet oder Beziehungen.</p>
+					</article>
+					<article class="tip-item">
+						<h3>Momentaufnahmen</h3>
+						<p>Ein einzelner Gedanke, der sonst nirgends gut reinpasst, bekommt hier seinen Platz.</p>
+					</article>
+					<article class="tip-item">
+						<h3>Reflexionen</h3>
+						<p>Etwas erlebt, kurz eingeordnet und fuer andere sichtbar gemacht.</p>
+					</article>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="Blog.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

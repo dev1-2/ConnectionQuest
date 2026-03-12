@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#12090f">
+	<title>Connection Quest Admin Access</title>
+	<link rel="manifest" href="manifest.webmanifest">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="AdminAccess.css">
+</head>
+<body>
+	<div class="access-shell">
+		<section class="access-card hero-card">
+			<p class="eyebrow">Restricted Area</p>
+			<h1>Admin Access</h1>
+			<p class="hero-copy">Das eigentliche Dashboard wird serverseitig nur an angemeldete Admins ausgeliefert. Melde dich hier an, dann landest du direkt im geschuetzten Bereich.</p>
+			<div class="link-row">
+				<a class="ghost-link" href="Hub.html">Zum Hub</a>
+				<a class="ghost-link" href="About.html">Ueber uns</a>
+			</div>
+		</section>
+
+		<section class="access-card form-card">
+			<div class="section-head">
+				<div>
+					<p class="eyebrow">Login</p>
+					<h2>Admin anmelden</h2>
+				</div>
+				<p id="admin-access-status" class="section-copy">Status wird geladen.</p>
+			</div>
+			<form id="admin-access-form" class="access-form">
+				<label>
+					<span>Admin-Passwort</span>
+					<input id="admin-access-password" type="password" autocomplete="current-password" placeholder="Passwort eingeben" required>
+				</label>
+				<button type="submit">Dashboard oeffnen</button>
+			</form>
+			<p id="admin-access-feedback" class="feedback"></p>
+		</section>
+	</div>
+
+	<script src="AdminAccess.js"></script>
+	<script src="app-shell.js"></script>
+</body>
+</html>

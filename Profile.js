@@ -1,5 +1,14 @@
 const SESSION_KEY = "connection-quest-session-token-v1";
 
+const deleteElements = {
+	form: document.querySelector("#delete-account-form"),
+	pin: document.querySelector("#delete-account-pin"),
+	feedback: document.querySelector("#delete-account-feedback"),
+	button: document.querySelector("#delete-account-button"),
+};
+
+deleteElements.form.addEventListener("submit", handleDeleteAccount);
+
 initialize();
 
 async function initialize() {
@@ -32,6 +41,60 @@ function renderProfile(currentUser, pulse) {
 	renderSnapshot(stats);
 	renderEntries(currentUser?.entries || []);
 	renderBadges(stats);
+	renderDangerZone(Boolean(currentUser));
+}
+
+async function handleDeleteAccount(event) {
+	event.preventDefault();
+	const sessionToken = window.localStorage.getItem(SESSION_KEY) || "";
+	if (!sessionToken) {
+		setDeleteFeedback("Du musst eingeloggt sein, um deinen Account zu loeschen.", true);
+		return;
+	}
+	const pin = deleteElements.pin.value.trim();
+	if (pin.length < 4) {
+		setDeleteFeedback("Bitte zuerst deine PIN eingeben.", true);
+		return;
+	}
+	if (!window.confirm("Willst du deinen Account wirklich dauerhaft loeschen? Dieser Schritt kann nicht rueckgaengig gemacht werden.")) {
+		return;
+	}
+	deleteElements.button.disabled = true;
+	setDeleteFeedback("Account wird geloescht ...", false);
+	try {
+		await apiRequest("/api/cq/account", {
+			method: "DELETE",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ pin }),
+		});
+		window.localStorage.removeItem(SESSION_KEY);
+		deleteElements.form.reset();
+		setDeleteFeedback("Dein Account wurde geloescht.", false);
+		renderProfile(null, {});
+	} catch (error) {
+		setDeleteFeedback(error.message, true);
+	} finally {
+		deleteElements.button.disabled = false;
+	}
+}
+
+function renderDangerZone(hasCurrentUser) {
+	deleteElements.form.hidden = !hasCurrentUser;
+	setDeleteFeedback(
+		hasCurrentUser
+			? "Nur mit korrekter PIN wird der Account serverseitig geloescht."
+			: "Logge dich ein, damit du deinen eigenen Account verwalten kannst.",
+		false,
+	);
+	if (!hasCurrentUser) {
+		deleteElements.form.reset();
+	}
+}
+
+function setDeleteFeedback(message, isError) {
+	deleteElements.feedback.textContent = message || "";
+	deleteElements.feedback.classList.toggle("is-error", Boolean(isError));
+	deleteElements.feedback.classList.toggle("is-success", Boolean(message) && !isError);
 }
 
 function renderRecommendations(items) {
@@ -158,10 +221,17 @@ function buildEmptyStats() {
 	};
 }
 
-async function apiRequest(url) {
+async function apiRequest(url, options = {}) {
 	const sessionToken = window.localStorage.getItem(SESSION_KEY) || "";
-	const headers = sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {};
-	const response = await fetch(url, { headers });
+	const headers = { ...(options.headers || {}) };
+	if (sessionToken) {
+		headers.Authorization = `Bearer ${sessionToken}`;
+	}
+	const response = await fetch(url, {
+		method: options.method || "GET",
+		headers,
+		body: options.body,
+	});
 	const payload = await response.json().catch(() => ({}));
 	if (!response.ok) {
 		throw new Error(payload.error || "Profil konnte nicht geladen werden.");

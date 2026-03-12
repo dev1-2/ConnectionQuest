@@ -149,6 +149,17 @@ app.use(express.json({ limit: "1mb" }));
 app.get("/", (_request, response) => {
 	response.sendFile(path.join(publicDir, "index.html"));
 });
+app.get("/Admin.html", (request, response) => {
+	const target = isAuthenticated(request) ? "Admin.html" : "AdminAccess.html";
+	response.sendFile(path.join(publicDir, target));
+});
+app.get("/AdminMessages.html", (request, response) => {
+	if (!isAuthenticated(request)) {
+		response.redirect(302, "/Admin.html");
+		return;
+	}
+	response.sendFile(path.join(publicDir, "AdminMessages.html"));
+});
 app.use("/api/", rateLimit({
 	windowMs: 15 * 60 * 1000,
 	max: 400,
@@ -430,6 +441,47 @@ app.get("/api/cq/social-rank", async (request, response) => {
 	}
 });
 
+app.get("/api/cq/blog-posts", async (_request, response) => {
+	try {
+		const result = await pool.query(
+			`SELECT id, author_name, title, body, created_at
+			 FROM cq_blog_posts
+			 ORDER BY created_at DESC
+			 LIMIT 50`,
+		);
+
+		response.json({
+			posts: result.rows.map((row) => serializeBlogPost(row)),
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.post("/api/cq/blog-posts", async (request, response) => {
+	try {
+		const payload = normalizeBlogPostInput(request.body);
+		if (!payload) {
+			response.status(400).json({ error: "Autor, Titel und Gedanke sind Pflichtfelder." });
+			return;
+		}
+
+		const result = await pool.query(
+			`INSERT INTO cq_blog_posts (id, author_name, title, body)
+			 VALUES ($1, $2, $3, $4)
+			 RETURNING id, author_name, title, body, created_at`,
+			[crypto.randomUUID(), payload.authorName, payload.title, payload.body],
+		);
+
+		response.status(201).json({
+			message: "Beitrag wurde veroeffentlicht.",
+			post: serializeBlogPost(result.rows[0]),
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
 app.post("/api/cq/social-rank/ratings", async (request, response) => {
 	try {
 		const session = await requireCqPlayer(request, response);
@@ -505,6 +557,109 @@ app.get("/api/admin/overview", requireAdmin, async (request, response) => {
 	try {
 		const overview = await loadAdminOverview();
 		response.json({ overview, auth: buildAuthState(request) });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.get("/api/banner", async (_request, response) => {
+	try {
+		const banner = await loadActiveAdminBanner();
+		response.json({ banner });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.get("/api/admin/messages", requireAdmin, async (request, response) => {
+	try {
+		const messages = await loadAdminMessages();
+		response.json({ messages, auth: buildAuthState(request) });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.delete("/api/admin/messages/:messageId", requireAdmin, async (request, response) => {
+	try {
+		const deleted = await deleteAdminMessage(String(request.params.messageId || ""));
+		if (!deleted) {
+			response.status(404).json({ error: "Nachricht wurde nicht gefunden." });
+			return;
+		}
+		const messages = await loadAdminMessages();
+		response.json({ message: "Admin-Nachricht wurde geloescht.", messages, auth: buildAuthState(request) });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.post("/api/admin/messages", requireAdmin, async (request, response) => {
+	try {
+		const payload = normalizeAdminMessageInput(request.body);
+		if (!payload) {
+			response.status(400).json({ error: "Bitte Autor, Titel, Kategorie und Nachricht angeben." });
+			return;
+		}
+
+		const message = await createAdminMessage(payload);
+		const messages = await loadAdminMessages();
+		response.status(201).json({
+			message: "Admin-Nachricht wurde gespeichert.",
+			entry: message,
+			messages,
+			auth: buildAuthState(request),
+		});
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.get("/api/admin/moderation", requireAdmin, async (request, response) => {
+	try {
+		const [players, blogPosts] = await Promise.all([
+			loadAdminPlayers(),
+			loadAdminBlogPosts(),
+		]);
+		response.json({ players, blogPosts, auth: buildAuthState(request) });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.delete("/api/admin/blog-posts/:postId", requireAdmin, async (request, response) => {
+	try {
+		const deleted = await deleteBlogPost(String(request.params.postId || ""));
+		if (!deleted) {
+			response.status(404).json({ error: "Blog-Post wurde nicht gefunden." });
+			return;
+		}
+		const blogPosts = await loadAdminBlogPosts();
+		response.json({ message: "Blog-Post wurde geloescht.", blogPosts, auth: buildAuthState(request) });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.delete("/api/admin/players/:playerId", requireAdmin, async (request, response) => {
+	try {
+		const playerId = String(request.params.playerId || "").trim();
+		if (!playerId) {
+			response.status(400).json({ error: "Spieler-ID fehlt." });
+			return;
+		}
+
+		const deleted = await deleteCqPlayerAccount(playerId);
+		if (!deleted) {
+			response.status(404).json({ error: "Spieler wurde nicht gefunden." });
+			return;
+		}
+
+		const [players, overview] = await Promise.all([
+			loadAdminPlayers(),
+			loadAdminOverview(),
+		]);
+		response.json({ message: "Spieleraccount wurde geloescht.", players, overview, auth: buildAuthState(request) });
 	} catch (error) {
 		sendServerError(response, error);
 	}
@@ -648,6 +803,33 @@ app.post("/api/cq/logout", async (request, response) => {
 			await pool.query("DELETE FROM cq_sessions WHERE token_hash = $1", [hashSessionToken(token)]);
 		}
 		response.json({ ok: true });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.delete("/api/cq/account", async (request, response) => {
+	try {
+		const session = await requireCqPlayer(request, response);
+		if (!session) {
+			return;
+		}
+
+		const pin = String(request.body?.pin || "").trim();
+		if (pin.length < 4) {
+			response.status(400).json({ error: "Bitte zur Bestaetigung deine PIN eingeben." });
+			return;
+		}
+
+		const playerResult = await pool.query("SELECT pin_hash FROM cq_players WHERE id = $1", [session.playerId]);
+		const player = playerResult.rows[0];
+		if (!player || !verifySecret(pin, player.pin_hash)) {
+			response.status(401).json({ error: "Die PIN ist falsch." });
+			return;
+		}
+
+		await deleteCqPlayerAccount(session.playerId);
+		response.json({ ok: true, message: "Dein Account wurde dauerhaft geloescht." });
 	} catch (error) {
 		sendServerError(response, error);
 	}
@@ -1000,8 +1182,30 @@ async function initializeDatabase() {
 			redeemed_by_player_id TEXT REFERENCES cq_players(id) ON DELETE SET NULL,
 			redeemed_at TIMESTAMPTZ
 		);
+
+		CREATE TABLE IF NOT EXISTS cq_blog_posts (
+			id TEXT PRIMARY KEY,
+			author_name VARCHAR(40) NOT NULL,
+			title VARCHAR(80) NOT NULL,
+			body VARCHAR(1200) NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		);
+
+		CREATE TABLE IF NOT EXISTS cq_admin_messages (
+			id TEXT PRIMARY KEY,
+			author_name VARCHAR(40) NOT NULL,
+			title VARCHAR(80) NOT NULL,
+			category VARCHAR(32) NOT NULL,
+			body VARCHAR(1500) NOT NULL,
+			is_banner BOOLEAN NOT NULL DEFAULT FALSE,
+			expires_at TIMESTAMPTZ,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		);
 	`);
 
+	await pool.query("ALTER TABLE cq_admin_messages ADD COLUMN IF NOT EXISTS is_banner BOOLEAN NOT NULL DEFAULT FALSE");
+	await pool.query("ALTER TABLE cq_admin_messages ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ");
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_sessions INTEGER NOT NULL DEFAULT 0");
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_wins INTEGER NOT NULL DEFAULT 0");
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS game_score INTEGER NOT NULL DEFAULT 0");
@@ -1381,6 +1585,63 @@ function normalizeSocialPersonName(value) {
 	return normalized.length >= 2 ? normalized : "";
 }
 
+function normalizeBlogPostInput(body) {
+	const authorName = normalizeBlogShortText(body?.authorName, 40);
+	const title = normalizeBlogShortText(body?.title, 80);
+	const bodyText = normalizeBlogLongText(body?.body, 1200);
+	if (!authorName || !title || !bodyText) {
+		return null;
+	}
+	return {
+		authorName,
+		title,
+		body: bodyText,
+	};
+}
+
+function normalizeAdminMessageInput(body) {
+	const authorName = normalizeBlogShortText(body?.authorName, 40);
+	const title = normalizeBlogShortText(body?.title, 80);
+	const category = normalizeBlogShortText(body?.category, 32);
+	const messageBody = normalizeBlogLongText(body?.body, 1500);
+	const bannerDurationHours = Math.max(1, Math.min(168, Math.round(Number(body?.bannerDurationHours) || 24)));
+	if (!authorName || !title || !category || !messageBody) {
+		return null;
+	}
+	return {
+		authorName,
+		title,
+		category,
+		isBanner: Boolean(body?.isBanner),
+		bannerDurationHours,
+		body: messageBody,
+	};
+}
+
+function normalizeBlogShortText(value, maxLength) {
+	const normalized = String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+	return normalized;
+}
+
+function normalizeBlogLongText(value, maxLength) {
+	const normalized = String(value || "")
+		.replace(/\r\n/g, "\n")
+		.replace(/\n{3,}/g, "\n\n")
+		.trim()
+		.slice(0, maxLength);
+	return normalized;
+}
+
+function serializeBlogPost(row) {
+	return {
+		id: row.id,
+		authorName: row.author_name,
+		title: row.title,
+		body: row.body,
+		createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+	};
+}
+
 function buildSingleGameRewards(gameType, rawScore) {
 	const config = CQ_SINGLE_GAMES[gameType];
 	const normalizedRawScore = Math.max(0, Math.min(config.maxRawScore, Math.round(rawScore)));
@@ -1636,6 +1897,116 @@ async function loadInnerCircleMembers() {
 	}));
 }
 
+async function loadAdminMessages(limit = 24) {
+	const result = await pool.query(
+		`SELECT id, author_name, title, category, body, is_banner, expires_at, created_at, updated_at
+		 FROM cq_admin_messages
+		 ORDER BY created_at DESC, updated_at DESC
+		 LIMIT $1`,
+		[Math.max(1, Math.min(100, Number(limit) || 24))],
+	);
+	return result.rows.map((row) => serializeAdminMessage(row));
+}
+
+async function deleteAdminMessage(messageId) {
+	const result = await pool.query("DELETE FROM cq_admin_messages WHERE id = $1", [messageId]);
+	return result.rowCount > 0;
+}
+
+async function loadActiveAdminBanner() {
+	const result = await pool.query(
+		`SELECT id, author_name, title, category, body, is_banner, expires_at, created_at, updated_at
+		 FROM cq_admin_messages
+		 WHERE is_banner = TRUE
+		   AND (expires_at IS NULL OR expires_at > NOW())
+		 ORDER BY updated_at DESC, created_at DESC
+		 LIMIT 1`,
+	);
+	return result.rows[0] ? serializeAdminMessage(result.rows[0]) : null;
+}
+
+async function loadAdminPlayers(limit = 18) {
+	const result = await pool.query(
+		`SELECT id, handle, score, level, placement, status_tier, total_entries, game_sessions, last_login_at, created_at
+		 FROM cq_players
+		 ORDER BY last_login_at DESC NULLS LAST, created_at DESC
+		 LIMIT $1`,
+		[Math.max(1, Math.min(100, Number(limit) || 18))],
+	);
+	return result.rows.map((row) => ({
+		id: row.id,
+		handle: row.handle,
+		score: Number(row.score) || 0,
+		level: Number(row.level) || 1,
+		placement: Number(row.placement) || 0,
+		statusTier: row.status_tier || "standard",
+		totalEntries: Number(row.total_entries) || 0,
+		gameSessions: Number(row.game_sessions) || 0,
+		lastLoginAt: row.last_login_at,
+		createdAt: row.created_at,
+	}));
+}
+
+async function loadAdminBlogPosts(limit = 18) {
+	const result = await pool.query(
+		`SELECT id, author_name, title, body, created_at
+		 FROM cq_blog_posts
+		 ORDER BY created_at DESC
+		 LIMIT $1`,
+		[Math.max(1, Math.min(100, Number(limit) || 18))],
+	);
+	return result.rows.map((row) => serializeBlogPost(row));
+}
+
+async function deleteBlogPost(postId) {
+	const result = await pool.query("DELETE FROM cq_blog_posts WHERE id = $1", [postId]);
+	return result.rowCount > 0;
+}
+
+async function deleteCqPlayerAccount(playerId) {
+	const client = await pool.connect();
+	try {
+		await client.query("BEGIN");
+		const deleteResult = await client.query("DELETE FROM cq_players WHERE id = $1", [playerId]);
+		if (deleteResult.rowCount === 0) {
+			await client.query("ROLLBACK");
+			return false;
+		}
+		await refreshCqPlacements(client);
+		await client.query("COMMIT");
+		return true;
+	} catch (error) {
+		await client.query("ROLLBACK");
+		throw error;
+	} finally {
+		client.release();
+	}
+}
+
+async function createAdminMessage(payload) {
+	const result = await pool.query(
+		`INSERT INTO cq_admin_messages (id, author_name, title, category, body, is_banner, expires_at, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, CASE WHEN $6 THEN NOW() + ($7 || ' hours')::interval ELSE NULL END, NOW(), NOW())
+		 RETURNING id, author_name, title, category, body, is_banner, expires_at, created_at, updated_at`,
+		[crypto.randomUUID(), payload.authorName, payload.title, payload.category, payload.body, payload.isBanner, String(payload.bannerDurationHours)],
+	);
+	return serializeAdminMessage(result.rows[0]);
+}
+
+function serializeAdminMessage(row) {
+	return {
+		id: row.id,
+		authorName: row.author_name,
+		title: row.title,
+		category: row.category,
+		body: row.body,
+		isBanner: Boolean(row.is_banner),
+		expiresAt: row.expires_at instanceof Date ? row.expires_at.toISOString() : row.expires_at,
+		createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+		updatedAt: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
+	};
+}
+
 async function loadAdminOverview() {
 	const [
 		playerCountResult,
@@ -1643,6 +2014,8 @@ async function loadAdminOverview() {
 		ratingCountResult,
 		peopleCountResult,
 		inviteCountResult,
+		messageCountResult,
+		blogCountResult,
 		teacherCountResult,
 		latestPlayersResult,
 		topPlayersResult,
@@ -1652,6 +2025,8 @@ async function loadAdminOverview() {
 		pool.query("SELECT COUNT(*)::int AS count FROM cq_social_ratings"),
 		pool.query("SELECT COUNT(*)::int AS count FROM cq_social_people"),
 		pool.query("SELECT COUNT(*)::int AS count FROM cq_inner_circle_invites"),
+		pool.query("SELECT COUNT(*)::int AS count FROM cq_admin_messages"),
+		pool.query("SELECT COUNT(*)::int AS count FROM cq_blog_posts"),
 		pool.query("SELECT COUNT(*)::int AS count FROM teachers"),
 		pool.query(
 			`SELECT handle, last_login_at, status_tier
@@ -1667,7 +2042,10 @@ async function loadAdminOverview() {
 		),
 	]);
 
-	const members = await loadInnerCircleMembers();
+	const [members, recentAdminMessages] = await Promise.all([
+		loadInnerCircleMembers(),
+		loadAdminMessages(4),
+	]);
 
 	return {
 		stats: {
@@ -1676,6 +2054,8 @@ async function loadAdminOverview() {
 			ratings: Number(ratingCountResult.rows[0]?.count) || 0,
 			people: Number(peopleCountResult.rows[0]?.count) || 0,
 			invites: Number(inviteCountResult.rows[0]?.count) || 0,
+			adminMessages: Number(messageCountResult.rows[0]?.count) || 0,
+			blogPosts: Number(blogCountResult.rows[0]?.count) || 0,
 			teacherProfiles: Number(teacherCountResult.rows[0]?.count) || 0,
 			innerCircleMembers: members.length,
 		},
@@ -1691,6 +2071,7 @@ async function loadAdminOverview() {
 			placement: Number(row.placement) || 0,
 			statusTier: row.status_tier || "standard",
 		})),
+		recentAdminMessages,
 		innerCircleMembers: members,
 	};
 }

@@ -17,11 +17,11 @@
 			<div>
 				<p class="eyebrow">Operations</p>
 				<h1>Zentrales Admin Panel</h1>
-				<p class="hero-copy">Alle Verwaltungsfunktionen sind jetzt an einem Ort gebuendelt: Status, Systemzahlen, Inner-Circle-Invites und die Weiterleitung in das separate Teacher-Ranking-Backoffice.</p>
+				<p class="hero-copy">Dieses Dashboard ist jetzt nur noch nach erfolgreicher Admin-Anmeldung erreichbar. Hier laufen Uebersicht, operative Tools, Inner-Circle-Verwaltung und die neuesten internen Admin-Notizen zusammen.</p>
 			</div>
 			<div class="hero-actions">
 				<a class="hero-link" href="Hub.html">Hub</a>
-				<a class="hero-link" href="Guide.html">Guide</a>
+				<a class="hero-link" href="AdminMessages.html">Admin Messages</a>
 				<a class="ghost-link" href="LehrerRanking.html">Teacher Ranking Admin</a>
 			</div>
 		</header>
@@ -31,15 +31,17 @@
 				<div class="section-head">
 					<div>
 						<p class="eyebrow">Zugang</p>
-						<h2>Admin Status</h2>
+						<h2>Session</h2>
 					</div>
-					<p id="admin-status" class="section-copy">Status wird geladen.</p>
+					<p id="admin-status" class="section-copy">Admin-Status wird geladen.</p>
 				</div>
-				<form id="admin-login-form" class="inline-form">
-					<input id="admin-password" type="password" autocomplete="current-password" placeholder="Admin-Passwort">
-					<button type="submit" class="primary-button">Admin anmelden</button>
+				<div class="action-cluster">
+					<a class="route-card" href="AdminMessages.html"><strong>Admin Messages</strong><span>Interne Updates schreiben und Verlauf sehen.</span></a>
+					<a class="route-card" href="About.html"><strong>Ueber uns</strong><span>Oeffentliche Kontextseite der Plattform.</span></a>
+				</div>
+				<div class="inline-actions">
 					<button id="admin-logout" type="button" class="ghost-button">Logout</button>
-				</form>
+				</div>
 				<p id="admin-feedback" class="feedback"></p>
 			</section>
 
@@ -98,14 +100,48 @@
 				</div>
 			</section>
 
+			<section class="card messages-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Admin Notes</p>
+						<h2>Neueste Nachrichten</h2>
+					</div>
+					<p class="section-copy">Die letzten internen Posts der Admin-Seite.</p>
+				</div>
+				<div id="admin-messages" class="stack-list"></div>
+			</section>
+
+			<section class="card control-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Account Control</p>
+						<h2>Spieler verwalten</h2>
+					</div>
+					<p class="section-copy">Aktive Konten koennen direkt aus dem Admin-Bereich geloescht werden.</p>
+				</div>
+				<div id="admin-player-list" class="stack-list"></div>
+			</section>
+
+			<section class="card moderation-card">
+				<div class="section-head">
+					<div>
+						<p class="eyebrow">Content Moderation</p>
+						<h2>Blog-Posts verwalten</h2>
+					</div>
+					<p class="section-copy">Oeffentliche Gedanken aus dem Blog koennen hier moderiert werden.</p>
+				</div>
+				<div id="admin-blog-list" class="stack-list"></div>
+			</section>
+
 			<section class="card routes-card">
 				<p class="eyebrow">Struktur</p>
 				<h2>Verwaltungspfade</h2>
 				<div class="route-grid">
+					<a class="route-card" href="AdminMessages.html"><strong>Admin Messages</strong><span>Serverseitige Notizen, Ansagen und interne Abstimmung.</span></a>
 					<a class="route-card" href="SocialRank.html"><strong>Social Rank</strong><span>Oeffentliche Bewertungsseite ohne Admin-Unordnung.</span></a>
 					<a class="route-card" href="LehrerRanking.html"><strong>Teacher Ranking</strong><span>Separates Spezial-Backoffice fuer Lehrerprofile.</span></a>
 					<a class="route-card" href="Hub.html"><strong>Hub</strong><span>Sauberer Einstieg fuer Nutzer ohne Verwaltungsballast.</span></a>
-					<a class="route-card" href="Guide.html"><strong>Guide</strong><span>Nutzererklaerung getrennt von Operations.</span></a>
+					<a class="route-card" href="About.html"><strong>Ueber uns</strong><span>Oeffentliche Einordnung der Idee, Werte und Struktur.</span></a>
 				</div>
 			</section>
 		</main>

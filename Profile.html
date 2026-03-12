@@ -133,6 +133,26 @@
 					<a class="route-link" href="Leaderboard.html">Platzierung pruefen</a>
 				</div>
 			</section>
+
+			<section class="card danger-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Account</p>
+						<h2>Konto loeschen</h2>
+					</div>
+					<p class="section-copy">Die Loeschung entfernt dein eigenes Profil dauerhaft inklusive Sessions, Journal und Spielfortschritt.</p>
+				</div>
+				<form id="delete-account-form" class="danger-form" hidden>
+					<label>
+						<span class="mini-label">PIN bestaetigen</span>
+						<input id="delete-account-pin" type="password" minlength="4" maxlength="24" placeholder="Deine PIN" required>
+					</label>
+					<div class="danger-actions">
+						<p id="delete-account-feedback" class="danger-feedback">Nur mit korrekter PIN wird der Account serverseitig geloescht.</p>
+						<button id="delete-account-button" type="submit" class="danger-button">Meinen Account dauerhaft loeschen</button>
+					</div>
+				</form>
+			</section>
 		</main>
 	</div>
 

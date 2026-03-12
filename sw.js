@@ -1,11 +1,12 @@
-const CACHE_NAME = "connection-quest-v6";
+const CACHE_NAME = "connection-quest-v8";
 const APP_SHELL = [
 	"/",
 	"/index.html",
 	"/Hub.html",
 	"/Guide.html",
-	"/Admin.html",
 	"/SocialRank.html",
+	"/Blog.html",
+	"/About.html",
 	"/ConnectionQuest.html",
 	"/Games.html",
 	"/Leaderboard.html",
@@ -17,6 +18,10 @@ const APP_SHELL = [
 	"/Guide.js",
 	"/Admin.css",
 	"/Admin.js",
+	"/AdminAccess.css",
+	"/AdminAccess.js",
+	"/AdminMessages.css",
+	"/AdminMessages.js",
 	"/SocialRank.css",
 	"/SocialRank.js",
 	"/Connectionqueststyles.css",
@@ -31,6 +36,8 @@ const APP_SHELL = [
 	"/Community.html",
 	"/Community.css",
 	"/Community.js",
+	"/Blog.css",
+	"/Blog.js",
 	"/Notifications.html",
 	"/Notifications.css",
 	"/Notifications.js",
@@ -46,6 +53,8 @@ const APP_SHELL = [
 	"/Analytics.html",
 	"/Analytics.css",
 	"/Analytics.js",
+	"/About.css",
+	"/About.js",
 	"/app-shell.js",
 	"/manifest.webmanifest",
 	"/icon.svg"
@@ -68,7 +77,7 @@ self.addEventListener("fetch", (event) => {
 	if (request.method !== "GET") {
 		return;
 	}
-	if (request.url.includes("/api/")) {
+	if (request.url.includes("/api/") || request.url.includes("/Admin.html") || request.url.includes("/AdminMessages.html")) {
 		return;
 	}
 
