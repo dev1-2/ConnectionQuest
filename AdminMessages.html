@@ -17,7 +17,7 @@
 			<div>
 				<p class="eyebrow">Internal Channel</p>
 				<h1>Admin Messages</h1>
-				<p class="hero-copy">Hier schreiben Admins interne Ansagen, Betriebsnotizen und kurze Entscheidungen. Alle Eintraege werden serverseitig gespeichert und nach Neuheit sortiert.</p>
+				<p class="hero-copy">Hier landen Nachrichten aus dem Admin-Bereich. Alle koennen sie lesen, Admins koennen neue Eintraege verfassen und verwalten.</p>
 			</div>
 			<div class="hero-actions">
 				<a class="hero-link" href="Admin.html">Zum Dashboard</a>
@@ -35,7 +35,7 @@
 					</div>
 					<p id="admin-messages-status" class="section-copy">Admin-Status wird geladen.</p>
 				</div>
-				<form id="admin-message-form" class="composer-form">
+				<form id="admin-message-form" class="composer-form" hidden>
 					<label>
 						<span>Autor</span>
 						<input id="message-author" type="text" maxlength="40" value="System Admin" required>
@@ -73,6 +73,7 @@
 						<button type="submit">Nachricht speichern</button>
 					</div>
 				</form>
+				<div id="admin-message-readonly" class="readonly-box" hidden>Diese Seite ist oeffentlich lesbar. Nur Admins koennen neue Nachrichten verfassen.</div>
 			</section>
 
 			<section class="card feed-card">

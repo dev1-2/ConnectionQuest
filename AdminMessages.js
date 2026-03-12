@@ -7,6 +7,7 @@ const elements = {
 	status: document.querySelector("#admin-messages-status"),
 	logout: document.querySelector("#admin-messages-logout"),
 	form: document.querySelector("#admin-message-form"),
+	readonly: document.querySelector("#admin-message-readonly"),
 	author: document.querySelector("#message-author"),
 	category: document.querySelector("#message-category"),
 	title: document.querySelector("#message-title"),
@@ -26,10 +27,6 @@ initialize();
 async function initialize() {
 	try {
 		await hydrateStatus();
-		if (!adminMessagesState.auth.isAdmin) {
-			window.location.replace("Admin.html");
-			return;
-		}
 		await hydrateMessages();
 		renderPage();
 	} catch (error) {
@@ -43,7 +40,7 @@ async function hydrateStatus() {
 }
 
 async function hydrateMessages() {
-	const payload = await fetchJson("/api/admin/messages");
+	const payload = await fetchJson(adminMessagesState.auth.isAdmin ? "/api/admin/messages" : "/api/messages");
 	adminMessagesState.messages = payload.messages || [];
 }
 
@@ -86,7 +83,10 @@ async function handleLogout() {
 function renderPage() {
 	elements.status.textContent = adminMessagesState.auth.isAdmin
 		? "Admin aktiv. Neue Nachrichten werden direkt serverseitig gespeichert."
-		: "Keine aktive Admin-Sitzung.";
+		: "Oeffentliche Lesesicht. Neue Nachrichten stammen aus dem Admin-Bereich.";
+	elements.form.hidden = !adminMessagesState.auth.isAdmin;
+	elements.readonly.hidden = adminMessagesState.auth.isAdmin;
+	elements.logout.hidden = !adminMessagesState.auth.isAdmin;
 	renderFeed();
 }
 
@@ -114,13 +114,16 @@ function renderFeed() {
 				</div>
 			</div>
 			<p>${escapeHtml(entry.body)}</p>
-			<button class="danger-button" data-message-id="${escapeHtml(entry.id)}">Nachricht loeschen</button>
+			${adminMessagesState.auth.isAdmin ? `<button class="danger-button" data-message-id="${escapeHtml(entry.id)}">Nachricht loeschen</button>` : ""}
 		`;
 		elements.feed.appendChild(item);
 	});
 }
 
 async function handleFeedClick(event) {
+	if (!adminMessagesState.auth.isAdmin) {
+		return;
+	}
 	const button = event.target.closest("button[data-message-id]");
 	if (!button) {
 		return;
@@ -147,7 +150,7 @@ async function fetchJson(url, options = {}) {
 	});
 	const payload = await response.json().catch(() => ({}));
 	if (!response.ok) {
-		if (response.status === 401) {
+		if (response.status === 401 && adminMessagesState.auth.isAdmin) {
 			window.location.replace("Admin.html");
 		}
 		throw new Error(payload.error || "Anfrage fehlgeschlagen.");

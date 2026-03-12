@@ -154,10 +154,6 @@ app.get("/Admin.html", (request, response) => {
 	response.sendFile(path.join(publicDir, target));
 });
 app.get("/AdminMessages.html", (request, response) => {
-	if (!isAuthenticated(request)) {
-		response.redirect(302, "/Admin.html");
-		return;
-	}
 	response.sendFile(path.join(publicDir, "AdminMessages.html"));
 });
 app.use("/api/", rateLimit({
@@ -566,6 +562,15 @@ app.get("/api/banner", async (_request, response) => {
 	try {
 		const banner = await loadActiveAdminBanner();
 		response.json({ banner });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.get("/api/messages", async (_request, response) => {
+	try {
+		const messages = await loadAdminMessages();
+		response.json({ messages });
 	} catch (error) {
 		sendServerError(response, error);
 	}

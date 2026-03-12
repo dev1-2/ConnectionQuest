@@ -231,14 +231,19 @@ async function renderAnnouncementBanner() {
 		node.hidden = false;
 		document.body.classList.add("cq-shell-body-banner");
 		node.innerHTML = `
-			<div class="cq-shell__announcement-copy">
-				<span class="cq-shell__announcement-tag">Admin Banner</span>
+			<a class="cq-shell__announcement-copy" href="AdminMessages.html">
+				<span class="cq-shell__announcement-tag">Neue Nachricht von ${escapeHtml(banner.authorName || "Admin")}</span>
 				<strong>${escapeHtml(banner.title)}</strong>
 				<p>${escapeHtml(banner.body)}</p>
-			</div>
+			</a>
 			<button type="button" class="cq-shell__announcement-close">Schliessen</button>
 		`;
 
+		node.querySelector(".cq-shell__announcement-copy")?.addEventListener("click", (event) => {
+			event.preventDefault();
+			window.localStorage.setItem(BANNER_DISMISS_KEY, String(banner.id));
+			window.location.href = "AdminMessages.html";
+		});
 		node.querySelector(".cq-shell__announcement-close")?.addEventListener("click", () => {
 			window.localStorage.setItem(BANNER_DISMISS_KEY, String(banner.id));
 			node.hidden = true;
@@ -367,6 +372,9 @@ function injectShellStyles() {
 		.cq-shell__announcement-copy {
 			display: grid;
 			gap: 0.2rem;
+			text-decoration: none;
+			color: inherit;
+			cursor: pointer;
 		}
 		.cq-shell__announcement-copy p {
 			margin: 0;

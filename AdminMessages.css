@@ -228,6 +228,15 @@ textarea { min-height: 12rem; resize: vertical; line-height: 1.65; }
 	background: rgba(255,255,255,0.04);
 }
 
+.readonly-box {
+	padding: 1rem;
+	border-radius: 20px;
+	border: 1px dashed var(--line);
+	background: rgba(255,255,255,0.04);
+	color: var(--muted);
+	line-height: 1.65;
+}
+
 @media (max-width: 980px) {
 	.hero-card,
 	.section-head,
