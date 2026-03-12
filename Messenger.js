@@ -1,4 +1,5 @@
 const SESSION_KEY = "connection-quest-session-token-v1";
+const COMPACT_BREAKPOINT = 980;
 
 const messengerState = {
 	currentUser: null,
@@ -6,15 +7,20 @@ const messengerState = {
 	selectedContactId: "",
 	messages: [],
 	isLoadingThread: false,
+	isCompactThreadView: false,
 };
 
 const elements = {
+	shell: document.querySelector(".messenger-shell"),
 	heroCopy: document.querySelector("#messenger-hero-copy"),
 	status: document.querySelector("#messenger-status"),
 	currentUser: document.querySelector("#messenger-current-user"),
+	contactsCard: document.querySelector("#messenger-contacts-card"),
 	contacts: document.querySelector("#messenger-contacts"),
+	threadCard: document.querySelector("#messenger-thread-card"),
 	threadTitle: document.querySelector("#messenger-thread-title"),
 	threadMeta: document.querySelector("#messenger-thread-meta"),
+	backToContacts: document.querySelector("#messenger-back-to-contacts"),
 	thread: document.querySelector("#messenger-thread"),
 	form: document.querySelector("#messenger-form"),
 	body: document.querySelector("#messenger-body"),
@@ -24,6 +30,8 @@ const elements = {
 
 elements.contacts.addEventListener("click", handleContactClick);
 elements.form.addEventListener("submit", handleSubmit);
+elements.backToContacts.addEventListener("click", handleBackToContacts);
+window.addEventListener("resize", handleViewportResize, { passive: true });
 
 initialize();
 
@@ -39,6 +47,7 @@ async function initialize() {
 		const contactsPayload = await apiRequest("/api/cq/messages/contacts");
 		messengerState.contacts = contactsPayload.contacts || [];
 		messengerState.selectedContactId = messengerState.contacts[0]?.id || "";
+		messengerState.isCompactThreadView = false;
 		if (messengerState.selectedContactId) {
 			await loadThread(messengerState.selectedContactId);
 		} else {
@@ -62,6 +71,7 @@ async function loadThread(contactId) {
 		messengerState.contacts = payload.contacts || messengerState.contacts;
 		messengerState.messages = payload.messages || [];
 		messengerState.selectedContactId = contactId;
+		messengerState.isLoadingThread = false;
 		setFeedback("", false);
 		renderPage();
 	} catch (error) {
@@ -110,13 +120,32 @@ function handleContactClick(event) {
 	if (!button || button.dataset.contactId === messengerState.selectedContactId) {
 		return;
 	}
+	if (isCompactViewport()) {
+		messengerState.isCompactThreadView = true;
+		syncResponsiveView();
+		scrollCardIntoView(elements.threadCard);
+	}
 	loadThread(button.dataset.contactId);
+}
+
+function handleBackToContacts() {
+	messengerState.isCompactThreadView = false;
+	syncResponsiveView();
+	scrollCardIntoView(elements.contactsCard);
+}
+
+function handleViewportResize() {
+	if (!isCompactViewport()) {
+		messengerState.isCompactThreadView = false;
+	}
+	syncResponsiveView();
 }
 
 function renderLoggedOut() {
 	messengerState.contacts = [];
 	messengerState.messages = [];
 	messengerState.selectedContactId = "";
+	messengerState.isCompactThreadView = false;
 	elements.heroCopy.textContent = "Der Messenger nutzt dein aktives Connection-Quest-Konto. Logge dich zuerst im Journal ein, damit du serverseitig Nachrichten senden und empfangen kannst.";
 	elements.status.textContent = "Kein Nutzer aktiv.";
 	elements.currentUser.classList.add("empty-state");
@@ -129,9 +158,11 @@ function renderLoggedOut() {
 	elements.contacts.textContent = "Kontakte werden nach dem Login geladen.";
 	elements.form.hidden = true;
 	setFeedback("", false);
+	syncResponsiveView();
 }
 
 function renderFailure(message) {
+	messengerState.isCompactThreadView = false;
 	elements.status.textContent = message || "Messenger konnte nicht geladen werden.";
 	elements.currentUser.classList.add("empty-state");
 	elements.currentUser.textContent = "Der Messenger ist gerade nicht verfuegbar.";
@@ -143,6 +174,7 @@ function renderFailure(message) {
 	elements.contacts.textContent = "Kontakte konnten nicht geladen werden.";
 	elements.form.hidden = true;
 	setFeedback(message || "", true);
+	syncResponsiveView();
 }
 
 function renderPage() {
@@ -151,13 +183,14 @@ function renderPage() {
 	renderThread();
 	const hasContacts = messengerState.contacts.length > 0;
 	elements.form.hidden = !messengerState.currentUser || !messengerState.selectedContactId || !hasContacts;
+	syncResponsiveView();
 	if (!messengerState.currentUser) {
 		return;
 	}
 	elements.status.textContent = hasContacts
 		? `${messengerState.contacts.length} Nutzer verfuegbar.`
 		: "Noch keine anderen Nutzer vorhanden.";
-	}
+}
 
 function renderCurrentUser() {
 	if (!messengerState.currentUser) {
@@ -247,6 +280,31 @@ function renderThread() {
 	});
 	requestAnimationFrame(() => {
 		elements.thread.scrollTop = elements.thread.scrollHeight;
+	});
+}
+
+function syncResponsiveView() {
+	const showCompactThreadView = Boolean(
+		isCompactViewport()
+		&& messengerState.currentUser
+		&& messengerState.selectedContactId
+		&& messengerState.contacts.length
+		&& messengerState.isCompactThreadView
+	);
+	elements.shell.classList.toggle("is-compact-thread", showCompactThreadView);
+	elements.backToContacts.hidden = !showCompactThreadView;
+}
+
+function isCompactViewport() {
+	return window.innerWidth <= COMPACT_BREAKPOINT;
+}
+
+function scrollCardIntoView(element) {
+	if (!element) {
+		return;
+	}
+	requestAnimationFrame(() => {
+		element.scrollIntoView({ behavior: "smooth", block: "start" });
 	});
 }
 

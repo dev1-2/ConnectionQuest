@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<meta name="theme-color" content="#0f1722">
 	<title>Connection Quest Messenger</title>
 	<link rel="manifest" href="manifest.webmanifest">
@@ -27,7 +27,7 @@
 		</header>
 
 		<main class="messenger-layout">
-			<section class="card contacts-card">
+			<section id="messenger-contacts-card" class="card contacts-card">
 				<div class="section-head">
 					<div>
 						<p class="eyebrow">Contacts</p>
@@ -39,13 +39,16 @@
 				<div id="messenger-contacts" class="contacts-list empty-state">Noch keine Kontakte verfuegbar.</div>
 			</section>
 
-			<section class="card thread-card">
+			<section id="messenger-thread-card" class="card thread-card">
 				<div class="section-head">
 					<div>
 						<p class="eyebrow">Thread</p>
 						<h2 id="messenger-thread-title">Kein Nutzer ausgewaehlt</h2>
 					</div>
-					<p id="messenger-thread-meta" class="section-copy">Logge dich ein und waehle dann einen Kontakt aus.</p>
+					<div class="section-actions">
+						<p id="messenger-thread-meta" class="section-copy">Logge dich ein und waehle dann einen Kontakt aus.</p>
+						<button id="messenger-back-to-contacts" class="thread-back-button" type="button" hidden>Zurueck zu Kontakten</button>
+					</div>
 				</div>
 				<div id="messenger-thread" class="thread-list empty-state">Sobald ein Kontakt ausgewaehlt ist, erscheint der Verlauf hier.</div>
 				<form id="messenger-form" class="composer-form" hidden>
