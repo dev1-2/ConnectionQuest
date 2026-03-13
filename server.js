@@ -46,15 +46,6 @@ const CQ_SINGLE_GAMES = {
 	"pattern-pulse": { maxRawScore: 12, scoreMultiplier: 90, xpMultiplier: 30 },
 };
 
-const CQ_DUEL_GAMES = {
-	"reaction-duel": {
-		winnerScore: 260,
-		winnerXp: 110,
-		loserScore: 90,
-		loserXp: 30,
-	},
-};
-
 const CQ_DAILY_MISSIONS = [
 	{
 		id: "daily-log",
@@ -114,14 +105,6 @@ const CQ_WEEKLY_CHALLENGES = [
 		target: 4,
 		rewardLabel: "+2 Prestige Pings",
 		metric: (engagement) => engagement.games7d,
-	},
-	{
-		id: "weekly-rivalry",
-		title: "Rivalry Loop",
-		description: "Spiele 2 Duels in den letzten 7 Tagen.",
-		target: 2,
-		rewardLabel: "+1 Duel Badge Pulse",
-		metric: (engagement) => engagement.duels7d,
 	},
 ];
 
@@ -1112,79 +1095,6 @@ app.post("/api/cq/games/single", async (request, response) => {
 	}
 });
 
-app.post("/api/cq/games/duel", async (request, response) => {
-	try {
-		const session = await requireCqPlayer(request, response);
-		if (!session) {
-			return;
-		}
-
-		const payload = normalizeDuelGamePayload(request.body);
-		if (!payload) {
-			response.status(400).json({ error: "Ungültiges Duel-Ergebnis." });
-			return;
-		}
-
-		if (payload.opponentPlayerId === session.playerId) {
-			response.status(400).json({ error: "Du kannst nicht gegen dich selbst spielen." });
-			return;
-		}
-
-		if (payload.winnerPlayerId !== session.playerId && payload.winnerPlayerId !== payload.opponentPlayerId) {
-			response.status(400).json({ error: "Der Sieger muss einer der beiden Spieler sein." });
-			return;
-		}
-
-		const opponentResult = await pool.query("SELECT id FROM cq_players WHERE id = $1", [payload.opponentPlayerId]);
-		if (!opponentResult.rows[0]) {
-			response.status(404).json({ error: "Gegner nicht gefunden." });
-			return;
-		}
-
-		const rewards = CQ_DUEL_GAMES[payload.gameType];
-		const winnerId = payload.winnerPlayerId;
-		const loserId = winnerId === session.playerId ? payload.opponentPlayerId : session.playerId;
-		const client = await pool.connect();
-		try {
-			await client.query("BEGIN");
-			await client.query(
-				`INSERT INTO cq_game_results (
-					id, game_type, mode, primary_player_id, opponent_player_id, winner_player_id,
-					primary_points, opponent_points, primary_xp, opponent_xp, payload, created_at
-				 ) VALUES ($1, $2, 'duel', $3, $4, $5, $6, $7, $8, $9, $10::jsonb, NOW())`,
-				[
-					crypto.randomUUID(),
-					payload.gameType,
-					session.playerId,
-					payload.opponentPlayerId,
-					winnerId,
-					winnerId === session.playerId ? rewards.winnerScore : rewards.loserScore,
-					winnerId === payload.opponentPlayerId ? rewards.winnerScore : rewards.loserScore,
-					winnerId === session.playerId ? rewards.winnerXp : rewards.loserXp,
-					winnerId === payload.opponentPlayerId ? rewards.winnerXp : rewards.loserXp,
-					JSON.stringify({ summary: payload.summary || "" }),
-				],
-			);
-			await applyDuelGameRewards(client, winnerId, rewards.winnerScore, rewards.winnerXp, true);
-			await applyDuelGameRewards(client, loserId, rewards.loserScore, rewards.loserXp, false);
-			await recalculateCqPlayerStats(client, session.playerId);
-			await recalculateCqPlayerStats(client, payload.opponentPlayerId);
-			await refreshCqPlacements(client);
-			await client.query("COMMIT");
-		} catch (error) {
-			await client.query("ROLLBACK");
-			throw error;
-		} finally {
-			client.release();
-		}
-
-		const profile = await loadCqPlayerProfile(session.playerId);
-		response.status(201).json({ currentUser: profile, winnerPlayerId: winnerId });
-	} catch (error) {
-		sendServerError(response, error);
-	}
-});
-
 app.get("*", (_request, response) => {
 	response.sendFile(path.join(publicDir, "index.html"));
 });
@@ -1696,17 +1606,6 @@ function normalizeSingleGamePayload(body) {
 		rawScore: Math.round(rawScore),
 		summary,
 	};
-}
-
-function normalizeDuelGamePayload(body) {
-	const gameType = String(body?.gameType || "").trim();
-	const opponentPlayerId = String(body?.opponentPlayerId || "").trim();
-	const winnerPlayerId = String(body?.winnerPlayerId || "").trim();
-	const summary = String(body?.summary || "").trim().slice(0, 180);
-	if (!CQ_DUEL_GAMES[gameType] || !opponentPlayerId || !winnerPlayerId) {
-		return null;
-	}
-	return { gameType, opponentPlayerId, winnerPlayerId, summary };
 }
 
 function normalizeSocialRatingPayload(body) {
@@ -2445,11 +2344,6 @@ async function loadCqPlayerEngagement(playerId) {
 			`SELECT
 				COUNT(*) FILTER (WHERE created_at >= date_trunc('day', NOW()))::int AS games_today,
 				COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int AS games_7d,
-				COUNT(*) FILTER (
-					WHERE mode = 'duel'
-					  AND created_at >= NOW() - INTERVAL '7 days'
-					  AND (primary_player_id = $1 OR opponent_player_id = $1)
-				)::int AS duels_7d,
 				MAX(created_at) AS last_game_at
 			 FROM cq_game_results
 			 WHERE primary_player_id = $1 OR opponent_player_id = $1`,
@@ -2473,7 +2367,6 @@ async function loadCqPlayerEngagement(playerId) {
 		typeVarietyToday: Number(entry.type_variety_today) || 0,
 		gamesToday: Number(game.games_today) || 0,
 		games7d: Number(game.games_7d) || 0,
-		duels7d: Number(game.duels_7d) || 0,
 		lastActivityAt: lastActivityAt ? lastActivityAt.toISOString() : null,
 	};
 }
@@ -2673,19 +2566,6 @@ async function refreshCqPlacements(client) {
 	}
 }
 
-async function applyDuelGameRewards(client, playerId, scoreGain, xpGain, isWinner) {
-	await client.query(
-		`UPDATE cq_players
-		 SET game_sessions = game_sessions + 1,
-		     game_wins = game_wins + $2,
-		     game_score = game_score + $3,
-		     game_xp = game_xp + $4,
-		     updated_at = NOW()
-		 WHERE id = $1`,
-		[playerId, isWinner ? 1 : 0, scoreGain, xpGain],
-	);
-}
-
 function buildCqStats(entries, bonusStats = {}) {
 	const uniqueConnections = new Set(entries.map((entry) => entry.name.toLowerCase())).size;
 	const typeVariety = new Set(entries.map((entry) => entry.type)).size;
@@ -2780,7 +2660,7 @@ function buildCqRecommendations(currentUser, engagement) {
 		cards.push({
 			id: "rec-game",
 			title: "Arcade-Loop heute noch offen",
-			copy: "Ein kurzer Sprint oder ein Duel bringt sofort Game-Score, Feed-Aktivitaet und Weekly-Fortschritt.",
+			copy: "Ein kurzer Sprint oder ein Pattern-Run bringt sofort Game-Score, Feed-Aktivitaet und Weekly-Fortschritt.",
 			tag: "Arcade",
 		});
 	}
