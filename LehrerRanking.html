@@ -36,6 +36,13 @@
 			</div>
 		</header>
 
+		<div class="school-filter-bar">
+			<label for="school-select" class="school-filter-label">Schule</label>
+			<select id="school-select" class="school-select">
+				<option value="">Alle Schulen &amp; Standardlehrer</option>
+			</select>
+		</div>
+
 		<main class="layout-grid">
 			<section class="battle-panel">
 				<div class="panel-head">
@@ -97,14 +104,30 @@
 						</form>
 						<button type="button" id="logout-button" class="secondary-button secondary-button-compact" hidden>Abmelden</button>
 					</div>
-				</section>
-
+				<div id="school-admin-body" hidden>
+					<div class="school-admin-head">
+						<p class="kicker">Schulen</p>
+						<h3>Schulverwaltung</h3>
+					</div>
+					<form id="school-form" class="school-form">
+						<label class="sr-only" for="school-name-input">Name der Schule</label>
+						<input id="school-name-input" type="text" placeholder="Name der Schule" maxlength="60" autocomplete="off">
+						<button type="submit" class="primary-button">Schule anlegen</button>
+					</form>
+					<ul id="school-list" class="school-list"></ul>
+				</div>
 				<section class="panel control-panel">
 					<div class="panel-head compact">
 						<div>
 							<p class="kicker">Daten</p>
 							<h2>Profile bearbeiten</h2>
 						</div>
+					</div>
+					<div id="control-school-selector" class="control-school-selector" hidden>
+						<label for="teacher-school-select" class="control-school-label">Schule für diese Lehrer</label>
+						<select id="teacher-school-select" class="school-select">
+							<option value="">— Schule wählen —</option>
+						</select>
 					</div>
 					<p class="panel-note">
 						Du kannst entweder `Name | Fach | Bild-URL` oder Rohlisten wie `Name (Kürzel), Fach/Fach` pro Zeile einfügen.

@@ -529,6 +529,140 @@ textarea {
 	}
 	}
 
+/* ── School filter bar ── */
+.school-filter-bar {
+	display: flex;
+	align-items: center;
+	gap: 0.85rem;
+	margin-bottom: 1.25rem;
+	padding: 0.85rem 1.15rem;
+	background: var(--panel);
+	border: 1px solid rgba(255, 255, 255, 0.5);
+	border-radius: 22px;
+	backdrop-filter: blur(16px);
+}
+
+.school-filter-label {
+	font-size: 0.78rem;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--muted);
+	white-space: nowrap;
+}
+
+.school-select {
+	flex: 1;
+	padding: 0.65rem 0.9rem;
+	border-radius: 14px;
+	border: 1px solid var(--line);
+	background: rgba(255, 255, 255, 0.85);
+	color: #050505;
+	font: inherit;
+	font-size: 0.95rem;
+	font-weight: 600;
+	cursor: pointer;
+	appearance: auto;
+}
+
+.school-select:focus {
+	outline: 2px solid #1f365c;
+	outline-offset: 2px;
+}
+
+/* ── Admin school management ── */
+.school-admin-head {
+	margin: 1rem 0 0.6rem;
+	padding-top: 0.85rem;
+	border-top: 1px solid var(--line);
+}
+
+.school-admin-head .kicker {
+	margin-bottom: 0.25rem;
+}
+
+.school-admin-head h3 {
+	font-family: "Anton", sans-serif;
+	font-size: 1.35rem;
+	font-weight: 400;
+	letter-spacing: 0.03em;
+	margin: 0;
+}
+
+.school-form {
+	display: grid;
+	gap: 0.6rem;
+	margin-top: 0.75rem;
+}
+
+.school-form input {
+	width: 100%;
+	padding: 0.82rem 1rem;
+	border-radius: 16px;
+	border: 1px solid var(--line);
+	background: rgba(255, 255, 255, 0.85);
+	color: #050505;
+}
+
+.school-list {
+	margin: 0.85rem 0 0;
+	padding: 0;
+	list-style: none;
+	display: grid;
+	gap: 0.55rem;
+}
+
+.school-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.65rem 0.9rem;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.55);
+	border: 1px solid var(--line);
+}
+
+.school-item-name {
+	font-weight: 700;
+	font-size: 0.95rem;
+}
+
+.school-delete-btn {
+	padding: 0.45rem 0.75rem;
+	font-size: 0.82rem;
+	border-radius: 12px;
+}
+
+.empty-school-item {
+	padding: 0.75rem 0.9rem;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.45);
+	border: 1px solid var(--line);
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+
+/* ── Control panel school selector ── */
+.control-school-selector {
+	margin-bottom: 0.6rem;
+}
+
+.control-school-label {
+	display: block;
+	font-size: 0.8rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--muted);
+	margin-bottom: 0.4rem;
+}
+
+.control-school-selector .school-select {
+	width: 100%;
+	margin-bottom: 0.2rem;
+}
+
 @media (max-width: 820px) {
 	.battle-stage {
 		grid-template-columns: 1fr;

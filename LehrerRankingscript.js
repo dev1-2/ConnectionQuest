@@ -27,6 +27,13 @@ const elements = {
 	controlPanel: document.querySelector(".control-panel"),
 	controlLockNote: document.querySelector("#control-lock-note"),
 	purgeButton: document.querySelector("#purge-button"),
+	schoolSelect: document.querySelector("#school-select"),
+	schoolAdminBody: document.querySelector("#school-admin-body"),
+	schoolForm: document.querySelector("#school-form"),
+	schoolNameInput: document.querySelector("#school-name-input"),
+	schoolList: document.querySelector("#school-list"),
+	controlSchoolSelector: document.querySelector("#control-school-selector"),
+	teacherSchoolSelect: document.querySelector("#teacher-school-select"),
 };
 
 const state = {
@@ -38,6 +45,8 @@ const state = {
 	isAdmin: false,
 	adminConfigured: false,
 	adminPanelOpen: false,
+	schoolId: null,
+	schools: [],
 };
 
 elements.leftCard.addEventListener("click", () => handleVote("left"));
@@ -48,6 +57,8 @@ elements.adminForm.addEventListener("submit", handleLogin);
 elements.logoutButton.addEventListener("click", handleLogout);
 elements.adminToggle.addEventListener("click", toggleAdminPanel);
 elements.purgeButton.addEventListener("click", purgeDatabase);
+elements.schoolSelect.addEventListener("change", handleSchoolChange);
+elements.schoolForm.addEventListener("submit", handleAddSchool);
 window.addEventListener("keydown", handleKeyboardVote);
 
 initializeApp();
@@ -56,7 +67,10 @@ async function initializeApp() {
 	setBusy(true);
 	try {
 		const payload = await fetchJson("/api/state");
+		state.schools = payload.schools || [];
+		state.schoolId = payload.schoolId || null;
 		applyServerState(payload.state, payload.auth);
+		renderSchoolSelectors();
 		render();
 	} catch (error) {
 		renderError(error.message);
@@ -78,8 +92,10 @@ async function handleVote(side) {
 				leftId: state.currentPair.left.id,
 				rightId: state.currentPair.right.id,
 				side,
+				schoolId: state.schoolId,
 			}),
 		});
+		if (payload.schools) state.schools = payload.schools;
 		applyServerState(payload.state, payload.auth);
 		render(payload.message);
 	} catch (error) {
@@ -95,6 +111,12 @@ async function applyTeacherList() {
 		return;
 	}
 
+	const schoolId = elements.teacherSchoolSelect?.value || null;
+	if (!schoolId) {
+		renderError("Bitte zuerst eine Schule auswählen, bevor Profile übernommen werden.");
+		return;
+	}
+
 	const teachers = parseTeacherInput(elements.teacherInput.value);
 	if (teachers.length < 2) {
 		renderError("Mindestens zwei Profile werden benötigt.");
@@ -105,9 +127,12 @@ async function applyTeacherList() {
 	try {
 		const payload = await fetchJson("/api/teachers", {
 			method: "PUT",
-			body: JSON.stringify({ teachers }),
+			body: JSON.stringify({ teachers, schoolId }),
 		});
+		if (payload.schools) state.schools = payload.schools;
+		state.schoolId = schoolId;
 		applyServerState(payload.state, payload.auth);
+		renderSchoolSelectors();
 		render(payload.message);
 	} catch (error) {
 		renderError(error.message);
@@ -132,8 +157,9 @@ async function resetTournament() {
 	try {
 		const payload = await fetchJson("/api/reset", {
 			method: "POST",
-			body: JSON.stringify({ teachers }),
+			body: JSON.stringify({ teachers, schoolId: state.schoolId }),
 		});
+		if (payload.schools) state.schools = payload.schools;
 		applyServerState(payload.state, payload.auth);
 		render(payload.message);
 	} catch (error) {
@@ -158,8 +184,10 @@ async function purgeDatabase() {
 
 	setBusy(true);
 	try {
-		const payload = await fetchJson("/api/admin/purge", { method: "POST" });
+		const payload = await fetchJson("/api/admin/purge", { method: "POST", body: JSON.stringify({ schoolId: state.schoolId }) });
+		if (payload.schools) state.schools = payload.schools;
 		applyServerState(payload.state, payload.auth);
+		renderSchoolSelectors();
 		render(payload.message);
 	} catch (error) {
 		renderError(error.message);
@@ -188,7 +216,9 @@ async function handleLogin(event) {
 		});
 		state.adminPanelOpen = true;
 		elements.adminPassword.value = "";
+		if (payload.schools) state.schools = payload.schools;
 		applyServerState(payload.state, payload.auth);
+		renderSchoolSelectors();
 		render(payload.message);
 	} catch (error) {
 		renderError(error.message);
@@ -217,6 +247,69 @@ async function handleLogout() {
 	}
 }
 
+async function handleSchoolChange() {
+	const schoolId = elements.schoolSelect.value || null;
+	state.schoolId = schoolId;
+	setBusy(true);
+	try {
+		const url = schoolId ? `/api/state?school=${encodeURIComponent(schoolId)}` : "/api/state";
+		const payload = await fetchJson(url);
+		if (payload.schools) state.schools = payload.schools;
+		applyServerState(payload.state, payload.auth);
+		render();
+	} catch (error) {
+		renderError(error.message);
+	} finally {
+		setBusy(false);
+	}
+}
+
+async function handleAddSchool(event) {
+	event.preventDefault();
+	const name = elements.schoolNameInput?.value.trim();
+	if (!name) {
+		return;
+	}
+	setBusy(true);
+	try {
+		const payload = await fetchJson("/api/schools", {
+			method: "POST",
+			body: JSON.stringify({ name }),
+		});
+		state.schools = payload.schools || [];
+		elements.schoolNameInput.value = "";
+		renderSchoolSelectors();
+		render();
+	} catch (error) {
+		renderError(error.message);
+	} finally {
+		setBusy(false);
+	}
+}
+
+async function handleDeleteSchool(schoolId) {
+	const school = state.schools.find((s) => s.id === schoolId);
+	if (!window.confirm(`Schule "${school?.name || schoolId}" wirklich löschen? Alle zugehörigen Lehrer werden ebenfalls gelöscht.`)) {
+		return;
+	}
+	setBusy(true);
+	try {
+		const payload = await fetchJson(`/api/schools/${encodeURIComponent(schoolId)}`, { method: "DELETE" });
+		state.schools = payload.schools || [];
+		if (state.schoolId === schoolId) {
+			state.schoolId = null;
+			const statePayload = await fetchJson("/api/state");
+			applyServerState(statePayload.state, statePayload.auth);
+		}
+		renderSchoolSelectors();
+		render();
+	} catch (error) {
+		renderError(error.message);
+	} finally {
+		setBusy(false);
+	}
+}
+
 function render(message) {
 	elements.teacherInput.value = formatTeacherInput(state.teachers);
 	elements.roundCount.textContent = String(state.rounds);
@@ -225,6 +318,55 @@ function render(message) {
 	renderBattle(message);
 	renderRanking();
 	updateControlsState();
+	renderSchoolLabel();
+}
+
+function renderSchoolLabel() {
+	const school = state.schools.find((s) => s.id === state.schoolId);
+	const label = school ? school.name : "Alle Schulen / Standardlehrer";
+	const heading = document.querySelector(".battle-panel .panel-head h2");
+	if (heading) {
+		heading.textContent = state.schoolId ? `Wähle links oder rechts — ${label}` : "Wähle links oder rechts";
+	}
+}
+
+function renderSchoolSelectors() {
+	const opts = state.schools
+		.map((s) => `<option value="${escapeHtml(s.id)}"${s.id === state.schoolId ? " selected" : ""}>${escapeHtml(s.name)}</option>`)
+		.join("");
+
+	elements.schoolSelect.innerHTML = `<option value=""${!state.schoolId ? " selected" : ""}>Alle Schulen &amp; Standardlehrer</option>${opts}`;
+
+	if (elements.teacherSchoolSelect) {
+		const currentEditorSchool = elements.teacherSchoolSelect.value;
+		elements.teacherSchoolSelect.innerHTML = `<option value="">— Schule wählen —</option>${opts}`;
+		if (currentEditorSchool) {
+			elements.teacherSchoolSelect.value = currentEditorSchool;
+		}
+	}
+
+	renderSchoolAdminList();
+}
+
+function renderSchoolAdminList() {
+	if (!elements.schoolList) {
+		return;
+	}
+	if (!state.schools.length) {
+		elements.schoolList.innerHTML = '<li class="empty-school-item">Noch keine Schulen angelegt.</li>';
+		return;
+	}
+	elements.schoolList.innerHTML = state.schools
+		.map(
+			(s) => `<li class="school-item">
+				<span class="school-item-name">${escapeHtml(s.name)}</span>
+				<button type="button" class="danger-button school-delete-btn" data-school-id="${escapeHtml(s.id)}">Löschen</button>
+			</li>`,
+		)
+		.join("");
+	elements.schoolList.querySelectorAll(".school-delete-btn").forEach((btn) => {
+		btn.addEventListener("click", () => handleDeleteSchool(btn.dataset.schoolId));
+	});
 }
 
 function renderAuthPanel() {
@@ -236,6 +378,8 @@ function renderAuthPanel() {
 		elements.adminToggle.hidden = true;
 		elements.logoutButton.hidden = true;
 		elements.purgeButton.hidden = true;
+		if (elements.schoolAdminBody) elements.schoolAdminBody.hidden = true;
+		if (elements.controlSchoolSelector) elements.controlSchoolSelector.hidden = true;
 		return;
 	}
 
@@ -247,10 +391,14 @@ function renderAuthPanel() {
 		elements.adminToggle.textContent = state.adminPanelOpen ? "Admin schließen" : "Admin öffnen";
 		elements.logoutButton.hidden = false;
 		elements.purgeButton.hidden = false;
+		if (elements.schoolAdminBody) elements.schoolAdminBody.hidden = !state.adminPanelOpen;
+		if (elements.controlSchoolSelector) elements.controlSchoolSelector.hidden = false;
 		return;
 	}
 
 	elements.purgeButton.hidden = true;
+	if (elements.schoolAdminBody) elements.schoolAdminBody.hidden = true;
+	if (elements.controlSchoolSelector) elements.controlSchoolSelector.hidden = true;
 
 	elements.authStatus.textContent = "Admin-Rechte sind für Bearbeiten und Reset erforderlich.";
 	elements.adminBody.hidden = !state.adminPanelOpen;

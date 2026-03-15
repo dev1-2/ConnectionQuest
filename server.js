@@ -167,12 +167,73 @@ app.get("/health", async (_request, response) => {
 	}
 });
 
-app.get("/api/state", async (request, response) => {
+app.get("/api/schools", async (_request, response) => {
 	try {
-		const state = await loadRuntimeState();
+		const schools = await loadSchools();
+		response.json({ schools });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.post("/api/schools", requireAdmin, async (request, response) => {
+	const name = String(request.body?.name || "").trim().slice(0, 120);
+	if (!name) {
+		response.status(400).json({ error: "Schulname ist erforderlich." });
+		return;
+	}
+	try {
+		const id = crypto.randomBytes(5).toString("hex");
+		const sortOrder = (await pool.query("SELECT COUNT(*)::int AS c FROM schools")).rows[0].c;
+		await pool.query("INSERT INTO schools (id, name, sort_order) VALUES ($1, $2, $3)", [id, name, sortOrder]);
+		const schools = await loadSchools();
+		response.json({ schools });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.delete("/api/schools/:schoolId", requireAdmin, async (request, response) => {
+	const { schoolId } = request.params;
+	if (!/^[a-f0-9]{10}$/.test(schoolId)) {
+		response.status(400).json({ error: "Ungültige Schul-ID." });
+		return;
+	}
+	const stateKey = `school_${schoolId}`;
+	const client = await pool.connect();
+	try {
+		await client.query("BEGIN");
+		await client.query("UPDATE app_state SET left_id = NULL, right_id = NULL WHERE state_key = $1", [stateKey]);
+		await client.query("DELETE FROM teachers WHERE school_id = $1", [schoolId]);
+		await client.query("DELETE FROM app_state WHERE state_key = $1", [stateKey]);
+		await client.query("DELETE FROM schools WHERE id = $1", [schoolId]);
+		await client.query("COMMIT");
+	} catch (error) {
+		await client.query("ROLLBACK");
+		throw error;
+	} finally {
+		client.release();
+	}
+	try {
+		const schools = await loadSchools();
+		response.json({ schools });
+	} catch (error) {
+		sendServerError(response, error);
+	}
+});
+
+app.get("/api/state", async (request, response) => {
+	const schoolId = request.query.school || null;
+	try {
+		const [state, schools] = await Promise.all([
+			schoolId ? loadRuntimeStateForSchool(schoolId) : loadRuntimeState(),
+			loadSchools(),
+		]);
 		response.json({
 			state: serializeState(state),
 			auth: buildAuthState(request),
+			schools,
+			schoolId,
 		});
 	} catch (error) {
 		sendServerError(response, error);
@@ -227,6 +288,11 @@ app.post("/api/admin/logout", async (request, response) => {
 });
 
 app.put("/api/teachers", requireAdmin, async (request, response) => {
+	const schoolId = request.body?.schoolId || null;
+	if (schoolId && !/^[a-f0-9]{10}$/.test(schoolId)) {
+		response.status(400).json({ error: "Ungültige Schul-ID." });
+		return;
+	}
 	try {
 		const teachers = normalizeTeacherPayload(request.body?.teachers);
 		if (teachers.length < 2) {
@@ -235,11 +301,21 @@ app.put("/api/teachers", requireAdmin, async (request, response) => {
 		}
 
 		const state = createStateFromTeachers(teachers);
-		await replaceRuntimeState(state);
+		if (schoolId) {
+			await replaceRuntimeStateForSchool(state, schoolId);
+		} else {
+			await replaceRuntimeState(state);
+		}
+		const [updatedState, schools] = await Promise.all([
+			schoolId ? loadRuntimeStateForSchool(schoolId) : loadRuntimeState(),
+			loadSchools(),
+		]);
 		response.json({
 			message: "Neue Profile übernommen.",
-			state: serializeState(state),
+			state: serializeState(updatedState),
 			auth: buildAuthState(request),
+			schools,
+			schoolId,
 		});
 	} catch (error) {
 		sendServerError(response, error);
@@ -247,20 +323,42 @@ app.put("/api/teachers", requireAdmin, async (request, response) => {
 });
 
 app.post("/api/reset", requireAdmin, async (request, response) => {
+	const schoolId = request.body?.schoolId || null;
+	if (schoolId && !/^[a-f0-9]{10}$/.test(schoolId)) {
+		response.status(400).json({ error: "Ungültige Schul-ID." });
+		return;
+	}
 	try {
 		const requestedTeachers = Array.isArray(request.body?.teachers) ? request.body.teachers : null;
-		const teachers = requestedTeachers ? normalizeTeacherPayload(requestedTeachers) : normalizeTeacherPayload((await loadRuntimeState()).teachers);
+		let teachers;
+		if (requestedTeachers) {
+			teachers = normalizeTeacherPayload(requestedTeachers);
+		} else if (schoolId) {
+			teachers = normalizeTeacherPayload((await loadRuntimeStateForSchool(schoolId)).teachers);
+		} else {
+			teachers = normalizeTeacherPayload((await loadRuntimeState()).teachers);
+		}
 		if (teachers.length < 2) {
 			response.status(400).json({ error: "Mindestens zwei Profile werden benötigt." });
 			return;
 		}
 
 		const state = createStateFromTeachers(teachers);
-		await replaceRuntimeState(state);
+		if (schoolId) {
+			await replaceRuntimeStateForSchool(state, schoolId);
+		} else {
+			await replaceRuntimeState(state);
+		}
+		const [updatedState, schools] = await Promise.all([
+			schoolId ? loadRuntimeStateForSchool(schoolId) : loadRuntimeState(),
+			loadSchools(),
+		]);
 		response.json({
 			message: "Turnier wurde zurückgesetzt.",
-			state: serializeState(state),
+			state: serializeState(updatedState),
 			auth: buildAuthState(request),
+			schools,
+			schoolId,
 		});
 	} catch (error) {
 		sendServerError(response, error);
@@ -268,12 +366,22 @@ app.post("/api/reset", requireAdmin, async (request, response) => {
 });
 
 app.post("/api/admin/purge", requireAdmin, async (request, response) => {
+	const schoolId = request.body?.schoolId || null;
+	if (schoolId && !/^[a-f0-9]{10}$/.test(schoolId)) {
+		response.status(400).json({ error: "Ungültige Schul-ID." });
+		return;
+	}
+	const stateKey = schoolId ? `school_${schoolId}` : "main";
 	try {
 		const client = await pool.connect();
 		try {
 			await client.query("BEGIN");
-			await client.query("UPDATE app_state SET left_id = NULL, right_id = NULL, queue = '[]'::jsonb, rounds = 0, updated_at = NOW() WHERE state_key = 'main'");
-			await client.query("DELETE FROM teachers");
+			await client.query("UPDATE app_state SET left_id = NULL, right_id = NULL, queue = '[]'::jsonb, rounds = 0, updated_at = NOW() WHERE state_key = $1", [stateKey]);
+			if (schoolId) {
+				await client.query("DELETE FROM teachers WHERE school_id = $1", [schoolId]);
+			} else {
+				await client.query("DELETE FROM teachers WHERE school_id IS NULL");
+			}
 			await client.query("COMMIT");
 		} catch (error) {
 			await client.query("ROLLBACK");
@@ -282,11 +390,16 @@ app.post("/api/admin/purge", requireAdmin, async (request, response) => {
 			client.release();
 		}
 
-		const state = await loadRuntimeState();
+		const [state, schools] = await Promise.all([
+			schoolId ? loadRuntimeStateForSchool(schoolId) : loadRuntimeState(),
+			loadSchools(),
+		]);
 		response.json({
-			message: "Datenbank wurde vollständig gelöscht.",
+			message: "Daten wurden gelöscht.",
 			state: serializeState(state),
 			auth: buildAuthState(request),
+			schools,
+			schoolId,
 		});
 	} catch (error) {
 		sendServerError(response, error);
@@ -295,7 +408,11 @@ app.post("/api/admin/purge", requireAdmin, async (request, response) => {
 
 app.post("/api/vote", async (request, response) => {
 	try {
-		const { leftId, rightId, side } = request.body || {};
+		const { leftId, rightId, side, schoolId } = request.body || {};
+		if (schoolId && !/^[a-f0-9]{10}$/.test(schoolId)) {
+			response.status(400).json({ error: "Ungültige Schul-ID." });
+			return;
+		}
 		if (side !== "left" && side !== "right") {
 			response.status(400).json({ error: "Ungültige Auswahl." });
 			return;
@@ -307,6 +424,7 @@ app.post("/api/vote", async (request, response) => {
 
 		const winnerId = side === "left" ? leftId : rightId;
 		const loserId = side === "left" ? rightId : leftId;
+		const stateKey = schoolId ? `school_${schoolId}` : "main";
 
 		const client = await pool.connect();
 		let winnerRow, loserRow;
@@ -321,7 +439,8 @@ app.post("/api/vote", async (request, response) => {
 				[loserId],
 			);
 			await client.query(
-				"UPDATE app_state SET rounds = rounds + 1, updated_at = NOW() WHERE state_key = 'main'",
+				"UPDATE app_state SET rounds = rounds + 1, updated_at = NOW() WHERE state_key = $1",
+				[stateKey],
 			);
 			await client.query("COMMIT");
 			winnerRow = winnerResult.rows[0];
@@ -338,11 +457,16 @@ app.post("/api/vote", async (request, response) => {
 			return;
 		}
 
-		const state = await loadRuntimeState();
+		const [state, schools] = await Promise.all([
+			schoolId ? loadRuntimeStateForSchool(schoolId) : loadRuntimeState(),
+			loadSchools(),
+		]);
 		response.json({
 			message: `${winnerRow.name} gewinnt gegen ${loserRow.name}.`,
 			state: serializeState(state),
 			auth: buildAuthState(request),
+			schools,
+			schoolId: schoolId || null,
 		});
 	} catch (error) {
 		sendServerError(response, error);
@@ -1262,6 +1386,16 @@ async function initializeDatabase() {
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS status_tier VARCHAR(24) NOT NULL DEFAULT 'standard'");
 	await pool.query("ALTER TABLE cq_players ADD COLUMN IF NOT EXISTS inner_circle_joined_at TIMESTAMPTZ");
 
+	await pool.query(`
+		CREATE TABLE IF NOT EXISTS schools (
+			id TEXT PRIMARY KEY,
+			name VARCHAR(120) NOT NULL,
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)
+	`);
+	await pool.query("ALTER TABLE teachers ADD COLUMN IF NOT EXISTS school_id TEXT REFERENCES schools(id) ON DELETE SET NULL");
+
 	await pool.query("DELETE FROM cq_sessions WHERE expires_at <= NOW()");
 
 	await pool.query(
@@ -1277,13 +1411,13 @@ async function initializeDatabase() {
 	}
 }
 
-async function loadRuntimeState() {
-	const [teachersResult, appStateResult] = await Promise.all([
-		pool.query("SELECT * FROM teachers ORDER BY sort_order ASC, name ASC"),
-		pool.query("SELECT * FROM app_state WHERE state_key = 'main'"),
-	]);
+async function loadSchools() {
+	const result = await pool.query("SELECT id, name FROM schools ORDER BY sort_order ASC, name ASC");
+	return result.rows;
+}
 
-	const teachers = teachersResult.rows.map((row) => ({
+function mapTeacherRow(row) {
+	return {
 		id: row.id,
 		name: row.name,
 		subject: row.subject,
@@ -1291,8 +1425,16 @@ async function loadRuntimeState() {
 		wins: Number(row.wins),
 		losses: Number(row.losses),
 		matches: Number(row.matches),
-	}));
+	};
+}
 
+async function loadRuntimeState() {
+	const [teachersResult, appStateResult] = await Promise.all([
+		pool.query("SELECT * FROM teachers WHERE school_id IS NULL ORDER BY sort_order ASC, name ASC"),
+		pool.query("SELECT * FROM app_state WHERE state_key = 'main'"),
+	]);
+
+	const teachers = teachersResult.rows.map(mapTeacherRow);
 	const appState = appStateResult.rows[0] || { rounds: 0 };
 
 	return {
@@ -1302,12 +1444,62 @@ async function loadRuntimeState() {
 	};
 }
 
+async function loadRuntimeStateForSchool(schoolId) {
+	const stateKey = `school_${schoolId}`;
+	const [teachersResult, appStateResult] = await Promise.all([
+		pool.query("SELECT * FROM teachers WHERE school_id = $1 ORDER BY sort_order ASC, name ASC", [schoolId]),
+		pool.query("SELECT * FROM app_state WHERE state_key = $1", [stateKey]),
+	]);
+
+	const teachers = teachersResult.rows.map(mapTeacherRow);
+	const appState = appStateResult.rows[0] || { rounds: 0 };
+
+	return {
+		teachers,
+		rounds: Number(appState.rounds) || 0,
+		currentPair: generateRandomPair(teachers),
+	};
+}
+
+async function replaceRuntimeStateForSchool(state, schoolId) {
+	const stateKey = `school_${schoolId}`;
+	const client = await pool.connect();
+	try {
+		await client.query("BEGIN");
+		await client.query("UPDATE app_state SET left_id = NULL, right_id = NULL WHERE state_key = $1", [stateKey]);
+		await client.query("DELETE FROM teachers WHERE school_id = $1", [schoolId]);
+
+		for (const [index, teacher] of state.teachers.entries()) {
+			await client.query(
+				`INSERT INTO teachers (id, name, subject, image, wins, losses, matches, sort_order, school_id)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+				[teacher.id, teacher.name, teacher.subject, teacher.image, teacher.wins, teacher.losses, teacher.matches, index, schoolId],
+			);
+		}
+
+		await client.query(
+			`INSERT INTO app_state (state_key, rounds, queue, left_id, right_id)
+			 VALUES ($1, 0, '[]'::jsonb, NULL, NULL)
+			 ON CONFLICT (state_key) DO UPDATE
+			 SET rounds = 0, queue = '[]'::jsonb, left_id = NULL, right_id = NULL, updated_at = NOW()`,
+			[stateKey],
+		);
+
+		await client.query("COMMIT");
+	} catch (error) {
+		await client.query("ROLLBACK");
+		throw error;
+	} finally {
+		client.release();
+	}
+}
+
 async function replaceRuntimeState(state) {
 	const client = await pool.connect();
 	try {
 		await client.query("BEGIN");
 		await client.query("UPDATE app_state SET left_id = NULL, right_id = NULL, queue = '[]'::jsonb, updated_at = NOW() WHERE state_key = 'main'");
-		await client.query("DELETE FROM teachers");
+		await client.query("DELETE FROM teachers WHERE school_id IS NULL");
 
 		for (const [index, teacher] of state.teachers.entries()) {
 			await client.query(
@@ -1360,7 +1552,7 @@ function normalizeTeacherPayload(teachers) {
 		.filter((teacher) => teacher.name.length > 0)
 		.slice(0, 200)
 		.map((teacher, index) => ({
-			id: (index + 1).toString(36),
+			id: crypto.randomBytes(5).toString("hex"),
 			name: teacher.name || `Profil ${index + 1}`,
 			subject: teacher.subject,
 			image: teacher.image,
