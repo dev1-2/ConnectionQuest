@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#050505">
+	<title>Snake Escape – CQ Games</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="SnakeGame.css">
+</head>
+<body>
+	<div class="shell">
+		<header class="game-header">
+			<div class="header-left">
+				<a href="Games.html" class="back-link">← Games</a>
+				<div>
+					<p class="eyebrow">CQ ARCADE</p>
+					<h1>Snake Escape</h1>
+				</div>
+			</div>
+			<div class="player-badge">
+				<p class="badge-name" id="badge-name">Nicht eingeloggt</p>
+				<p class="badge-score" id="badge-score">CQ Score: –</p>
+			</div>
+		</header>
+
+		<div class="game-wrap">
+			<div class="game-panel">
+				<div class="hud">
+					<div class="hud-cell">
+						<span class="hud-label">SCORE</span>
+						<strong class="hud-val" id="hud-score">0</strong>
+					</div>
+					<div class="hud-cell">
+						<span class="hud-label">HIGHSCORE</span>
+						<strong class="hud-val hud-high" id="hud-high">0</strong>
+					</div>
+					<div class="hud-cell">
+						<span class="hud-label">LEVEL</span>
+						<strong class="hud-val hud-level" id="hud-level">1</strong>
+					</div>
+					<div class="hud-cell">
+						<span class="hud-label">LEBEN</span>
+						<span class="lives" id="hud-lives">♥♥♥</span>
+					</div>
+				</div>
+
+				<div class="canvas-frame">
+					<canvas id="game-canvas" width="576" height="432"></canvas>
+					<div class="overlay" id="overlay">
+						<div class="overlay-box">
+							<h2 id="overlay-title">Snake Escape</h2>
+							<p id="overlay-copy">Fresse Äpfel. Wachse. Überlebe.<br>Pfeiltasten, WASD oder D-Pad.</p>
+							<button type="button" id="overlay-btn" class="start-btn">SPIELEN</button>
+							<p id="overlay-sub" class="overlay-sub"></p>
+						</div>
+					</div>
+				</div>
+
+				<div class="mobile-controls" aria-label="Steuerung">
+					<button type="button" class="dpad-btn" id="btn-up" aria-label="Hoch">▲</button>
+					<div class="dpad-row">
+						<button type="button" class="dpad-btn" id="btn-left" aria-label="Links">◀</button>
+						<button type="button" class="dpad-btn" id="btn-down" aria-label="Runter">▼</button>
+						<button type="button" class="dpad-btn" id="btn-right" aria-label="Rechts">▶</button>
+					</div>
+				</div>
+			</div>
+
+			<aside class="info-panel">
+				<section class="info-card">
+					<p class="eyebrow">Regeln</p>
+					<ul class="rules-list">
+						<li><span class="rule-icon">🍎</span> Normaler Apfel = +10 × Level</li>
+						<li><span class="rule-icon">⭐</span> Goldener Apfel = +50 × Level (12 Ticks)</li>
+						<li><span class="rule-icon">💀</span> Wand oder Selbstkollision = Leben –1</li>
+						<li><span class="rule-icon">⚡</span> Alle 5 Äpfel: Level + Geschwindigkeit ↑</li>
+						<li><span class="rule-icon">♥</span> 3 Leben, dann Game Over</li>
+					</ul>
+				</section>
+
+				<section class="info-card">
+					<p class="eyebrow">CQ Rewards</p>
+					<p class="info-copy" id="rewards-copy">Login in ConnectionQuest erforderlich für Score-Sync.</p>
+				</section>
+
+				<section class="info-card">
+					<p class="eyebrow">Run-Log</p>
+					<div id="run-log-list" class="run-log-list">
+						<p class="run-empty">Noch kein Run.</p>
+					</div>
+				</section>
+			</aside>
+		</div>
+	</div>
+
+	<script src="SnakeGame.js"></script>
+</body>
+</html>

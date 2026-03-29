@@ -51,12 +51,51 @@ function renderLeaderboardPage() {
 
 function renderCurrentPlayer(rankedUsers, currentUserId) {
 	const current = rankedUsers.find((entry) => entry.id === currentUserId);
-	document.querySelector("#current-player-name").textContent = current ? current.handle : "Kein Spieler aktiv";
-	document.querySelector("#current-player-copy").textContent = current
-		? `Aktuell markiert im Ranking mit Platz ${current.placement}.`
-		: "Logge dich in Connection Quest ein, damit dein Profil markiert wird.";
-	document.querySelector("#current-player-score").textContent = String(current?.stats.score || 0);
-	document.querySelector("#current-player-level").textContent = String(current?.stats.level || 1);
+	const nameEl = document.querySelector("#current-player-name");
+	const copyEl = document.querySelector("#current-player-copy");
+	const scoreEl = document.querySelector("#current-player-score");
+	const levelEl = document.querySelector("#current-player-level");
+	const rankEl = document.querySelector("#current-player-rank");
+	const rivalBanner = document.querySelector("#rivalry-banner");
+
+	nameEl.textContent = current ? current.handle.toUpperCase() : "KEIN SPIELER AKTIV";
+	copyEl.textContent = current
+		? `EREBOS hat dich lokalisiert. Du stehst auf Platz #${current.placement} der Hierarchie.`
+		: "Betritt das Spiel, um deinen Rang in der Hierarchie zu sehen.";
+	scoreEl.textContent = String(current?.stats.score || 0);
+	levelEl.textContent = String(toRomanNumeral(current?.stats.level || 1));
+	rankEl.textContent = current ? `#${current.placement}` : "—";
+
+	if (current && rivalBanner) {
+		rivalBanner.hidden = false;
+		const idx = rankedUsers.findIndex((e) => e.id === currentUserId);
+		const above = rankedUsers[idx - 1];
+		const below = rankedUsers[idx + 1];
+
+		const aboveNameEl = document.querySelector("#rival-above-name");
+		const aboveGapEl = document.querySelector("#rival-above-gap");
+		const belowNameEl = document.querySelector("#rival-below-name");
+		const belowGapEl = document.querySelector("#rival-below-gap");
+
+		if (aboveNameEl) aboveNameEl.textContent = above ? above.handle.toUpperCase() : "NIEMAND DARÜBER";
+		if (aboveGapEl && above) aboveGapEl.textContent = `${above.stats.score - current.stats.score} MACHT ÜBERLEGEN`;
+		if (aboveGapEl && !above) aboveGapEl.textContent = "DU BIST AN DER SPITZE";
+
+		if (belowNameEl) belowNameEl.textContent = below ? below.handle.toUpperCase() : "NIEMAND DARUNTER";
+		if (belowGapEl && below) belowGapEl.textContent = `${current.stats.score - below.stats.score} MACHT VOR IHM`;
+		if (belowGapEl && !below) belowGapEl.textContent = "DU BIST AM BODEN DER HIERARCHIE";
+	} else if (rivalBanner) {
+		rivalBanner.hidden = true;
+	}
+}
+
+function toRomanNumeral(n) {
+	const map = [[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+	let result = "";
+	for (const [val, sym] of map) {
+		while (n >= val) { result += sym; n -= val; }
+	}
+	return result || "I";
 }
 
 function renderSummary(rankedUsers) {
@@ -73,7 +112,7 @@ function renderPodium(rankedUsers, currentUserId) {
 	podium.classList.toggle("empty-state", rankedUsers.length === 0);
 
 	if (!rankedUsers.length) {
-		podium.textContent = "Noch keine Spieler vorhanden.";
+		podium.textContent = "EREBOS hat noch niemanden als würdig eingestuft.";
 		return;
 	}
 
@@ -83,9 +122,9 @@ function renderPodium(rankedUsers, currentUserId) {
 		item.innerHTML = `
 			<strong class="podium-rank">#${entry.placement}</strong>
 			<div class="podium-copy">
-				<h3>${escapeHtml(entry.handle)}</h3>
-				<p>${entry.stats.score} Score • Level ${entry.stats.level}</p>
-				<p>${entry.stats.totalEntries} Interaktionen • ${entry.stats.gameWins || 0} Game Wins • ${entry.stats.unlockedAchievements} Badges</p>
+				<h3>${escapeHtml(entry.handle.toUpperCase())}</h3>
+				<p>${entry.stats.score} MACHT • RANG ${toRomanNumeral(entry.stats.level)}</p>
+				<p>${entry.stats.totalEntries} ZÜGE • ${entry.stats.gameWins || 0} ARENAKAMPF-SIEGE • ${entry.stats.unlockedAchievements} PRÜFUNGEN</p>
 			</div>
 		`;
 		podium.appendChild(item);
@@ -99,7 +138,7 @@ function renderHighlights(highlights) {
 	node.classList.toggle("empty-state", items.length === 0);
 
 	if (!items.length) {
-		node.textContent = "Noch keine Highlights vorhanden.";
+		node.textContent = "EREBOS hat noch keinen Fokus gesetzt.";
 		return;
 	}
 
@@ -121,7 +160,7 @@ function renderFeed(feedItems) {
 	node.classList.toggle("empty-state", feedItems.length === 0);
 
 	if (!feedItems.length) {
-		node.textContent = "Noch keine Feed-Daten vorhanden.";
+		node.textContent = "Keine aktuellen Bewegungen. Das Netzwerk ist still.";
 		return;
 	}
 
@@ -131,7 +170,7 @@ function renderFeed(feedItems) {
 		card.innerHTML = `
 			<div class="feed-head">
 				<h3>${escapeHtml(item.title)}</h3>
-				<span class="feed-tag">${item.type === "game" ? "Game" : "Log"}</span>
+				<span class="feed-tag">${item.type === "game" ? "ARENA" : "PROTOKOLL"}</span>
 			</div>
 			<p>${escapeHtml(item.detail || "")}</p>
 			<p>${formatRelativeTime(item.occurredAt)}</p>
@@ -146,7 +185,7 @@ function renderList(rankedUsers, currentUserId) {
 	list.classList.toggle("empty-state", rankedUsers.length === 0);
 
 	if (!rankedUsers.length) {
-		list.textContent = state.searchTerm ? "Keine Spieler passen zur Suche." : "Noch keine Spieler vorhanden.";
+		list.textContent = state.searchTerm ? "EREBOS findet niemanden unter diesem Namen." : "Die Hierarchie ist leer. EREBOS wartet.";
 		return;
 	}
 
@@ -156,9 +195,9 @@ function renderList(rankedUsers, currentUserId) {
 		item.innerHTML = `
 			<div class="leaderboard-rank">#${entry.placement}</div>
 			<div class="leaderboard-copy">
-				<h3>${escapeHtml(entry.handle)}</h3>
-				<p>Level ${entry.stats.level} • ${entry.stats.xp} XP • ${entry.stats.currentStreak} Tage Streak • ${entry.stats.gameScore || 0} Game Score</p>
-				<p>${entry.stats.totalEntries} Interaktionen • ${entry.stats.uniqueConnections} Connections • ${entry.stats.gameSessions || 0} Game Sessions • ${entry.stats.gameWins || 0} Wins • ${entry.loginCount} Logins</p>
+				<h3>${escapeHtml(entry.handle.toUpperCase())}</h3>
+				<p>RANG ${toRomanNumeral(entry.stats.level)} • ${entry.stats.xp} XP • ${entry.stats.currentStreak} TAGE AUSDAUER • ${entry.stats.gameScore || 0} ARENAKAMPF-PUNKTE</p>
+				<p>${entry.stats.totalEntries} ZÜGE • ${entry.stats.uniqueConnections} EINFLUSS • ${entry.stats.gameSessions || 0} ARENA-SESSIONS • ${entry.stats.gameWins || 0} SIEGE • ${entry.loginCount} LOGINS</p>
 			</div>
 			<div class="leaderboard-score">${entry.stats.score}</div>
 		`;

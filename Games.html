@@ -18,7 +18,7 @@
 				<p class="eyebrow">ARCADE MODE</p>
 				<h1>Connection Quest Games</h1>
 				<p class="hero-copy">
-					Zwei Single-Player-Minigames, alle im selben Look und direkt an dein Scoreboard angebunden.
+					Vier Minigames direkt im Browser, plus <strong>Snake Escape</strong> – ein vollständiges Canvas-Spiel mit Lebens-System, goldenen Äpfeln und CQ-Score-Sync.
 				</p>
 				<div class="hero-badges">
 					<span>Single Player</span>
@@ -63,6 +63,25 @@
 		</header>
 
 		<main class="games-layout">
+			<section class="card featured-game-card">
+				<div class="featured-inner">
+					<div class="featured-copy">
+						<p class="mini-label">Vollständiges Spiel</p>
+						<h2>Snake Escape</h2>
+						<p class="section-copy">Klassischer Snake – aber richtig gebaut. Canvas-Rendering, 3 Leben, steigende Geschwindigkeit pro Level, goldene Äpfel und direktes XP-/Score-Sync mit deinem CQ-Profil. Tastatur, WASD und Touch-Steuerung.</p>
+						<div class="featured-badges">
+							<span>Canvas</span>
+							<span>3 Leben</span>
+							<span>Level-System</span>
+							<span>Goldene Äpfel</span>
+							<span>Tastatur + Touch</span>
+							<span>Score-Sync</span>
+						</div>
+					</div>
+					<a href="SnakeGame.html" class="featured-play-btn">Snake spielen →</a>
+				</div>
+			</section>
+
 			<section class="card loop-card">
 				<div class="section-head">
 					<div>
@@ -117,6 +136,54 @@
 				<div class="action-row">
 					<button type="button" class="primary-btn" id="pattern-start">Pattern starten</button>
 					<p id="pattern-status" class="section-copy">Noch kein Run gespielt.</p>
+				</div>
+			</section>
+
+			<section class="card game-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Single Player</p>
+						<h2>Reaction Flash</h2>
+					</div>
+					<p class="section-copy">Klicke sobald der Kreis grün leuchtet. Nicht zu früh!</p>
+				</div>
+				<div class="hud-row">
+					<div class="mini-stat-pill">Runde: <strong id="flash-round">0 / 5</strong></div>
+					<div class="mini-stat-pill">Treffer: <strong id="flash-hits">0</strong></div>
+				</div>
+				<div class="flash-stage" id="flash-stage">
+					<button type="button" id="flash-orb" class="flash-orb" disabled>WARTEN…</button>
+				</div>
+				<div class="action-row">
+					<button type="button" class="primary-btn" id="flash-start">Flash starten</button>
+					<p id="flash-status" class="section-copy">Noch kein Run gespielt.</p>
+				</div>
+			</section>
+
+			<section class="card game-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">Single Player</p>
+						<h2>Color Clash</h2>
+					</div>
+					<p class="section-copy">Klicke die Tintenfarbe des Wortes – nicht seine Bedeutung!</p>
+				</div>
+				<div class="hud-row">
+					<div class="mini-stat-pill">Richtig: <strong id="clash-score">0</strong></div>
+					<div class="mini-stat-pill">Zeit: <strong id="clash-time">25</strong></div>
+				</div>
+				<div class="clash-stage" id="clash-stage">
+					<p id="clash-word" class="clash-word" aria-live="polite"></p>
+					<div class="clash-choices">
+						<button type="button" class="clash-btn clash-rot"  data-color="rot"  disabled>ROT</button>
+						<button type="button" class="clash-btn clash-blau" data-color="blau" disabled>BLAU</button>
+						<button type="button" class="clash-btn clash-gruen" data-color="grün" disabled>GRÜN</button>
+						<button type="button" class="clash-btn clash-gelb" data-color="gelb" disabled>GELB</button>
+					</div>
+				</div>
+				<div class="action-row">
+					<button type="button" class="primary-btn" id="clash-start">Clash starten</button>
+					<p id="clash-status" class="section-copy">Noch kein Run gespielt.</p>
 				</div>
 			</section>
 

@@ -3,51 +3,51 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="theme-color" content="#050505">
-	<title>Connection Quest</title>
+	<meta name="theme-color" content="#07000a">
+	<title>EREBOS — Archiv</title>
 	<link rel="manifest" href="manifest.webmanifest">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="Connectionqueststyles.css">
 </head>
 <body>
+	<div class="scanlines" aria-hidden="true"></div>
 	<div class="page-shell">
 		<header class="hero">
 			<div class="hero-copy">
-				<p class="eyebrow">PRIVATE TRACKER</p>
-				<h1>Connection Quest</h1>
+				<p class="eyebrow">EREBOS // HAUPTARCHIV</p>
+				<h1>EREBOS</h1>
 				<p class="hero-text">
-					Tracke Dates, Vibes und besondere Momente in einer privaten Timeline mit Kalender,
-					XP, Levels und freischaltbaren Achievements.
+					Das Spiel protokolliert jeden Kontakt, jede Verbindung, jede Schwäche.
+					Deine Aktivitäten gehen in die Bewertung ein. Die Hierarchie kennt keine Gnade.
 				</p>
 				<div class="hero-badges">
-					<span>Kalenderansicht</span>
-					<span>Datenbank Sync</span>
-					<span>Achievement-Flow</span>
+					<span>Verschlüsselt</span>
+					<span>Serverseitig</span>
+					<span>Überwacht</span>
 				</div>
 				<div class="session-banner" aria-live="polite">
-					<span id="session-player">Kein Spieler aktiv</span>
-					<strong id="session-score">0 Score</strong>
+					<span id="session-player">KEIN SPIELER AKTIV</span>
+					<strong id="session-score">0 MACHT</strong>
 				</div>
 				<div class="hero-actions">
-					<a class="hero-link" href="index.html">Zum Intro</a>
-					<a class="hero-link" href="Profile.html">Zum Profil</a>
-					<a class="hero-link" href="Community.html">Zur Community</a>
-					<a class="hero-link" href="Notifications.html">Zur Inbox</a>
-					<a class="hero-link" href="Network.html">Zum Network</a>
-					<a class="hero-link" href="Rewards.html">Zu Rewards</a>
-					<a class="hero-link" href="Events.html">Zu Events</a>
-					<a class="hero-link" href="Analytics.html">Zu Analytics</a>
-					<a class="hero-link" href="Leaderboard.html">Zum Leaderboard</a>
-					<a class="hero-link" href="Games.html">Zu den Games</a>
+					<a class="hero-link" href="index.html">Intro</a>
+					<a class="hero-link" href="Profile.html">Identität</a>
+					<a class="hero-link" href="Leaderboard.html">Die Hierarchie</a>
+					<a class="hero-link" href="Hub.html">Kommandozentrale</a>
+					<a class="hero-link" href="Community.html">Das Netzwerk</a>
+					<a class="hero-link" href="Rewards.html">Belohnungen</a>
+					<a class="hero-link" href="Events.html">Ereignisse</a>
+					<a class="hero-link" href="Analytics.html">Auswertung</a>
+					<a class="hero-link" href="Games.html">Arenen</a>
 				</div>
 			</div>
-			<section class="level-panel" aria-label="Level Fortschritt">
+			<section class="level-panel" aria-label="Rang Fortschritt">
 				<div class="level-head">
 					<div>
-						<p class="mini-label">Current Level</p>
-						<h2 id="level-value">1</h2>
+						<p class="mini-label">AKTUELLER RANG</p>
+						<h2 id="level-value">I</h2>
 					</div>
 					<div class="xp-chip">
 						<span id="xp-value">0 XP</span>
@@ -55,15 +55,15 @@
 				</div>
 				<div class="progress-block">
 					<div class="progress-meta">
-						<span>Nächstes Level</span>
+						<span>Nächster Rang</span>
 						<span id="progress-text">0 / 120 XP</span>
 					</div>
 					<div class="progress-track" aria-hidden="true">
 						<div class="progress-fill" id="progress-fill"></div>
 					</div>
 				</div>
-				<p class="level-note" id="level-note">Starte mit dem ersten Eintrag.</p>
-				<p class="level-note player-note" id="player-note">Login erforderlich, um Punkte zu sammeln.</p>
+				<p class="level-note" id="level-note">Starte mit dem ersten Eintrag. Das Spiel beobachtet.</p>
+				<p class="level-note player-note" id="player-note">ZUGANG ERFORDERLICH um Macht zu sammeln.</p>
 			</section>
 		</header>
 
@@ -71,47 +71,47 @@
 			<section class="card auth-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Login</p>
-						<h2>Spieler Zugang</h2>
+						<p class="mini-label">ZUGANG</p>
+						<h2>Zugang zum Spiel</h2>
 					</div>
-					<p id="auth-state-copy" class="section-copy">Registriere einen Spieler oder logge dich ein.</p>
+					<p id="auth-state-copy" class="section-copy">Wähle deinen Schattennamen. Das Spiel erinnert sich an alles.</p>
 				</div>
 
 				<form id="auth-form" class="auth-form">
 					<label>
-						<span>Spielername</span>
-						<input id="auth-handle" name="auth-handle" type="text" maxlength="32" placeholder="z. B. Light" required>
+						<span>Schattenname</span>
+						<input id="auth-handle" name="auth-handle" type="text" maxlength="32" placeholder="z. B. Sarius" required>
 					</label>
 					<label>
-						<span>PIN</span>
+						<span>Zugangscode</span>
 						<input id="auth-pin" name="auth-pin" type="password" minlength="4" maxlength="20" placeholder="Mindestens 4 Zeichen" required>
 					</label>
 					<div class="auth-actions full-span">
-						<button type="submit" class="primary-btn" name="auth-intent" value="register">Registrieren</button>
-						<button type="submit" class="ghost-btn auth-ghost" name="auth-intent" value="login">Einloggen</button>
+						<button type="submit" class="primary-btn" name="auth-intent" value="register">Identität anlegen</button>
+						<button type="submit" class="ghost-btn auth-ghost" name="auth-intent" value="login">Eintreten</button>
 					</div>
 				</form>
 
-				<p id="auth-message" class="auth-message empty-state">Noch kein aktiver Spieler.</p>
-				<div id="profile-summary" class="profile-summary empty-state">Logge dich ein, um dein Profil, XP und Interaktionen zu sehen.</div>
+				<p id="auth-message" class="auth-message empty-state">Kein Spieler aktiv. Das Spiel wartet.</p>
+				<div id="profile-summary" class="profile-summary empty-state">Betritt das Spiel, um Rang, XP und Aktivitäten einzusehen.</div>
 				<div class="auth-footer-actions">
-					<button type="button" id="logout-player" class="danger-btn" hidden>Logout</button>
+					<button type="button" id="logout-player" class="danger-btn" hidden>Verlassen</button>
 				</div>
 			</section>
 
 			<section class="card form-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Neuer Eintrag</p>
-						<h2>Moment loggen</h2>
+						<p class="mini-label">AKTIVITÄT PROTOKOLLIEREN</p>
+						<h2>Neuen Zug einloggen</h2>
 					</div>
-					<p id="form-lock-copy" class="section-copy">Deine Daten werden serverseitig in der Datenbank gespeichert.</p>
+					<p id="form-lock-copy" class="section-copy">Jede Aktion wird vom Spiel registriert und bewertet. Kein Zug bleibt unbemerkt.</p>
 				</div>
 
 				<form id="entry-form" class="entry-form">
 					<label>
-						<span>Name oder Nickname</span>
-						<input id="name" name="name" type="text" maxlength="40" placeholder="z. B. Lena" required>
+						<span>Zielperson</span>
+						<input id="name" name="name" type="text" maxlength="40" placeholder="Name des Spielers" required>
 					</label>
 
 					<label>
@@ -120,120 +120,120 @@
 					</label>
 
 					<label>
-						<span>Moment</span>
+						<span>Art des Zuges</span>
 						<select id="type" name="type" required>
-							<option value="Chat">Chat</option>
-							<option value="Date">Date</option>
-							<option value="Kuss">Kuss</option>
-							<option value="Hookup">Hookup</option>
-							<option value="Beziehung">Beziehung</option>
+							<option value="Chat">Kontakt herstellen</option>
+							<option value="Date">Persönliche Begegnung</option>
+							<option value="Kuss">Vertrauen gewinnen</option>
+							<option value="Hookup">Allianz schließen</option>
+							<option value="Beziehung">Dominanz festigen</option>
 						</select>
 					</label>
 
 					<label class="full-span">
-						<span>Notiz</span>
-						<textarea id="notes" name="notes" rows="3" maxlength="180" placeholder="Kurz festhalten, was den Tag besonders gemacht hat."></textarea>
+						<span>Bericht fürs Protokoll</span>
+						<textarea id="notes" name="notes" rows="3" maxlength="180" placeholder="Beschreibe den Zug. Das Spiel liest mit."></textarea>
 					</label>
 
-					<button type="submit" class="primary-btn">Eintrag speichern</button>
+					<button type="submit" class="primary-btn">Zug protokollieren</button>
 				</form>
 			</section>
 
-			<section class="stats-grid" aria-label="Statistiken">
+			<section class="stats-grid" aria-label="Statuswerte">
 				<article class="card stat-card accent-one">
-					<p class="mini-label">Score</p>
+					<p class="mini-label">MACHT</p>
 					<h2 id="score-count">0</h2>
-					<p id="score-copy">Noch keine Punkte gesammelt.</p>
+					<p id="score-copy">Noch keine Macht gesammelt.</p>
 				</article>
 				<article class="card stat-card accent-two">
-					<p class="mini-label">Interaktionen</p>
+					<p class="mini-label">ZÜGE</p>
 					<h2 id="entry-count">0</h2>
-					<p id="entry-copy">Dein Journal wartet auf den ersten Log.</p>
+					<p id="entry-copy">Das Protokoll wartet auf den ersten Zug.</p>
 				</article>
 				<article class="card stat-card accent-three">
-					<p class="mini-label">Connections</p>
+					<p class="mini-label">EINFLUSS</p>
 					<h2 id="unique-count">0</h2>
-					<p id="unique-copy">Noch keine Namen erfasst.</p>
+					<p id="unique-copy">Noch keine Zielpersonen erfasst.</p>
 				</article>
 				<article class="card stat-card accent-four">
-					<p class="mini-label">Current Streak</p>
+					<p class="mini-label">AUSDAUER</p>
 					<h2 id="streak-count">0 Tage</h2>
-					<p id="streak-copy">Noch keine Aktivität in Folge.</p>
+					<p id="streak-copy">Kein aktiver Lauf. Das Spiel vergisst Inaktive.</p>
 				</article>
 				<article class="card stat-card accent-five">
-					<p class="mini-label">Unlocked</p>
+					<p class="mini-label">BESTANDENE PRÜFUNGEN</p>
 					<h2 id="achievement-count">0</h2>
-					<p id="achievement-copy">Keine Badges freigeschaltet.</p>
+					<p id="achievement-copy">Keine Prüfungen bestanden.</p>
 				</article>
 			</section>
 
 			<section class="card mission-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Daily Loop</p>
-						<h2>Mission Board</h2>
+						<p class="mini-label">AKTUELLE BEFEHLE</p>
+						<h2>Erebos sendet dir Aufgaben</h2>
 					</div>
-					<p class="section-copy">Taegliche Aufgaben halten Score, Streak und Rueckkehr-Druck aktiv.</p>
+					<p class="section-copy">Erledige die täglichen Befehle. Wer nicht gehorcht, fällt in der Hierarchie zurück.</p>
 				</div>
-				<div id="mission-list" class="mission-list empty-state">Logge dich ein, um deine taeglichen Missionen zu sehen.</div>
+				<div id="mission-list" class="mission-list empty-state">ZUGANG ERFORDERLICH um Befehle zu empfangen.</div>
 			</section>
 
 			<section class="card return-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Retention</p>
-						<h2>Return Bonus</h2>
+						<p class="mini-label">LOYALITÄTSPRÜFUNG</p>
+						<h2>Das Spiel testet dich</h2>
 					</div>
-					<p class="section-copy">Die App zeigt, wie nah du am naechsten Comeback- oder Streak-Meilenstein bist.</p>
+					<p class="section-copy">Erebos belohnt Loyalität. Wer fernbleibt, wird ersetzt.</p>
 				</div>
-				<div id="return-bonus" class="return-bonus empty-state">Noch kein Rueckkehr-Ziel aktiv.</div>
+				<div id="return-bonus" class="return-bonus empty-state">Kein Rückkehr-Ziel aktiv.</div>
 			</section>
 
 			<section class="card weekly-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Weekly Run</p>
-						<h2>Challenge Track</h2>
+						<p class="mini-label">7-TAGE-HERAUSFORDERUNG</p>
+						<h2>Die Wochenprüfung</h2>
 					</div>
-					<p class="section-copy">Diese 7-Tage-Ziele sorgen dafuer, dass Nutzer nicht nach einem Tag wieder verschwinden.</p>
+					<p class="section-copy">Sieben Tage. Sieben Chancen. Wer versagt, verliert Rang.</p>
 				</div>
-				<div id="weekly-list" class="mission-list empty-state">Weekly Challenges werden nach dem Login aktiviert.</div>
+				<div id="weekly-list" class="mission-list empty-state">Wochenprüfung wird nach dem Zugang aktiviert.</div>
 			</section>
 
 			<section class="card recommendation-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Next Moves</p>
-						<h2>Persoenliche Empfehlungen</h2>
+						<p class="mini-label">EREBOS RÄT DIR</p>
+						<h2>Nächste Schritte</h2>
 					</div>
-					<p class="section-copy">Das System zeigt direkt, welcher naechste Schritt die meiste Bindung erzeugt.</p>
+					<p class="section-copy">Das Spiel analysiert deine Schwächen und weist den Weg nach oben.</p>
 				</div>
-				<div id="recommendation-list" class="recommendation-list empty-state">Noch keine persoenlichen Empfehlungen sichtbar.</div>
+				<div id="recommendation-list" class="recommendation-list empty-state">Keine Empfehlungen sichtbar.</div>
 			</section>
 
 			<section class="card community-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Community Pulse</p>
-						<h2>Live Activity</h2>
+						<p class="mini-label">DAS NETZWERK BEOBACHTET</p>
+						<h2>Live-Aktivität</h2>
 					</div>
-					<p class="section-copy">Ein zentraler Feed plus Live-Zahlen machen die Anwendung wie ein richtiges Netzwerk lebendiger.</p>
+					<p class="section-copy">Alle Bewegungen der anderen Spieler. Erebos sieht alles — du auch.</p>
 				</div>
 				<div id="community-stats" class="community-stats"></div>
 				<div id="community-highlights" class="community-highlights"></div>
-				<div id="community-feed" class="community-feed empty-state">Noch keine Community-Aktivitaet sichtbar.</div>
+				<div id="community-feed" class="community-feed empty-state">Noch keine Aktivität im Netzwerk.</div>
 			</section>
 
 			<section class="card calendar-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Kalender</p>
+						<p class="mini-label">SPIELHISTORIE</p>
 						<h2 id="calendar-label">Monat</h2>
 					</div>
 					<div class="calendar-actions">
-						<button type="button" class="ghost-btn" id="prev-month">Zurück</button>
+						<button type="button" class="ghost-btn" id="prev-month">◄</button>
 						<button type="button" class="ghost-btn" id="today-btn">Heute</button>
-						<button type="button" class="ghost-btn" id="next-month">Weiter</button>
+						<button type="button" class="ghost-btn" id="next-month">►</button>
 					</div>
 				</div>
 
@@ -252,23 +252,23 @@
 			<section class="card day-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Tagesansicht</p>
+						<p class="mini-label">TAGESPROTOKOLL</p>
 						<h2 id="selected-date-label">Kein Datum gewählt</h2>
 					</div>
-					<p class="section-copy" id="selected-date-summary">Wähle einen Tag im Kalender oder lege direkt einen Eintrag an.</p>
+					<p class="section-copy" id="selected-date-summary">Wähle einen Tag, um die protokollierten Züge einzusehen.</p>
 				</div>
 				<div id="selected-day-list" class="day-list empty-state">
-					Noch keine Einträge für diesen Tag.
+					Keine Aktivitäten für diesen Tag aufgezeichnet.
 				</div>
 			</section>
 
 			<section class="card achievement-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Badges</p>
-						<h2>Achievement Board</h2>
+						<p class="mini-label">BESTANDENE PRÜFUNGEN</p>
+						<h2>Prüfungen des Spiels</h2>
 					</div>
-					<p class="section-copy">Freischaltungen basieren auf Aktivität, Vielfalt und Konstanz.</p>
+					<p class="section-copy">Erebos stellt seine Würdigen auf die Probe. Nur wer besteht, steigt auf.</p>
 				</div>
 				<div id="achievement-list" class="achievement-list"></div>
 			</section>
@@ -276,13 +276,13 @@
 			<section class="card timeline-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Recent Logs</p>
-						<h2>Letzte Einträge</h2>
+						<p class="mini-label">AKTIONSPROTOKOLL</p>
+						<h2>Letzte Züge</h2>
 					</div>
-					<button type="button" id="clear-all" class="danger-btn">Alles löschen</button>
+					<button type="button" id="clear-all" class="danger-btn">Protokoll löschen</button>
 				</div>
 				<div id="recent-list" class="recent-list empty-state">
-					Noch keine Einträge vorhanden.
+					Keine Einträge im Protokoll.
 				</div>
 			</section>
 		</main>

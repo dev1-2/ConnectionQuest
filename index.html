@@ -3,17 +3,18 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="theme-color" content="#050505">
-	<title>Connection Quest Intro</title>
+	<meta name="theme-color" content="#07000a">
+	<title>EREBOS</title>
 	<link rel="manifest" href="manifest.webmanifest">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Unbounded:wght@600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="Welcome.css">
 </head>
 <body>
-	<div class="film-grain" aria-hidden="true"></div>
-	<div class="vignette" aria-hidden="true"></div>
+	<div class="scanlines" aria-hidden="true"></div>
+	<div class="blood-vignette" aria-hidden="true"></div>
+	<div class="flicker" aria-hidden="true"></div>
 
 	<main class="intro-page">
 		<section class="mono-stage">
@@ -23,41 +24,41 @@
 			<div class="corner-mark corner-mark-bottom-right" aria-hidden="true"></div>
 
 			<header class="stage-header">
-				<p class="stage-label">Intro Sequence</p>
-				<p class="stage-index">01 / CQ</p>
+				<p class="stage-label">EREBOS // INITIALISIERUNG</p>
+				<p class="stage-index">00 / EB</p>
 			</header>
 
 			<div class="hero-stack">
 				<div class="title-block">
-					<p class="lead-tag">Anonymous web craft</p>
-					<p id="intro-prefix" class="intro-prefix">Welcome to</p>
-					<h1 id="main-title" class="main-title" data-text="Connection Quest" aria-label="Connection Quest"></h1>
-					<p id="credit-line" class="credit-line" data-text="made by Light and Frieren" aria-label="made by Light and Frieren"></p>
+					<p class="lead-tag">Das Spiel hat dich gefunden</p>
+					<p id="intro-prefix" class="intro-prefix">Du wurdest auserwählt für</p>
+					<h1 id="main-title" class="main-title" data-text="EREBOS" aria-label="EREBOS"></h1>
+					<p id="credit-line" class="credit-line" data-text="niemand entkommt dem Ranking" aria-label="niemand entkommt dem Ranking"></p>
 				</div>
 
-				<div class="info-ribbon" aria-label="Intro Informationen">
+				<div class="info-ribbon" aria-label="System Status">
 					<div class="ribbon-item">
-						<p class="info-label">Studio</p>
-						<p class="info-value">Light and Frieren</p>
+						<p class="info-label">PROTOKOLL</p>
+						<p class="info-value">VERSCHLÜSSELT</p>
 					</div>
 					<div class="ribbon-item">
-						<p class="info-label">Mood</p>
-						<p class="info-value">Black and White</p>
+						<p class="info-label">SPIELER</p>
+						<p class="info-value" id="player-count-ribbon">WIRD GELADEN</p>
 					</div>
 					<div class="ribbon-item ribbon-item-wide">
-						<p class="info-label">Statement</p>
-						<p class="info-copy">Die ungefilterte Wahrheit</p>
+						<p class="info-label">WARNUNG</p>
+						<p class="info-copy">Das Spiel beobachtet jeden Zug. Kein Verhalten bleibt unbemerkt. Die Hierarchie wird täglich neu berechnet.</p>
 					</div>
 				</div>
 			</div>
 
 			<div class="stage-footer">
-				<p id="status-line" class="status-line">letters incoming</p>
+				<p id="status-line" class="status-line">EREBOS ANALYSIERT...</p>
 				<div class="action-row">
-					<a id="enter-link" class="enter-link is-locked" href="Hub.html" aria-disabled="true">Open Connection Quest Hub</a>
-					<a class="ghost-link" href="ConnectionQuest.html">Direkt ins Journal</a>
-					<a class="ghost-link" href="Guide.html">Funktionen erklaert</a>
-					<a class="ghost-link" href="LehrerRanking.html">Lehrer Ranking</a>
+					<a id="enter-link" class="enter-link is-locked" href="Hub.html" aria-disabled="true">Beweise deine Würdigkeit</a>
+					<a class="ghost-link" href="Leaderboard.html">Die Hierarchie einsehen</a>
+					<a class="ghost-link" href="ConnectionQuest.html">Zum Archiv</a>
+					<a class="ghost-link" href="Guide.html">Regeln des Spiels</a>
 				</div>
 			</div>
 		</section>

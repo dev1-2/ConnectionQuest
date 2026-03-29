@@ -1,15 +1,18 @@
 :root {
-	--bg: #050505;
-	--panel: rgba(255, 255, 255, 0.04);
-	--line: rgba(255, 255, 255, 0.12);
-	--text: #f5f5f5;
-	--muted: rgba(255, 255, 255, 0.58);
-	--soft: rgba(255, 255, 255, 0.2);
-	--shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-	--gold: #ffd700;
-	--coral: #ff6b6b;
-	--teal: #20c997;
-	--olive: #7fff7f;
+	--bg: #07000a;
+	--panel: rgba(100, 0, 0, 0.1);
+	--line: rgba(160, 20, 20, 0.4);
+	--text: #e8d4c0;
+	--muted: rgba(232, 200, 180, 0.52);
+	--soft: rgba(160, 30, 30, 0.25);
+	--shadow: 0 20px 70px rgba(80, 0, 0, 0.55);
+	--blood: #6b0000;
+	--crimson: #c41a1a;
+	--ember: #ff3535;
+	--gold: #c47a1a;
+	--coral: #c41a1a;
+	--teal: #8b2020;
+	--olive: #7a4040;
 }
 
 * {
@@ -21,14 +24,79 @@ body {
 	min-height: 100vh;
 	font-family: "Space Grotesk", sans-serif;
 	color: var(--text);
-	background: #050505;
+	background: #07000a;
 }
 
 a {
 	color: inherit;
+	text-decoration: none;
+}
+
+/* Erebos atmosphere */
+.scanlines,
+.blood-vignette {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.scanlines {
+	background: repeating-linear-gradient(
+		0deg,
+		transparent,
+		transparent 2px,
+		rgba(0, 0, 0, 0.22) 2px,
+		rgba(0, 0, 0, 0.22) 4px
+	);
+	opacity: 0.4;
+}
+
+.blood-vignette {
+	background: radial-gradient(
+		ellipse at center,
+		transparent 30%,
+		rgba(50, 0, 0, 0.65) 80%,
+		rgba(15, 0, 0, 0.9) 100%
+	);
+}
+
+/* Erebos surveillance banner */
+.erebos-watch-banner {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	justify-content: center;
+	padding: 0.65rem 1.5rem;
+	background: rgba(80, 0, 0, 0.8);
+	border-bottom: 1px solid rgba(196, 26, 26, 0.5);
+	font-family: "Share Tech Mono", monospace;
+	font-size: 0.78rem;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--ember);
+}
+
+.watch-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--ember);
+	box-shadow: 0 0 8px var(--ember);
+	animation: pulseDot 1.4s ease-in-out infinite;
+	flex-shrink: 0;
+}
+
+@keyframes pulseDot {
+	0%, 100% { opacity: 0.4; transform: scale(0.9); }
+	50%       { opacity: 1;   transform: scale(1.2); }
 }
 
 .page-shell {
+	position: relative;
+	z-index: 1;
 	width: min(1200px, calc(100% - 2rem));
 	margin: 0 auto;
 	padding: 2rem 0 3rem;
@@ -56,8 +124,8 @@ a {
 .podium-item,
 .leaderboard-item {
 	background: var(--panel);
-	border: 1px solid rgba(255, 255, 255, 0.45);
-	border-radius: 28px;
+	border: 1px solid rgba(160, 20, 20, 0.5);
+	border-radius: 4px;
 	box-shadow: var(--shadow);
 	backdrop-filter: blur(18px);
 }
@@ -75,7 +143,7 @@ a {
 	inset: auto -4rem -5rem auto;
 	width: 15rem;
 	height: 15rem;
-	background: radial-gradient(circle, rgba(239, 107, 87, 0.24), transparent 66%);
+	background: radial-gradient(circle, rgba(150, 0, 0, 0.25), transparent 66%);
 }
 
 .eyebrow,
@@ -84,22 +152,24 @@ a {
 	text-transform: uppercase;
 	letter-spacing: 0.18em;
 	font-size: 0.74rem;
-	color: var(--muted);
+	color: var(--crimson);
+	font-family: "Share Tech Mono", monospace;
 }
 
 h1,
 h2,
 h3 {
 	margin: 0;
-	font-family: "Bebas Neue", sans-serif;
-	letter-spacing: 0.03em;
-	font-weight: 400;
+	font-family: "Cinzel", serif;
+	letter-spacing: 0.06em;
+	font-weight: 900;
 }
 
 h1 {
 	margin-top: 0.45rem;
 	font-size: clamp(3.4rem, 8vw, 6rem);
 	line-height: 0.92;
+	text-shadow: 0 0 40px rgba(196, 26, 26, 0.45);
 }
 
 h2 {
@@ -133,34 +203,84 @@ h2 {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0.85rem 1.15rem;
-	border-radius: 999px;
+	padding: 0.75rem 1.1rem;
+	border-radius: 2px;
 	text-decoration: none;
 	font-weight: 700;
-	letter-spacing: 0.03em;
-	transition: transform 160ms ease, box-shadow 160ms ease;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	font-size: 0.8rem;
+	font-family: "Share Tech Mono", monospace;
+	transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
 .hero-link {
-	background: linear-gradient(135deg, var(--coral), var(--gold));
-	color: #fffdf9;
+	background: linear-gradient(135deg, var(--blood), var(--crimson));
+	color: #f5e8e0;
+	border: 1px solid var(--crimson);
+	box-shadow: 0 0 16px rgba(196, 26, 26, 0.35);
 }
 
 .ghost-link {
-	background: rgba(255, 255, 255, 0.08);
+	background: rgba(80, 0, 0, 0.18);
 	border: 1px solid var(--line);
+	color: var(--muted);
 }
 
 .hero-link:hover,
 .ghost-link:hover {
 	transform: translateY(-2px);
-	box-shadow: 0 18px 32px rgba(84, 62, 17, 0.18);
+	box-shadow: 0 8px 28px rgba(196, 26, 26, 0.35);
+	border-color: var(--ember);
 }
 
 .current-player {
-	background:
-		linear-gradient(180deg, rgba(255, 248, 235, 0.95), rgba(255, 243, 224, 0.92)),
-		var(--panel-strong);
+	background: linear-gradient(180deg, rgba(80, 0, 0, 0.28), rgba(40, 0, 0, 0.18));
+	border-color: rgba(196, 26, 26, 0.55);
+}
+
+/* Rivalry panel — shows your enemies above and below */
+.rivalry-banner {
+	margin-top: 1.25rem;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.85rem;
+}
+
+.rival-above,
+.rival-below {
+	padding: 0.85rem 1rem;
+	border-radius: 2px;
+	display: grid;
+	gap: 0.3rem;
+}
+
+.rival-above {
+	background: rgba(120, 0, 0, 0.2);
+	border: 1px solid rgba(196, 26, 26, 0.4);
+}
+
+.rival-below {
+	background: rgba(60, 0, 0, 0.15);
+	border: 1px solid rgba(160, 20, 20, 0.3);
+}
+
+.rival-above strong,
+.rival-below strong {
+	font-family: "Cinzel", serif;
+	font-size: 1rem;
+}
+
+.gap-value {
+	font-family: "Share Tech Mono", monospace;
+	font-size: 0.82rem;
+	color: var(--ember);
+	letter-spacing: 0.08em;
+}
+
+/* Rivalry card layout */
+.rivalry-card {
+	grid-column: span 12;
 }
 
 .mini-stats,
@@ -172,16 +292,22 @@ h2 {
 }
 
 .mini-stats {
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	margin-top: 1.25rem;
 }
 
 .mini-stats div,
 .stat-box {
 	padding: 1rem;
-	border-radius: 20px;
-	background: rgba(255, 255, 255, 0.15);
-	border: 1px solid var(--line);
+	border-radius: 2px;
+	background: rgba(80, 0, 0, 0.15);
+	border: 1px solid rgba(160, 20, 20, 0.3);
+}
+
+.mini-stats strong {
+	Font-size: 1.4rem;
+	Font-family: "Cinzel", serif;
+	Color: var(--ember);
 }
 
 .summary-card {
@@ -208,12 +334,13 @@ h2 {
 .stat-box h3 {
 	font-size: 2.4rem;
 	margin-top: 0.2rem;
+	text-shadow: 0 0 20px rgba(196, 26, 26, 0.4);
 }
 
-.accent-one { border-top: 8px solid var(--gold); }
-.accent-two { border-top: 8px solid var(--coral); }
-.accent-three { border-top: 8px solid var(--teal); }
-.accent-four { border-top: 8px solid var(--olive); }
+.accent-one { border-top: 6px solid var(--crimson); }
+.accent-two { border-top: 6px solid #8b0000; }
+.accent-three { border-top: 6px solid #7a2020; }
+.accent-four { border-top: 6px solid #5a1010; }
 
 .section-head {
 	display: flex;
@@ -243,27 +370,34 @@ h2 {
 .tool-field span {
 	font-size: 0.8rem;
 	text-transform: uppercase;
-	letter-spacing: 0.08em;
-	color: var(--muted);
+	letter-spacing: 0.1em;
+	color: var(--crimson);
+	font-family: "Share Tech Mono", monospace;
 }
 
 .tool-field input,
 .tool-field select {
 	width: 100%;
 	padding: 0.92rem 1rem;
-	border-radius: 16px;
+	border-radius: 2px;
 	border: 1px solid var(--line);
-	background: rgba(255, 255, 255, 0.85);
-	color: #050505;
+	background: rgba(40, 0, 0, 0.5);
+	color: var(--text);
 	font: inherit;
+}
+
+.tool-field select option {
+	background: #1a0000;
+	color: var(--text);
 }
 
 .podium-item,
 .leaderboard-item {
 	padding: 1rem;
-	border-radius: 20px;
-	background: rgba(255, 255, 255, 0.15);
-	border: 1px solid var(--line);
+	border-radius: 2px;
+	background: rgba(80, 0, 0, 0.12);
+	border: 1px solid rgba(160, 20, 20, 0.3);
+	transition: background 160ms ease, border-color 160ms ease;
 }
 
 .podium-item {
@@ -273,15 +407,32 @@ h2 {
 
 .podium-item.is-active,
 .leaderboard-item.is-active {
-	border-color: rgba(31, 138, 134, 0.35);
-	box-shadow: inset 0 0 0 1px rgba(31, 138, 134, 0.12);
+	border-color: rgba(196, 26, 26, 0.6);
+	background: rgba(120, 0, 0, 0.2);
+	box-shadow: 0 0 20px rgba(196, 26, 26, 0.2);
+}
+
+.leaderboard-item:hover {
+	background: rgba(100, 0, 0, 0.2);
+	border-color: var(--crimson);
 }
 
 .podium-rank {
 	font-weight: 700;
-	color: var(--coral);
+	color: var(--ember);
 	letter-spacing: 0.06em;
+	font-family: "Share Tech Mono", monospace;
 }
+
+/* Special podium rank colors */
+.podium-item:nth-child(1) .podium-rank { color: #ffcc00; text-shadow: 0 0 10px rgba(255, 200, 0, 0.5); }
+.podium-item:nth-child(2) .podium-rank { color: #c0c0c0; }
+.podium-item:nth-child(3) .podium-rank { color: #cd7f32; }
+
+/* Leaderboard item rank indicators */
+.leaderboard-item[data-rank="1"] { border-left: 4px solid #ffcc00; }
+.leaderboard-item[data-rank="2"] { border-left: 4px solid #c0c0c0; }
+.leaderboard-item[data-rank="3"] { border-left: 4px solid #cd7f32; }
 
 .leaderboard-item {
 	display: flex;
@@ -294,6 +445,8 @@ h2 {
 .leaderboard-score {
 	font-weight: 700;
 	font-size: 1.2rem;
+	font-family: "Share Tech Mono", monospace;
+	color: var(--ember);
 }
 
 .leaderboard-copy h3,
@@ -314,14 +467,22 @@ h2 {
 .highlight-item,
 .feed-item {
 	padding: 1rem;
-	border-radius: 20px;
-	background: rgba(255, 255, 255, 0.15);
-	border: 1px solid var(--line);
+	border-radius: 2px;
+	background: rgba(80, 0, 0, 0.12);
+	border: 1px solid rgba(160, 20, 20, 0.3);
+	transition: background 160ms ease, border-color 160ms ease;
+}
+
+.highlight-item:hover,
+.feed-item:hover {
+	background: rgba(100, 0, 0, 0.2);
+	border-color: var(--crimson);
 }
 
 .highlight-item h3,
 .feed-item h3 {
 	font-size: 1.1rem;
+	font-family: "Cinzel", serif;
 }
 
 .highlight-item p,
@@ -344,11 +505,26 @@ h2 {
 
 .feed-tag {
 	padding: 0.35rem 0.65rem;
-	border-radius: 999px;
-	background: rgba(255, 255, 255, 0.08);
+	border-radius: 2px;
+	background: rgba(100, 0, 0, 0.2);
+	border: 1px solid rgba(160, 20, 20, 0.3);
 	font-size: 0.75rem;
 	font-weight: 700;
-	letter-spacing: 0.06em;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--ember);
+	font-family: "Share Tech Mono", monospace;
+}
+
+.empty-state {
+	padding: 1rem;
+	border-radius: 2px;
+	background: rgba(60, 0, 0, 0.15);
+	border: 1px solid rgba(160, 20, 20, 0.25);
+	color: var(--muted);
+	font-family: "Share Tech Mono", monospace;
+	letter-spacing: 0.05em;
+}	letter-spacing: 0.06em;
 	text-transform: uppercase;
 }
 
@@ -367,6 +543,7 @@ h2 {
 	.summary-card,
 	.podium-card,
 	.ranking-card,
+	.rivalry-card,
 	.activity-card {
 		grid-column: span 1;
 	}
@@ -387,16 +564,9 @@ h2 {
 		padding-top: 1rem;
 	}
 
-	.hero-card,
-	.card,
-	.stat-box,
-	.podium-item,
-	.leaderboard-item {
-		border-radius: 22px;
-	}
-
 	.summary-grid,
-	.mini-stats {
+	.mini-stats,
+	.rivalry-banner {
 		grid-template-columns: 1fr;
 	}
 
@@ -411,4 +581,8 @@ h2 {
 	.ghost-link {
 		width: 100%;
 	}
+
+	.highlight-grid {
+		grid-template-columns: 1fr;
 	}
+}

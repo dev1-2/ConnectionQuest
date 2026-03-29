@@ -187,6 +187,72 @@ h2 {
 .results-card { grid-column: span 12; }
 .community-game-card { grid-column: span 12; }
 
+/* ── Featured game card ────────────────────────────────── */
+.featured-game-card {
+	grid-column: span 12;
+	background:
+		linear-gradient(135deg, rgba(32, 201, 151, 0.13), rgba(0, 212, 255, 0.07)),
+		var(--panel);
+	border-color: rgba(32, 201, 151, 0.32);
+}
+
+.featured-inner {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 2rem;
+	flex-wrap: wrap;
+}
+
+.featured-copy {
+	max-width: 680px;
+}
+
+.featured-copy .section-copy {
+	margin-top: 0.6rem;
+	max-width: 58ch;
+}
+
+.featured-badges {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.55rem;
+	margin-top: 1rem;
+}
+
+.featured-badges span {
+	padding: 0.38rem 0.72rem;
+	border-radius: 999px;
+	background: rgba(32, 201, 151, 0.14);
+	border: 1px solid rgba(32, 201, 151, 0.28);
+	font-size: 0.76rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--teal);
+}
+
+.featured-play-btn {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	padding: 1.15rem 2.2rem;
+	border-radius: 999px;
+	background: linear-gradient(135deg, var(--teal), var(--sky));
+	color: #fff;
+	text-decoration: none;
+	font-weight: 700;
+	font-size: 1.08rem;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.featured-play-btn:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 18px 36px rgba(32, 201, 151, 0.34);
+}
+
 .section-head {
 	display: flex;
 	justify-content: space-between;
@@ -361,6 +427,121 @@ select:disabled,
 	background: rgba(255, 255, 255, 0.08);
 	border: 1px solid var(--line);
 }
+
+/* ── Reaction Flash ─────────────────────────────────── */
+
+.flash-stage {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 220px;
+	margin-top: 1.25rem;
+	border-radius: 28px;
+	border: 1px solid var(--line);
+	background:
+		radial-gradient(circle at 50% 50%, rgba(32, 201, 151, 0.06), transparent 60%),
+		rgba(255, 255, 255, 0.04);
+}
+
+.flash-orb {
+	width: 150px;
+	height: 150px;
+	border-radius: 50%;
+	border: none;
+	font-family: "Bebas Neue", sans-serif;
+	font-size: 1.55rem;
+	letter-spacing: 0.1em;
+	cursor: pointer;
+	transition: background 200ms ease, box-shadow 200ms ease, transform 100ms ease;
+	background: rgba(255, 255, 255, 0.1);
+	color: var(--muted);
+}
+
+.flash-orb:disabled {
+	cursor: not-allowed;
+}
+
+.flash-orb.flash-wait {
+	background: rgba(255, 107, 107, 0.18);
+	color: var(--coral);
+	animation: flash-pulse 1.1s ease-in-out infinite;
+}
+
+.flash-orb.flash-go {
+	background: radial-gradient(circle at 32% 32%, #a8ffc6, var(--teal) 60%);
+	color: #fff;
+	box-shadow: 0 0 48px rgba(32, 201, 151, 0.65);
+	cursor: pointer;
+	transform: scale(1.06);
+}
+
+@keyframes flash-pulse {
+	0%, 100% { opacity: 0.65; }
+	50%       { opacity: 1; }
+}
+
+/* ── Color Clash ─────────────────────────────────────── */
+
+.clash-stage {
+	min-height: 220px;
+	margin-top: 1.25rem;
+	border-radius: 28px;
+	border: 1px solid var(--line);
+	background: rgba(255, 255, 255, 0.04);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1.5rem;
+	padding: 1.25rem;
+}
+
+.clash-word {
+	margin: 0;
+	font-family: "Bebas Neue", sans-serif;
+	font-size: clamp(3.6rem, 9vw, 5.5rem);
+	letter-spacing: 0.1em;
+	line-height: 1;
+	min-height: 1.1em;
+	transition: color 60ms ease;
+}
+
+.clash-choices {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.75rem;
+	width: 100%;
+	max-width: 300px;
+}
+
+.clash-btn {
+	padding: 0.85rem 1rem;
+	border-radius: 18px;
+	border: 2px solid transparent;
+	font-family: "Bebas Neue", sans-serif;
+	font-size: 1.4rem;
+	letter-spacing: 0.08em;
+	font-weight: 400;
+	cursor: pointer;
+	transition: transform 120ms ease, filter 120ms ease;
+	color: #fff;
+}
+
+.clash-btn:hover:not(:disabled) {
+	transform: translateY(-2px);
+	filter: brightness(1.15);
+}
+
+.clash-btn:disabled {
+	opacity: 0.38;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.clash-rot  { background: #ff4757; }
+.clash-blau { background: #1e90ff; }
+.clash-gruen { background: #2ed573; color: #050505; }
+.clash-gelb { background: #ffa502; color: #050505; }
 
 @media (max-width: 1024px) {
 	.games-hero,

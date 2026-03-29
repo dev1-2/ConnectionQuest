@@ -36,6 +36,7 @@ function renderTopline(stats, highlights) {
 		{ label: "Aktiv 7 Tage", value: stats.activePlayers7d || 0 },
 		{ label: "Top Score", value: highlights.scoreLeader?.handle || "-" },
 	].forEach((item) => {
+		
 		const card = document.createElement("div");
 		card.innerHTML = `<p class="mini-label">${escapeHtml(item.label)}</p><strong>${escapeHtml(item.value)}</strong>`;
 		node.appendChild(card);

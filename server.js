@@ -42,8 +42,11 @@ const CQ_ACHIEVEMENTS = [
 ];
 
 const CQ_SINGLE_GAMES = {
-	"signal-sprint": { maxRawScore: 60, scoreMultiplier: 14, xpMultiplier: 5 },
-	"pattern-pulse": { maxRawScore: 12, scoreMultiplier: 90, xpMultiplier: 30 },
+	"signal-sprint":  { maxRawScore: 60, scoreMultiplier: 14, xpMultiplier: 5 },
+	"pattern-pulse":  { maxRawScore: 12, scoreMultiplier: 90, xpMultiplier: 30 },
+	"reaction-flash": { maxRawScore: 5,  scoreMultiplier: 180, xpMultiplier: 55 },
+	"color-clash":    { maxRawScore: 20, scoreMultiplier: 22,  xpMultiplier: 8 },
+	"snake-escape":   { maxRawScore: 50, scoreMultiplier: 20,  xpMultiplier: 8 },
 };
 
 const CQ_DAILY_MISSIONS = [

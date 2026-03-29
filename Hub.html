@@ -3,33 +3,42 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="theme-color" content="#050505">
-	<title>Connection Quest Hub</title>
+	<meta name="theme-color" content="#07000a">
+	<title>EREBOS — Die Festung</title>
 	<link rel="manifest" href="manifest.webmanifest">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Share+Tech+Mono&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="Hub.css">
 </head>
 <body>
+	<div class="scanlines"></div>
+	<div class="blood-vignette"></div>
+
+	<div class="erebos-watch-banner">
+		<span class="watch-dot"></span>
+		EREBOS BEOBACHTET JEDEN SCHRITT — DIE FESTUNG ÖFFNET SICH NUR FÜR WÜRDIGE SPIELER
+		<span class="watch-dot"></span>
+	</div>
+
 	<div class="page-shell">
 		<header class="hub-hero">
 			<section class="hero-card spotlight">
-				<p class="eyebrow">COMMAND HUB</p>
-				<h1>Connection Quest Hub</h1>
-				<p class="hero-copy">Der Hub zeigt nur noch die wichtigsten Wege zuerst: starten, schreiben, spielen und verwalten. Doppelte Einstiege fliegen raus, damit klar ist, wo man fuer welchen Zweck hingeht.</p>
+				<p class="eyebrow">EREBOS // KOMMANDOZENTRALE</p>
+				<h1>Die Festung</h1>
+				<p class="hero-copy">Das Spiel beobachtet. Jede Wahl wird protokolliert. Wähle deinen Weg mit Bedacht — EREBOS vergisst nichts und verzeiht noch weniger.</p>
 				<div class="hero-actions">
-					<a class="hero-link" href="ConnectionQuest.html">Journal</a>
-					<a class="hero-link" href="Messenger.html">Messenger</a>
-					<a class="ghost-link" href="Games.html">Games</a>
-					<a class="ghost-link" href="Community.html">Community</a>
+					<a class="hero-link" href="ConnectionQuest.html">Archiv</a>
+					<a class="hero-link" href="Messenger.html">Sendbote</a>
+					<a class="ghost-link" href="Games.html">Arenen</a>
+					<a class="ghost-link" href="Community.html">Das Netzwerk</a>
 				</div>
 			</section>
 
 			<section class="hero-card pulse-card" aria-live="polite">
-				<p class="mini-label">Live Snapshot</p>
-				<h2 id="hub-title">System wartet</h2>
-				<p id="hub-copy" class="section-copy">Sobald Daten geladen sind, zeigt der Hub hier den schnellsten Einstieg fuer heute.</p>
+				<p class="mini-label">LIVE-STATUS // SPIELZUSTAND</p>
+				<h2 id="hub-title">EREBOS WARTET</h2>
+				<p id="hub-copy" class="section-copy">Das Spiel lädt Daten. Sobald dein Rang bekannt ist, zeigt die Festung den optimalen nächsten Zug.</p>
 				<div id="hub-topline" class="topline-grid"></div>
 			</section>
 		</header>
@@ -38,94 +47,94 @@
 			<section class="card route-card route-card-wide">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Schnellstart</p>
-						<h2>Die 4 wichtigsten Wege</h2>
+						<p class="mini-label">SCHNELLZUGANG // PRIMÄRE WEGE</p>
+						<h2>Die 5 Hauptpfade</h2>
 					</div>
-					<p class="section-copy">Wenn jemand neu ist oder schnell weiter will, reichen diese vier Einstiege fast immer aus.</p>
+					<p class="section-copy">Das Spiel hat diese Wege als die kritischsten eingestuft. Jede Aktion zählt. Jede Verzögerung kostet Rang.</p>
 				</div>
 				<div class="route-grid">
-					<a class="route-link accent-coral" href="ConnectionQuest.html"><strong>Journal</strong><span>Login, Eintraege, XP und der persoenliche Hauptfortschritt.</span></a>
-					<a class="route-link accent-sky" href="Messenger.html"><strong>Messenger</strong><span>Nutzer auswaehlen und direkt serverseitig Nachrichten schreiben.</span></a>
-					<a class="route-link accent-teal" href="Community.html"><strong>Community</strong><span>Live-Feed, Trends und der schnellste Blick auf das Netzwerk.</span></a>
-					<a class="route-link accent-gold" href="Games.html"><strong>Games</strong><span>Arcade-Minigames und schneller Score-Schub ohne Umwege.</span></a>
-					<a class="route-link accent-gold" href="Schuelerranking.html"><strong>Schüler Ranking</strong>Links oder Rechter Schüler</span></a>
+					<a class="route-link accent-blood" href="ConnectionQuest.html"><strong>Archiv</strong><span>Züge einloggen, MACHT sammeln, Prüfungen bestehen und den persönlichen Rang sichern.</span></a>
+					<a class="route-link accent-shadow" href="Messenger.html"><strong>Sendbote</strong><span>Direktnachrichten an Zielpersonen. Das Spiel sieht alle Kontakte.</span></a>
+					<a class="route-link accent-dark" href="Community.html"><strong>Das Netzwerk</strong><span>Live-Feed der Spielbewegungen. Wer steigt, wer fällt, wer bedroht dich.</span></a>
+					<a class="route-link accent-ember" href="Games.html"><strong>Arenen</strong><span>Kämpfe um Arenakampf-Punkte. Siege werden in der Hierarchie vermerkt.</span></a>
+					<a class="route-link accent-blood" href="Schuelerranking.html"><strong>Schüler-Hierarchie</strong><span>Direkter Vergleich zwischen Schülern. Wer dominiert, wer verliert.</span></a>
 				</div>
 			</section>
 
 			<section class="card cluster-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Orientierung</p>
-						<h2>Starten und verstehen</h2>
+						<p class="mini-label">ORIENTIERUNG // EINSTIEG</p>
+						<h2>Verstehen und einordnen</h2>
 					</div>
-					<p class="section-copy">Diese Seiten helfen beim Einstieg und beim persoenlichen Status, ohne andere Bereiche doppelt zu erklaeren.</p>
+					<p class="section-copy">Das Spiel gewährt Einblicke. Nutze sie, um deinen Stand zu kennen.</p>
 				</div>
 				<div class="hub-grid">
-					<a class="hub-link accent-sky" href="Guide.html"><strong>Guide</strong><span>Erklaert alle Funktionen ohne Technikballast</span></a>
-					<a class="hub-link accent-sky" href="Profile.html"><strong>Profil</strong><span>Dein Zentrum fuer Identitaet und Fokus</span></a>
-					<a class="hub-link accent-gold" href="Leaderboard.html"><strong>Leaderboard</strong><span>Vergleich, Platzierung und Rangdruck an einem klaren Ort</span></a>
+					<a class="hub-link accent-shadow" href="Guide.html"><strong>Kodex</strong><span>Die Regeln des Spiels. Was erlaubt ist — und was bestraft wird.</span></a>
+					<a class="hub-link accent-shadow" href="Profile.html"><strong>Identität</strong><span>Dein Schattenname, dein Rang, deine Macht. Wer bist du im Spiel?</span></a>
+					<a class="hub-link accent-ember" href="Leaderboard.html"><strong>Die Hierarchie</strong><span>Die vollständige Rangliste. Sieh, wo du stehst und wer dich bedroht.</span></a>
 				</div>
 			</section>
 
 			<section class="card cluster-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Kommunikation</p>
-						<h2>Schreiben, lesen, vernetzen</h2>
+						<p class="mini-label">KOMMUNIKATION // EINFLUSS</p>
+						<h2>Schreiben, lenken, manipulieren</h2>
 					</div>
-					<p class="section-copy">Alles fuer Inhalte, Direktnachrichten und oeffentliche Updates. Aehnliche Bereiche sind jetzt bewusst zusammengezogen.</p>
+					<p class="section-copy">Einfluss entsteht durch Worte. Wähle sie mit Bedacht — EREBOS liest mit.</p>
 				</div>
 				<div class="hub-grid">
-					<a class="hub-link" href="Community.html"><strong>Community</strong><span>Live-Feed, Trends und Segment-Leader</span></a>
-					<a class="hub-link" href="Blog.html"><strong>Blog</strong><span>Offener Gedankenfeed fuer Posts, Stimmen und kurze Essays</span></a>
-					<a class="hub-link" href="Messenger.html"><strong>Messenger</strong><span>Nutzer waehlen, Direktnachrichten schreiben und echte Threads fuehren</span></a>
-					<a class="hub-link" href="AdminChannel.html"><strong>Ankündigungen</strong><span>Neuigkeiten und Mitteilungen für alle Nutzer direkt vom Team</span></a>
-					<a class="hub-link" href="Notifications.html"><strong>Inbox</strong><span>Warnungen, Progress und soziale Trigger</span></a>
-					<a class="hub-link" href="SocialRank.html"><strong>Social Rank</strong><span>Beliebige Personen bewerten und nach Ranggruppen sehen</span></a>
-					<a class="hub-link" href="Schuelerranking.html"><strong>Schüler Ranking</strong><span>Rechter oder Linker Schüler</span></a>
+					<a class="hub-link" href="Community.html"><strong>Das Netzwerk</strong><span>Live-Feed, Trends und die Stimmen der Spieler</span></a>
+					<a class="hub-link" href="Blog.html"><strong>Propaganda</strong><span>Offener Gedankenfeed für Posts, Meinungen und strategische Botschaften</span></a>
+					<a class="hub-link" href="Messenger.html"><strong>Sendbote</strong><span>Direktkontakt zu einzelnen Spielern. Allianzen schmieden oder Rivalen warnen.</span></a>
+					<a class="hub-link" href="AdminChannel.html"><strong>Direktiven</strong><span>Offizielle Botschaften des Spiels an alle Teilnehmer</span></a>
+					<a class="hub-link" href="Notifications.html"><strong>Signale</strong><span>Warnungen, Rangveränderungen und soziale Bedrohungen</span></a>
+					<a class="hub-link" href="SocialRank.html"><strong>Soziale Wertung</strong><span>Spieler einschätzen und in Ranggruppen einordnen</span></a>
+					<a class="hub-link" href="Schuelerranking.html"><strong>Schüler-Hierarchie</strong><span>Wer führt, wer folgt — die vollständige Schülerhierarchie</span></a>
 				</div>
 			</section>
 
 			<section class="card cluster-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">System</p>
-						<h2>Verwalten und auswerten</h2>
+						<p class="mini-label">KONTROLLE // SYSTEM</p>
+						<h2>Überwachen und steuern</h2>
 					</div>
-					<p class="section-copy">Hier landen nur die Bereiche, die wirklich eher Steuerung, Analyse oder Spezialrollen sind.</p>
+					<p class="section-copy">Nur die Würdigsten erhalten Zugang zur vollen Kontrolle. Das Spiel prüft kontinuierlich.</p>
 				</div>
 				<div class="hub-grid">
-					<a class="hub-link" href="Rewards.html"><strong>Rewards</strong><span>Unlocks, Titel und kosmetische Progression</span></a>
-					<a class="hub-link" href="Analytics.html"><strong>Analytics</strong><span>Produkt-Health, Segmente und Retention-Linse</span></a>
-					<a class="hub-link" href="Admin.html"><strong>Admin</strong><span>Zentrales Panel fuer Status, Invites und Operations</span></a>
-					<a class="hub-link" href="LehrerRanking.html"><strong>Teacher Ranking</strong><span>Separater Ranking-Zweig mit eigenem Spezial-Backoffice</span></a>
+					<a class="hub-link" href="Rewards.html"><strong>Tribute</strong><span>Freischaltungen, Titel und die Belohnungen des Spiels für Loyalität</span></a>
+					<a class="hub-link" href="Analytics.html"><strong>Überwachung</strong><span>Spieler-Daten, Rangsegmente und Aktivitätsmuster</span></a>
+					<a class="hub-link" href="Admin.html"><strong>Kontrollraum</strong><span>Zentrales Panel für System-Operationen und Spielerverwaltung</span></a>
+					<a class="hub-link" href="LehrerRanking.html"><strong>Aufseher-Hierarchie</strong><span>Die Aufseher im Spiel — separater Ranking-Zweig mit Spezialzugang</span></a>
 				</div>
 			</section>
 
 			<section class="card compact-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Weitere Bereiche</p>
-						<h2>Weniger haeufig, aber weiter da</h2>
+						<p class="mini-label">WEITERE ZUGÄNGE</p>
+						<h2>Andere Bereiche des Spiels</h2>
 					</div>
-					<p class="section-copy">Diese Seiten bleiben erreichbar, stehen aber nicht mehr als grosse Hauptkarte doppelt im Weg.</p>
+					<p class="section-copy">Diese Wege existieren. Das Spiel hat sie freigegeben.</p>
 				</div>
 				<div class="compact-links">
-					<a href="Network.html">Network</a>
-					<a href="Events.html">Events</a>
-					<a href="index.html">Intro</a>
+					<a href="Network.html">Netz</a>
+					<a href="Events.html">Ereignisse</a>
+					<a href="index.html">Eingang</a>
 				</div>
 			</section>
 
 			<section class="card focus-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Guided Start</p>
-						<h2>Heute sinnvoll starten</h2>
+						<p class="mini-label">NÄCHSTER ZUG // FOKUS</p>
+						<h2>EREBOS empfiehlt</h2>
 					</div>
-					<p class="section-copy">Der Hub zeigt jetzt konkrete naechste Schritte statt nur Link-Sammlungen.</p>
+					<p class="section-copy">Das Spiel analysiert deinen Stand und gibt dir konkrete Befehle. Folge ihnen — oder riskiere deinen Rang.</p>
 				</div>
-				<div id="hub-focus" class="focus-list empty-state">Noch keine Fokus-Routen geladen.</div>
+				<div id="hub-focus" class="focus-list empty-state">EREBOS analysiert. Befehle werden geladen.</div>
 			</section>
 		</main>
 	</div>

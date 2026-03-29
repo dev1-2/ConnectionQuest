@@ -24,6 +24,21 @@ const state = {
 		round: 0,
 		locked: false,
 	},
+	reactionFlash: {
+		running: false,
+		round: 0,
+		succeeded: 0,
+		flashActive: false,
+		timeoutId: null,
+		startTime: 0,
+	},
+	colorClash: {
+		running: false,
+		score: 0,
+		timeLeft: 25,
+		intervalId: null,
+		correctColor: null,
+	},
 };
 
 const sprintStartButton = document.querySelector("#sprint-start");
@@ -31,6 +46,10 @@ const sprintTarget = document.querySelector("#sprint-target");
 const sprintStage = document.querySelector("#sprint-stage");
 const patternStartButton = document.querySelector("#pattern-start");
 const patternPads = Array.from(document.querySelectorAll(".pattern-pad"));
+const flashStartButton = document.querySelector("#flash-start");
+const flashOrb = document.querySelector("#flash-orb");
+const clashStartButton = document.querySelector("#clash-start");
+const clashChoiceBtns = Array.from(document.querySelectorAll(".clash-btn"));
 const gamesMissions = document.querySelector("#games-missions");
 const gamesRecommendations = document.querySelector("#games-recommendations");
 const gamesCommunityFeed = document.querySelector("#games-community-feed");
@@ -50,6 +69,12 @@ function bindEvents() {
 	patternPads.forEach((pad) => {
 		pad.addEventListener("click", () => handlePatternInput(Number(pad.dataset.pad)));
 	});
+	flashStartButton.addEventListener("click", startReactionFlash);
+	flashOrb.addEventListener("click", handleFlashClick);
+	clashStartButton.addEventListener("click", startColorClash);
+	clashChoiceBtns.forEach((btn) => {
+		btn.addEventListener("click", () => handleClashChoice(btn.dataset.color));
+	});
 }
 
 async function hydrate() {
@@ -68,6 +93,8 @@ function renderAll() {
 	renderLoopPanels();
 	renderSprintHud();
 	renderPatternHud();
+	renderFlashHud();
+	renderClashHud();
 	renderFeed();
 	updateLockState();
 }
@@ -201,12 +228,18 @@ function updateLockState() {
 	const locked = !state.currentUser;
 	sprintStartButton.disabled = locked || state.sprint.running;
 	patternStartButton.disabled = locked || state.pattern.running;
+	flashStartButton.disabled = locked || state.reactionFlash.running;
+	clashStartButton.disabled = locked || state.colorClash.running;
 	sprintTarget.hidden = !state.sprint.running;
+	flashOrb.disabled = !state.reactionFlash.flashActive;
+	clashChoiceBtns.forEach((btn) => { btn.disabled = !state.colorClash.running; });
 	if (!locked) {
 		return;
 	}
 	document.querySelector("#sprint-status").textContent = "Login erforderlich für Sprint-Rewards.";
 	document.querySelector("#pattern-status").textContent = "Login erforderlich für Pattern-Rewards.";
+	document.querySelector("#flash-status").textContent = "Login erforderlich für Flash-Rewards.";
+	document.querySelector("#clash-status").textContent = "Login erforderlich für Clash-Rewards.";
 }
 
 function startSprint() {
@@ -317,19 +350,30 @@ async function handlePatternInput(index) {
 	}
 
 async function submitSingleResult(gameType, rawScore, summary) {
+	const STATUS_IDS = {
+		"signal-sprint":  "#sprint-status",
+		"pattern-pulse":  "#pattern-status",
+		"reaction-flash": "#flash-status",
+		"color-clash":    "#clash-status",
+	};
+	const GAME_LABELS = {
+		"signal-sprint":  "Signal Sprint",
+		"pattern-pulse":  "Pattern Pulse",
+		"reaction-flash": "Reaction Flash",
+		"color-clash":    "Color Clash",
+	};
+	const statusId = STATUS_IDS[gameType] || "#sprint-status";
+	const gameLabel = GAME_LABELS[gameType] || gameType;
 	try {
 		const payload = await apiRequest("/api/cq/games/single", {
 			method: "POST",
 			body: { gameType, rawScore, summary },
 		});
 		await applyCurrentUser(payload.currentUser);
-		const gameLabel = gameType === "signal-sprint" ? "Signal Sprint" : "Pattern Pulse";
 		const rewardText = `+${payload.rewards.score} Score • +${payload.rewards.xp} XP`;
-		const statusId = gameType === "signal-sprint" ? "#sprint-status" : "#pattern-status";
 		document.querySelector(statusId).textContent = `${summary} ${rewardText}`;
 		pushFeed(gameLabel, `${summary} ${rewardText}`);
 	} catch (error) {
-		const statusId = gameType === "signal-sprint" ? "#sprint-status" : "#pattern-status";
 		document.querySelector(statusId).textContent = error.message;
 	}
 	}
@@ -383,4 +427,150 @@ function escapeHtml(value) {
 		.replaceAll(">", "&gt;")
 		.replaceAll('"', "&quot;")
 		.replaceAll("'", "&#39;");
+}
+
+// ── Reaction Flash ──────────────────────────────────────────
+
+async function startReactionFlash() {
+	if (!state.currentUser || state.reactionFlash.running) {
+		return;
+	}
+	state.reactionFlash.running = true;
+	state.reactionFlash.round = 0;
+	state.reactionFlash.succeeded = 0;
+	state.reactionFlash.flashActive = false;
+	document.querySelector("#flash-status").textContent = "Mach dich bereit…";
+	renderFlashHud();
+	updateLockState();
+	await nextFlashRound();
+}
+
+async function nextFlashRound() {
+	if (state.reactionFlash.round >= 5) {
+		const score = state.reactionFlash.succeeded;
+		state.reactionFlash.running = false;
+		state.reactionFlash.flashActive = false;
+		flashOrb.className = "flash-orb";
+		flashOrb.textContent = "WARTEN…";
+		renderFlashHud();
+		await submitSingleResult("reaction-flash", score, `Reaction Flash: ${score} von 5 getroffen.`);
+		updateLockState();
+		return;
+	}
+	state.reactionFlash.round += 1;
+	state.reactionFlash.flashActive = false;
+	flashOrb.className = "flash-orb flash-wait";
+	flashOrb.textContent = "WARTEN…";
+	flashOrb.disabled = true;
+	renderFlashHud();
+
+	const delay = 1500 + Math.random() * 2000;
+	state.reactionFlash.timeoutId = window.setTimeout(() => {
+		if (!state.reactionFlash.running) {
+			return;
+		}
+		state.reactionFlash.flashActive = true;
+		state.reactionFlash.startTime = Date.now();
+		flashOrb.className = "flash-orb flash-go";
+		flashOrb.textContent = "JETZT!";
+		flashOrb.disabled = false;
+		// auto-fail if player doesn’t react within 2s
+		state.reactionFlash.timeoutId = window.setTimeout(async () => {
+			if (!state.reactionFlash.running || !state.reactionFlash.flashActive) {
+				return;
+			}
+			state.reactionFlash.flashActive = false;
+			flashOrb.disabled = true;
+			document.querySelector("#flash-status").textContent = `Runde ${state.reactionFlash.round}: Zu langsam!`;
+			await nextFlashRound();
+		}, 2000);
+	}, delay);
+}
+
+async function handleFlashClick() {
+	if (!state.reactionFlash.running || !state.reactionFlash.flashActive) {
+		return;
+	}
+	const reactionMs = Date.now() - state.reactionFlash.startTime;
+	window.clearTimeout(state.reactionFlash.timeoutId);
+	state.reactionFlash.flashActive = false;
+	flashOrb.disabled = true;
+	flashOrb.className = "flash-orb flash-wait";
+	if (reactionMs <= 800) {
+		state.reactionFlash.succeeded += 1;
+		document.querySelector("#flash-status").textContent = `Runde ${state.reactionFlash.round}: ${reactionMs}ms ✔`;
+	} else {
+		document.querySelector("#flash-status").textContent = `Runde ${state.reactionFlash.round}: ${reactionMs}ms – zu langsam!`;
+	}
+	renderFlashHud();
+	await wait(600);
+	await nextFlashRound();
+}
+
+function renderFlashHud() {
+	document.querySelector("#flash-round").textContent = `${state.reactionFlash.round} / 5`;
+	document.querySelector("#flash-hits").textContent = String(state.reactionFlash.succeeded);
+}
+
+// ── Color Clash ─────────────────────────────────────────────
+
+const CLASH_COLORS = [
+	{ id: "rot",  label: "ROT",  hex: "#ff4757" },
+	{ id: "blau", label: "BLAU", hex: "#1e90ff" },
+	{ id: "grün", label: "GRÜN", hex: "#2ed573" },
+	{ id: "gelb", label: "GELB", hex: "#ffa502" },
+];
+
+function nextClashWord() {
+	const wordIdx = Math.floor(Math.random() * CLASH_COLORS.length);
+	let inkIdx;
+	do {
+		inkIdx = Math.floor(Math.random() * CLASH_COLORS.length);
+	} while (inkIdx === wordIdx);
+	state.colorClash.correctColor = CLASH_COLORS[inkIdx].id;
+	const wordEl = document.querySelector("#clash-word");
+	wordEl.textContent = CLASH_COLORS[wordIdx].label;
+	wordEl.style.color = CLASH_COLORS[inkIdx].hex;
+}
+
+async function startColorClash() {
+	if (!state.currentUser || state.colorClash.running) {
+		return;
+	}
+	state.colorClash.running = true;
+	state.colorClash.score = 0;
+	state.colorClash.timeLeft = 25;
+	document.querySelector("#clash-status").textContent = "Run aktiv.";
+	renderClashHud();
+	updateLockState();
+	nextClashWord();
+	state.colorClash.intervalId = window.setInterval(async () => {
+		state.colorClash.timeLeft -= 1;
+		renderClashHud();
+		if (state.colorClash.timeLeft <= 0) {
+			window.clearInterval(state.colorClash.intervalId);
+			state.colorClash.running = false;
+			document.querySelector("#clash-word").textContent = "";
+			document.querySelector("#clash-word").style.color = "";
+			renderClashHud();
+			await submitSingleResult("color-clash", state.colorClash.score, `Color Clash: ${state.colorClash.score} richtige Antworten.`);
+			updateLockState();
+		}
+	}, 1000);
+}
+
+function handleClashChoice(color) {
+	if (!state.colorClash.running) {
+		return;
+	}
+	if (color === state.colorClash.correctColor) {
+		state.colorClash.score += 1;
+		renderClashHud();
+	}
+	nextClashWord();
+}
+
+function renderClashHud() {
+	document.querySelector("#clash-score").textContent = String(state.colorClash.score);
+	document.querySelector("#clash-time").textContent = String(state.colorClash.timeLeft);
 }

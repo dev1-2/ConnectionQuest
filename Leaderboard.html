@@ -3,49 +3,68 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="theme-color" content="#050505">
-	<title>Connection Quest Leaderboard</title>
+	<meta name="theme-color" content="#07000a">
+	<title>EREBOS — Die Hierarchie</title>
 	<link rel="manifest" href="manifest.webmanifest">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="Leaderboard.css">
 </head>
 <body>
+	<div class="scanlines" aria-hidden="true"></div>
+	<div class="blood-vignette" aria-hidden="true"></div>
+
+	<div class="erebos-watch-banner" aria-live="polite">
+		<span class="watch-dot" aria-hidden="true"></span>
+		EREBOS BEOBACHTET JEDEN ZUG — DIE HIERARCHIE WIRD PERMANENT AKTUALISIERT
+	</div>
+
 	<div class="page-shell">
 		<header class="leader-hero">
 			<section class="hero-card spotlight">
-				<p class="eyebrow">LOCAL RANKING</p>
-				<h1>Leaderboard</h1>
+				<p class="eyebrow">EREBOS // DIE HIERARCHIE</p>
+				<h1>Der Kampf</h1>
 				<p class="hero-copy">
-					Alle gespeicherten Profile aus der Datenbank, sortiert nach Score, XP, Aktivität und freigeschalteten Badges.
+					Alle Spieler. Sortiert nach Macht. Das Spiel entscheidet, wer oben steht — und wer
+					in die Dunkelheit zurückfällt. Niemand ist sicher. Jeder könnte dein nächstes Opfer sein.
 				</p>
 				<div class="hero-actions">
-					<a class="hero-link" href="ConnectionQuest.html">Zurück zu Connection Quest</a>
-					<a class="hero-link" href="Profile.html">Profil Hub</a>
-					<a class="hero-link" href="Community.html">Community Hub</a>
-					<a class="hero-link" href="Notifications.html">Inbox</a>
-					<a class="hero-link" href="Network.html">Network</a>
-					<a class="hero-link" href="Rewards.html">Rewards</a>
-					<a class="hero-link" href="Events.html">Events</a>
-					<a class="hero-link" href="Analytics.html">Analytics</a>
-					<a class="hero-link" href="Games.html">Games Hub</a>
-					<a class="ghost-link" href="index.html">Zum Intro</a>
+					<a class="hero-link" href="ConnectionQuest.html">Zurück zum Archiv</a>
+					<a class="hero-link" href="Hub.html">Kommandozentrale</a>
+					<a class="ghost-link" href="Community.html">Das Netzwerk</a>
+					<a class="ghost-link" href="index.html">Intro</a>
 				</div>
 			</section>
 
 			<section class="hero-card current-player" aria-live="polite">
-				<p class="mini-label">Aktiver Spieler</p>
-				<h2 id="current-player-name">Kein Spieler aktiv</h2>
-				<p id="current-player-copy" class="section-copy">Logge dich in Connection Quest ein, damit dein Profil markiert wird.</p>
+				<p class="mini-label">DEINE POSITION</p>
+				<h2 id="current-player-name">KEIN SPIELER AKTIV</h2>
+				<p id="current-player-copy" class="section-copy">Betritt das Spiel, um deinen Rang in der Hierarchie zu sehen.</p>
 				<div class="mini-stats">
 					<div>
-						<p class="mini-label">Score</p>
+						<p class="mini-label">MACHT</p>
 						<strong id="current-player-score">0</strong>
 					</div>
 					<div>
-						<p class="mini-label">Level</p>
-						<strong id="current-player-level">1</strong>
+						<p class="mini-label">RANG</p>
+						<strong id="current-player-level">I</strong>
+					</div>
+					<div>
+						<p class="mini-label">POSITION</p>
+						<strong id="current-player-rank">—</strong>
+					</div>
+				</div>
+				<div id="rivalry-banner" class="rivalry-banner" hidden>
+					<div class="rival-above">
+						<p class="mini-label">▲ BEDROHT DICH</p>
+						<strong id="rival-above-name">—</strong>
+						<span id="rival-above-gap" class="gap-value"></span>
+					</div>
+					<div class="rival-below">
+						<p class="mini-label">▼ DEIN OPFER</p>
+						<strong id="rival-below-name">—</strong>
+						<span id="rival-below-gap" class="gap-value"></span>
 					</div>
 				</div>
 			</section>
@@ -55,25 +74,25 @@
 			<section class="card summary-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Overview</p>
-						<h2>Board Stats</h2>
+						<p class="mini-label">SCHLACHTFELD-STATUS</p>
+						<h2>Das Ausmaß</h2>
 					</div>
 				</div>
 				<div class="summary-grid">
 					<article class="stat-box accent-one">
-						<p class="mini-label">Spieler</p>
+						<p class="mini-label">SPIELER</p>
 						<h3 id="player-count">0</h3>
 					</article>
 					<article class="stat-box accent-two">
-						<p class="mini-label">Top Score</p>
+						<p class="mini-label">HÖCHSTE MACHT</p>
 						<h3 id="top-score">0</h3>
 					</article>
 					<article class="stat-box accent-three">
-						<p class="mini-label">Top Level</p>
-						<h3 id="top-level">1</h3>
+						<p class="mini-label">HÖCHSTER RANG</p>
+						<h3 id="top-level">I</h3>
 					</article>
 					<article class="stat-box accent-four">
-						<p class="mini-label">Logs Gesamt</p>
+						<p class="mini-label">ZÜGE GESAMT</p>
 						<h3 id="total-logs">0</h3>
 					</article>
 				</div>
@@ -82,51 +101,61 @@
 			<section class="card podium-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Podium</p>
-						<h2>Top 3</h2>
+						<p class="mini-label">DIE UNANTASTBAREN</p>
+						<h2>Spitze der Hierachie</h2>
 					</div>
-					<p class="section-copy">Die stärksten lokalen Profile auf einen Blick.</p>
+					<p class="section-copy">Diese drei herrschen — noch. Eine einzige Schwäche kann alles verändern.</p>
 				</div>
-				<div id="podium" class="podium empty-state">Noch keine Spieler vorhanden.</div>
+				<div id="podium" class="podium empty-state">Noch keine Spieler im System.</div>
 			</section>
 
 			<section class="card ranking-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Ranking</p>
-						<h2>Alle Spieler</h2>
+						<p class="mini-label">ALLE SPIELER — VOLLSTÄNDIGE HIERARCHIE</p>
+						<h2>Die Rangliste</h2>
 					</div>
-					<p class="section-copy">Sortierung, Suche und Live-Feed machen das Board deutlich naeher an einer echten App.</p>
+					<p class="section-copy">Wer steht über dir? Wer liegt unter dir? Das Spiel hat alle Antworten.</p>
 				</div>
 				<div class="ranking-tools">
 					<label class="tool-field">
-						<span>Suche</span>
-						<input id="leaderboard-search" type="search" placeholder="Spielername suchen">
+						<span>SPIELER SUCHEN</span>
+						<input id="leaderboard-search" type="search" placeholder="Schattennamen eingeben...">
 					</label>
 					<label class="tool-field">
-						<span>Sortierung</span>
+						<span>SORTIERUNG</span>
 						<select id="leaderboard-sort">
-							<option value="score">Score</option>
-							<option value="streak">Streak</option>
-							<option value="games">Game Wins</option>
-							<option value="logins">Logins</option>
-							<option value="entries">Interaktionen</option>
+							<option value="score">Macht (Score)</option>
+							<option value="streak">Ausdauer (Streak)</option>
+							<option value="games">Arenakampf-Siege</option>
+							<option value="logins">Aktivität (Logins)</option>
+							<option value="entries">Züge gesamt</option>
 						</select>
 					</label>
 				</div>
-				<div id="leaderboard-list" class="leaderboard-list empty-state">Noch keine Spieler vorhanden.</div>
+				<div id="leaderboard-list" class="leaderboard-list empty-state">Noch keine Spieler im System.</div>
+			</section>
+
+			<section class="card rivalry-card">
+				<div class="section-head">
+					<div>
+						<p class="mini-label">EREBOS ANALYSIERT SCHWÄCHEN</p>
+						<h2>Rivalen im Fokus</h2>
+					</div>
+					<p class="section-copy">Das Spiel zeigt dir, wen du schlagen kannst — und wer dich bedroht. Handle zuerst.</p>
+				</div>
+				<div id="leaderboard-highlights" class="highlight-grid"></div>
 			</section>
 
 			<section class="card activity-card">
 				<div class="section-head">
 					<div>
-						<p class="mini-label">Live Feed</p>
-						<h2>Aktuelle Bewegung</h2>
+						<p class="mini-label">LIVE-PROTOKOLL</p>
+						<h2>Letzte Bewegungen</h2>
 					</div>
-					<p class="section-copy">Neue Logs und Game-Runs zeigen, dass das Board wirklich lebt.</p>
+					<p class="section-copy">Das Netzwerk bewegt sich. Jeder Zug verändert die Rangfolge. Bleib wachsam.</p>
 				</div>
-				<div id="leaderboard-highlights" class="highlight-grid"></div>
-				<div id="leaderboard-feed" class="activity-feed empty-state">Noch keine Feed-Daten vorhanden.</div>
+				<div id="leaderboard-feed" class="activity-feed empty-state">Keine aktuellen Bewegungen.</div>
 			</section>
 		</main>
 	</div>

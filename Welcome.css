@@ -1,11 +1,15 @@
 :root {
-	--bg: #050505;
-	--panel: rgba(255, 255, 255, 0.04);
-	--line: rgba(255, 255, 255, 0.12);
-	--text: #f5f5f5;
-	--muted: rgba(255, 255, 255, 0.58);
-	--soft: rgba(255, 255, 255, 0.2);
-	--shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+	--bg: #07000a;
+	--panel: rgba(120, 0, 0, 0.12);
+	--line: rgba(160, 20, 20, 0.45);
+	--text: #e8d4c0;
+	--muted: rgba(232, 200, 180, 0.52);
+	--soft: rgba(180, 30, 30, 0.3);
+	--shadow: 0 20px 80px rgba(100, 0, 0, 0.65);
+	--blood: #6b0000;
+	--crimson: #c41a1a;
+	--ember: #ff3535;
+	--glow: 0 0 28px rgba(196, 26, 26, 0.55);
 }
 
 * {
@@ -16,7 +20,7 @@ body {
 	margin: 0;
 	min-height: 100vh;
 	font-family: "Space Grotesk", sans-serif;
-	background: #050505;
+	background: #07000a;
 	color: var(--text);
 	overflow-x: hidden;
 	overflow-y: auto;
@@ -27,23 +31,39 @@ a {
 	text-decoration: none;
 }
 
-.film-grain,
-.vignette {
+/* ─── Atmosphere overlays ─── */
+.scanlines,
+.blood-vignette,
+.flicker {
 	position: fixed;
 	inset: 0;
 	pointer-events: none;
 	z-index: 0;
 }
 
-.film-grain {
-	background-image: radial-gradient(rgba(255, 255, 255, 0.09) 0.8px, transparent 0.8px);
-	background-size: 14px 14px;
-	opacity: 0.07;
-	animation: grainShift 8s steps(6) infinite;
+.scanlines {
+	background: repeating-linear-gradient(
+		0deg,
+		transparent,
+		transparent 2px,
+		rgba(0, 0, 0, 0.28) 2px,
+		rgba(0, 0, 0, 0.28) 4px
+	);
+	opacity: 0.45;
 }
 
-.vignette {
-	background: radial-gradient(circle at center, transparent 38%, rgba(0, 0, 0, 0.82) 100%);
+.blood-vignette {
+	background: radial-gradient(
+		ellipse at center,
+		transparent 30%,
+		rgba(60, 0, 0, 0.7) 80%,
+		rgba(20, 0, 0, 0.95) 100%
+	);
+}
+
+.flicker {
+	background: rgba(100, 0, 0, 0.03);
+	animation: flickerAnim 8s steps(3) infinite;
 }
 
 .intro-page {
@@ -65,12 +85,13 @@ a {
 	padding: clamp(1.5rem, 4vw, 3rem);
 	border: 1px solid var(--line);
 	background:
-		radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.06), transparent 24%),
-		linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
-	box-shadow: var(--shadow);
+		radial-gradient(circle at 18% 22%, rgba(160, 0, 0, 0.12), transparent 30%),
+		radial-gradient(circle at 80% 70%, rgba(80, 0, 0, 0.1), transparent 30%),
+		linear-gradient(180deg, rgba(60, 0, 0, 0.08), rgba(20, 0, 0, 0.04));
+	box-shadow: var(--shadow), inset 0 0 80px rgba(100, 0, 0, 0.08);
 	position: relative;
 	overflow: visible;
-	border-radius: 28px;
+	border-radius: 4px;
 }
 
 .mono-stage::before,
@@ -80,7 +101,7 @@ a {
 	left: 0;
 	right: 0;
 	height: 1px;
-	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+	background: linear-gradient(90deg, transparent, rgba(196, 26, 26, 0.5), transparent);
 }
 
 .mono-stage::before {
@@ -95,7 +116,7 @@ a {
 	position: absolute;
 	width: 44px;
 	height: 44px;
-	border-color: rgba(255, 255, 255, 0.26);
+	border-color: rgba(196, 26, 26, 0.6);
 	z-index: 2;
 }
 
@@ -133,7 +154,8 @@ a {
 	text-transform: uppercase;
 	letter-spacing: 0.28em;
 	font-size: 0.74rem;
-	color: var(--muted);
+	color: var(--crimson);
+	font-family: "Share Tech Mono", monospace;
 }
 
 .stage-header {
@@ -152,14 +174,15 @@ a {
 	text-transform: uppercase;
 	letter-spacing: 0.24em;
 	font-size: 0.72rem;
-	color: var(--muted);
+	color: var(--crimson);
+	font-family: "Share Tech Mono", monospace;
 }
 
 .stage-label,
 .stage-index {
 	padding: 0.45rem 0.7rem;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	background: rgba(255, 255, 255, 0.025);
+	border: 1px solid rgba(196, 26, 26, 0.4);
+	background: rgba(120, 0, 0, 0.15);
 	border-radius: 999px;
 }
 
@@ -189,7 +212,8 @@ a {
 	font-size: 0.82rem;
 	letter-spacing: 0.28em;
 	text-transform: uppercase;
-	color: rgba(255, 255, 255, 0.72);
+	color: var(--crimson);
+	font-family: "Share Tech Mono", monospace;
 }
 
 .intro-prefix {
@@ -211,11 +235,11 @@ a {
 .main-title,
 .credit-line {
 	margin: 0;
-	font-family: "Unbounded", sans-serif;
-	font-weight: 700;
+	font-family: "Cinzel", serif;
+	font-weight: 900;
 	line-height: 0.92;
 	text-transform: uppercase;
-	letter-spacing: -0.04em;
+	letter-spacing: 0.08em;
 }
 
 .main-title {
@@ -321,7 +345,7 @@ a {
 }
 
 .main-title .char.is-on {
-	text-shadow: 0 0 18px rgba(255, 255, 255, 0.08);
+	text-shadow: 0 0 28px rgba(196, 26, 26, 0.7), 0 0 60px rgba(120, 0, 0, 0.4);
 }
 
 .stage-footer {
@@ -330,7 +354,7 @@ a {
 	align-items: end;
 	gap: 1rem;
 	padding-top: 1.2rem;
-	border-top: 1px solid rgba(255, 255, 255, 0.08);
+	border-top: 1px solid rgba(196, 26, 26, 0.3);
 	position: relative;
 	z-index: 1;
 }
@@ -347,43 +371,51 @@ a {
 	align-items: center;
 	justify-content: center;
 	min-height: 52px;
-	padding: 0.9rem 1.1rem;
-	border-radius: 999px;
+	padding: 0.9rem 1.4rem;
+	border-radius: 2px;
 	border: 1px solid var(--line);
-	transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
+	transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
 	font-weight: 700;
-	letter-spacing: 0.12em;
+	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	font-size: 0.82rem;
+	font-family: "Share Tech Mono", monospace;
 }
 
 .enter-link {
-	background: #f5f5f5;
-	color: #050505;
-	box-shadow: 0 10px 34px rgba(255, 255, 255, 0.08);
+	background: linear-gradient(135deg, #6b0000, #c41a1a);
+	color: #f5e8e0;
+	border-color: var(--crimson);
+	box-shadow: 0 0 24px rgba(196, 26, 26, 0.4);
 }
 
 .enter-link.is-locked {
-	background: rgba(255, 255, 255, 0.06);
-	color: rgba(255, 255, 255, 0.36);
+	background: rgba(100, 0, 0, 0.15);
+	color: rgba(196, 26, 26, 0.38);
+	border-color: rgba(196, 26, 26, 0.2);
 	pointer-events: none;
+	box-shadow: none;
 }
 
 .enter-link.is-ready:hover,
 .ghost-link:hover {
 	transform: translateY(-2px);
-	border-color: rgba(255, 255, 255, 0.3);
+	border-color: var(--ember);
+	box-shadow: 0 8px 30px rgba(196, 26, 26, 0.35);
 }
 
 .ghost-link {
 	background: transparent;
-	color: var(--text);
+	color: var(--muted);
+	border-color: rgba(160, 20, 20, 0.35);
 }
 
 .status-line {
 	min-height: 1.4em;
 	position: relative;
 	padding-left: 1rem;
+	color: var(--crimson);
+	font-family: "Share Tech Mono", monospace;
 }
 
 .status-line::before {
@@ -394,23 +426,69 @@ a {
 	width: 6px;
 	height: 6px;
 	border-radius: 50%;
-	background: #ffffff;
+	background: var(--ember);
 	transform: translateY(-50%);
 	animation: blinkDot 1.2s steps(1) infinite;
+	box-shadow: 0 0 8px var(--ember);
 }
 
-@keyframes grainShift {
-	0% { transform: translate(0, 0); }
-	25% { transform: translate(-1%, 1%); }
-	50% { transform: translate(1%, -1%); }
-	75% { transform: translate(0.5%, 1%); }
-	100% { transform: translate(0, 0); }
+.info-ribbon {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0;
+	width: min(100%, 920px);
+	border: 1px solid rgba(160, 20, 20, 0.4);
+	background: linear-gradient(180deg, rgba(80, 0, 0, 0.15), rgba(40, 0, 0, 0.08));
+	border-radius: 2px;
+	overflow: hidden;
+}
+
+.ribbon-item {
+	display: grid;
+	gap: 0.35rem;
+	padding: 1rem 1.2rem;
+	text-align: center;
+	border-right: 1px solid rgba(160, 20, 20, 0.25);
+}
+
+.ribbon-item:last-child {
+	border-right: none;
+}
+
+.ribbon-item-wide {
+	text-align: left;
+}
+
+.info-value,
+.info-copy {
+	margin: 0;
+	line-height: 1.5;
+}
+
+.info-value {
+	font-family: "Share Tech Mono", monospace;
+	font-size: 0.95rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--ember);
+}
+
+.info-copy {
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+
+@keyframes flickerAnim {
+	0%   { opacity: 0.03; }
+	33%  { opacity: 0.07; }
+	66%  { opacity: 0.02; }
+	100% { opacity: 0.03; }
 }
 
 @keyframes blinkDot {
 	0%,
 	100% { opacity: 0.2; }
-	50% { opacity: 1; }
+	50%   { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -446,7 +524,7 @@ a {
 	}
 
 	.main-title {
-		font-size: clamp(2.2rem, 13vw, 4rem);
+		font-size: clamp(2.6rem, 16vw, 5rem);
 		max-width: 100%;
 		text-align: left;
 		text-wrap: pretty;
@@ -470,13 +548,13 @@ a {
 
 	.info-ribbon {
 		grid-template-columns: 1fr;
-		border-radius: 22px;
+		border-radius: 2px;
 	}
 
 	.ribbon-item {
 		text-align: left;
 		border-right: none;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		border-bottom: 1px solid rgba(160, 20, 20, 0.2);
 	}
 
 	.ribbon-item:last-child {
